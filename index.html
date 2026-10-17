@@ -199,7 +199,7 @@
                 <!-- Menu do Banco Digital (Atalhos do App) -->
                 <div>
                     <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-2">Serviços Bancários Protegidos</span>
-                    <div class="grid grid-cols-4 gap-2">
+                    <div class="grid grid-cols-3 gap-2">
                         <button onclick="openPixFlow('safe')" class="glass-card hover:bg-slate-800/90 p-3 rounded-2xl flex flex-col items-center justify-center text-center transition group border-amber-500/20">
                             <div class="w-9 h-9 rounded-xl bg-bb-yellow text-slate-950 flex items-center justify-center text-base mb-1 font-black group-hover:scale-105 transition-transform shadow-md">
                                 <i class="fa-solid fa-paper-plane"></i>
@@ -214,12 +214,6 @@
                             <span class="text-[10px] font-bold text-white">Triagem</span>
                         </button>
 
-                        <button onclick="navigateTo('action-post')" class="glass-card hover:bg-slate-800/90 p-3 rounded-2xl flex flex-col items-center justify-center text-center transition group border-amber-500/20">
-                            <div class="w-9 h-9 rounded-xl bg-rose-600 text-white flex items-center justify-center text-base mb-1 font-black group-hover:scale-105 transition-transform shadow-md">
-                                <i class="fa-solid fa-clock-rotate-left"></i>
-                            </div>
-                            <span class="text-[10px] font-bold text-white">Guia MED</span>
-                        </button>
 
                         <button onclick="navigateTo('rights')" class="glass-card hover:bg-slate-800/90 p-3 rounded-2xl flex flex-col items-center justify-center text-center transition group border-amber-500/20">
                             <div class="w-9 h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center text-base mb-1 font-black group-hover:scale-105 transition-transform shadow-md">
@@ -523,6 +517,9 @@
                         <p class="text-[11px] text-slate-300 leading-relaxed">
                             É o Mecanismo Especial de Devolução regulamentado pelo Banco Central que permite o bloqueio cautelar das contas bancárias de estelionatários.
                         </p>
+                        <button id="rights-med-guide" type="button" onclick="navigateTo('action-post')" class="mt-2 inline-flex items-center gap-2 rounded-lg bg-bb-yellow px-3 py-2 text-xs font-bold text-slate-950 hover:bg-amber-400 transition">
+                            <i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i> Acessar Guia MED
+                        </button>
                     </div>
 
                     <div class="glass-card p-3 rounded-xl border-slate-800 space-y-1">

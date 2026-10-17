@@ -130,3 +130,9 @@ Para automatizar em ambiente com Playwright e Chromium já instalados, sirva a r
 Próximas verificações recomendadas: inspeção visual com CDNs acessíveis em desktop e celular, navegação por teclado/leitor de tela e testes em outros navegadores. Se houver publicação futura, repetir os fluxos no endereço HTTPS e confirmar permissões de área de transferência.
 
 Resultado final da regressão após as últimas alterações: `node tests/balance.cjs` concluiu com código 0; todos os cenários funcionais listados passaram. Permaneceram apenas as falhas externas de CDN e os dois registros `tailwind is not defined` (carga e recarga), já descritos como pendências visuais.
+
+## Reorganização do Guia MED — 17/10/2026
+
+Removido o atalho Guia MED dos serviços da tela inicial e ajustada essa grade para três colunas. Adicionado “Acessar Guia MED” no cartão explicativo do MED em Direitos, apontando para o fluxo educativo existente. Mantidos os acessos emergenciais pós-golpe.
+
+Teste executado em Chromium/Playwright: ausência do atalho na Home, três serviços, navegação Home → Direitos → Guia MED e abertura do roteiro para o banco passaram. Validação por eventos DOM; a conferência visual com CDNs carregadas continua pendente. Alteração funcional limitada a `index.html`.
