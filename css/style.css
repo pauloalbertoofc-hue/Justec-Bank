@@ -1,0 +1,41 @@
+
+body {
+font-family: 'Plus Jakarta Sans', sans-serif;
+    background: radial-gradient(circle at top center, #0F172A 0%, #080D1A 60%, #030712 100%);
+    min-height: 100vh;
+}
+.phone-frame {
+    box-shadow: 0 35px 70px -15px rgba(0, 0, 0, 0.95), 0 0 0 12px #1E293B, 0 0 0 14px #334155, 0 0 45px rgba(255, 204, 0, 0.25);
+}
+.yellow-gradient-btn {
+    background: linear-gradient(135deg, #FFCC00 0%, #E6B800 100%);
+}
+.yellow-gradient-btn:hover {
+    background: linear-gradient(135deg, #FFD633 0%, #FFCC00 100%);
+}
+.glow-yellow {
+    box-shadow: 0 0 30px 5px rgba(255, 204, 0, 0.35);
+}
+.glow-rose {
+    box-shadow: 0 0 35px 8px rgba(244, 63, 94, 0.5);
+}
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+.no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+.glass-card {
+    background: rgba(18, 25, 41, 0.85);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 204, 0, 0.12);
+}
+.biometric-ring {
+    animation: pulse-ring 2s infinite ease-in-out;
+}
+@keyframes pulse-ring {
+    0% { transform: scale(0.95); opacity: 0.8; }
+    50% { transform: scale(1.05); opacity: 1; box-shadow: 0 0 25px rgba(255, 204, 0, 0.6); }
+    100% { transform: scale(0.95); opacity: 0.8; }
+}
