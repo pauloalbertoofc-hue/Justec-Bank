@@ -39,3 +39,41 @@ font-family: 'Plus Jakarta Sans', sans-serif;
     50% { transform: scale(1.05); opacity: 1; box-shadow: 0 0 25px rgba(255, 204, 0, 0.6); }
     100% { transform: scale(0.95); opacity: 0.8; }
 }
+/* Etapa 4: componentes limitados ao extrato para preservar as demais telas. */
+.statement-link { color: #FFCC00; font-size: 11px; font-weight: 800; display: inline-flex; gap: 7px; align-items: center; margin-top: 6px; }
+.statement-link:hover { text-decoration: underline; }
+.statement-screen { padding-bottom: 12px; }
+.statement-heading { display: flex; gap: 12px; align-items: center; margin-bottom: 12px; }
+.statement-heading button { background: #1e293b; padding: 6px 10px; border-radius: 10px; }
+.statement-heading small { color: #FFCC00; font-size: 9px; font-weight: 800; }
+.statement-heading h2, .statement-receipt h2 { font-size: 17px; font-weight: 800; }
+.statement-notice { font-size: 10px; color: #fcd34d; background: #ffcc0010; border: 1px solid #ffcc0040; border-radius: 10px; padding: 9px; margin-bottom: 12px; }
+.statement-summary { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.statement-summary > div { background: #121929; border: 1px solid #334155; border-radius: 14px; padding: 12px; }
+.statement-summary > div:first-child { grid-column: 1 / -1; border-left: 3px solid #FFCC00; }
+.statement-summary span { display: block; color: #94a3b8; font-size: 10px; }
+.statement-summary strong { font-size: 16px; }
+.statement-summary button { float: right; color: #FFCC00; }
+.statement-caption { color: #94a3b8; font-size: 10px; margin: 10px 0; line-height: 1.6; }
+.statement-filters { display: flex; gap: 10px; }
+.statement-filters label { flex: 1; color: #cbd5e1; font-size: 11px; }
+.statement-filters select { display: block; width: 100%; margin-top: 5px; background: #121929; color: white; border: 1px solid #475569; border-radius: 9px; padding: 9px; }
+.statement-list { display: grid; gap: 8px; }
+.transaction-item { width: 100%; text-align: left; background: #121929; border: 1px solid #334155; border-radius: 14px; padding: 12px; display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 5px 8px; }
+.transaction-item strong { font-size: 11px; }
+.transaction-item b { font-size: 12px; }
+.transaction-item.incoming b { color: #6ee7b7; }
+.transaction-item.outgoing b { color: #fda4af; }
+.transaction-item span, .transaction-item small { color: #94a3b8; font-size: 10px; }
+.transaction-item span { grid-column: 1 / -1; overflow-wrap: anywhere; }
+.transaction-status { grid-column: 1 / -1; }
+.transaction-item .suspicious { color: #fda4af; }
+.transaction-item .review { color: #fcd34d; }
+.statement-dialog { width: min(360px, calc(100% - 32px)); max-height: 80dvh; margin: auto; padding: 0; color: #f1f5f9; background: #121929; border: 1px solid #FFCC00; border-radius: 24px; overflow-y: auto; }
+.statement-dialog::backdrop { background: #020617cc; }
+.statement-receipt { padding: 20px; font-size: 12px; line-height: 1.6; overflow-wrap: anywhere; }
+.statement-receipt button { border: 1px solid #ffcc0060; border-radius: 10px; padding: 8px 10px; color: #FFCC00; margin: 8px 0; }
+.statement-receipt .receipt-close { float: right; margin: 0 0 8px 8px; }
+#receipt-details p { margin: 8px 0; }
+#receipt-education, #receipt-alert { margin-top: 10px; padding: 10px; background: #020617; border-radius: 12px; }
+.statement-link:focus-visible, .transaction-item:focus-visible, .statement-screen button:focus-visible, .statement-receipt button:focus-visible { outline: 2px solid #FFCC00; outline-offset: 3px; }

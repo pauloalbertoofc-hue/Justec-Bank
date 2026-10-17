@@ -58,3 +58,75 @@ O primeiro teste amplo parou no clique por coordenadas no leitor biométrico ani
 4. Navegue para outra tela e retorne: o saldo deve continuar oculto. Clique novamente para revelar o valor e restaurar o olho aberto.
 5. Teste os três diagnósticos de triagem, feche os modais, abra a orientação MED e simule Pix seguro e suspeito, incluindo o toque no leitor simulado.
 6. No painel de rede, confirme HTTP 200 para `js/app.js`; no console, confira a ausência de declarações duplicadas ou referências inválidas. Confirme também que as CDNs carregam para validar aparência e ícones.
+
+## Etapa 4 — Extrato bancário interativo — 17/10/2026
+
+### Objetivo e referência visual
+
+Adicionar “Ver extrato” abaixo do saldo, respeitando a captura fornecida: azul-escuro, amarelo #FFCC00, cantos arredondados, tipografia e moldura existentes. A etapa permanece acadêmica, sem backend, autenticação real, consulta a bancos ou movimentação de dinheiro.
+
+### Arquivos criados e modificados
+
+- Criado `js/transactions.js`: cenário fixo e 12 movimentações estruturadas.
+- Modificado `index.html`: botão compacto no cartão, tela `screen-statement`, resumo, filtros, lista e diálogo nativo de comprovante. Os scripts carregam os dados antes da lógica. Passou a carregar `css/style.css`, anteriormente desconectado da página principal. O conteúdo rolável recebeu identificador e altura mínima flexível; a barra inferior não encolhe.
+- Modificado `css/style.css`: componentes do extrato e do comprovante com seletores próprios, sem substituir o tema das telas anteriores.
+- Modificado `js/app.js`: navegação do extrato, funções de dados e interface, saldo compartilhado e textos explícitos de simulação nos cenários Pix antigos que sugeriam consulta ao Banco Central ou denúncias reais.
+- Criados `tests/statement.cjs` e `tests/balance.cjs`: testes de navegador reutilizáveis. Usam Playwright e Chromium existentes no ambiente; nenhuma dependência ou framework foi adicionado à aplicação.
+- Atualizado este relatório por acréscimo, preservando a Etapa 3.
+
+### Dados e coerência financeira
+
+Cada movimentação contém ID único DEMO, data ISO com fuso -03:00, tipo (`pix-in`, `pix-out`, `debit`, `payment`), descrição, valor assinado, status e participante/instituição fictícios. São quatro entradas e oito saídas, distribuídas de 01/08/2026 a 17/10/2026. Os status são Concluída, Em análise e Sinalizada como suspeita.
+
+Saldo inicial fictício R$ 1.000,00 + entradas R$ 2.650,00 − saídas R$ 1.169,50 = saldo disponível R$ 2.480,50. Esse resultado inicializa `bankState.balance`, sem criar outro estado de saldo. Neste cenário, saídas em análise e suspeitas já estão contabilizadas; isso é informado na tela. O resumo de entradas e saídas acompanha o filtro, enquanto o saldo disponível representa o cenário completo e não muda ao filtrar.
+
+O período usa uma data demonstrativa explícita, 17/10/2026, em vez do relógio do dispositivo. Assim, o conteúdo não desaparece com o passar do tempo. Os filtros abrangem dias de calendário em America/Sao_Paulo, incluindo o dia de referência: 7 dias mostram 6 itens; 30 dias, 9; 90 dias, 12.
+
+### Arquitetura e funções
+
+- `formatMoney()`: formatação BRL centralizada, também reutilizada pela Home.
+- `calculateTotals()`: soma em centavos inteiros, com entradas, saídas positivas e resultado líquido; evita acumulação de erros decimais.
+- `filterTransactions()`: aplica janela inclusiva de dias e direção da movimentação, ordenando da mais recente para a mais antiga.
+- `transactionDate()` e `transactionStatus()`: apresentação consistente de datas no fuso brasileiro e dos rótulos simulados.
+- `renderTransactions()`: monta botões de movimentação com texto seguro (`textContent`), data/hora, participante, operação, valor e status; atualiza totais, contagem e estado vazio.
+- `renderStatementBalance()`: espelha `bankState.isBalanceVisible`, inclusive ícone e nome acessível. `toggleBalance()` atualiza Home e Extrato. O botão “Ver extrato” funciona mesmo com saldo oculto.
+- `navigateTo()`: inclui a nova tela e reinicia a rolagem do conteúdo ao trocar de tela.
+- `showTransactionDetails()`: seleciona uma movimentação e preenche o diálogo com ID fictício, operação, participante, instituição, valor, horário e status. Apresenta aviso destacado de simulação e sem validade bancária.
+- `closeTransactionDetails()` e `navigateFromReceipt()`: fechamento, retorno de foco e integração com prevenção/pós-golpe. O diálogo nativo também permite Escape e restringe o foco enquanto aberto.
+- `copyReceipt()`: usa Clipboard API; o texto copiado contém aviso de simulação no início e ausência de operação real no final. Informa sucesso ou falha, sem alegar cópia quando a permissão é negada.
+- `showDisputeEducation()`: disponível apenas para saídas. Exibe orientação para canais oficiais e preservação de evidências, afirmando que nenhuma contestação foi aberta. Permite acessar o guia pós-golpe.
+
+A movimentação suspeita tem aviso textual/visual e caminhos para prevenção e pós-golpe. Nenhuma consulta externa é realizada. Ocultar saldo não oculta valores individuais, totais de entradas/saídas ou comprovantes; a tela informa esse comportamento. Não existe exportação com aparência de documento bancário autêntico.
+
+### Decisões de interface e problemas resolvidos
+
+O novo link tem ícone Font Awesome e ocupa apenas uma linha abaixo do saldo. A tela reaproveita o contêiner de rolagem existente, preservando a barra inferior como item flexível de tamanho fixo. O comprovante usa `dialog` responsivo, com limite de altura e rolagem própria, avisos persistentes e ações com nomes explícitos. Os valores de entrada/saída têm indicação textual, além de cores. O resumo ocupa duas colunas, com saldo em largura total.
+
+A página principal não usava o arquivo de estilos externo: o vínculo foi incluído para carregar os novos estilos. As funções e telas anteriores foram preservadas; somente os textos Pix que sugeriam verificação real foram esclarecidos como cenários fictícios. A aplicação continua utilizável via servidor HTTP estático sem instalação de pacotes.
+
+### Testes executados e resultados
+
+Executados com Python HTTP server, Chromium headless e Playwright já disponíveis no ambiente:
+
+1. `node --check js/app.js` e `node --check js/transactions.js`: passaram.
+2. `node tests/statement.cjs`: passou. Verificou saldo inicial e compartilhado entre telas; abertura do extrato com saldo oculto; 12 IDs únicos; totais exatos; quantidades dos filtros 7/30/90; filtros de entradas e saídas e seus totais; detalhes de entrada, saída suspeita e saída em análise; ausência de contestação em entradas; alerta somente no cenário suspeito; orientação sem abertura real; navegação para prevenção e pós-golpe; fechamento por botão e Escape; estado vazio sem modificar os dados persistidos.
+3. Área de transferência: cópia real executada e texto lido pelo Chromium com permissão concedida; aviso SIMULAÇÃO EDUCACIONAL — SEM VALIDADE BANCÁRIA confirmado. Falha de permissão também exercitada por rejeição controlada e mensagem de erro confirmada.
+4. `node tests/balance.cjs`: teste de regressão executado com saldo inicial, dois cliques, classes dos ícones, nomes acessíveis, estado durante navegação, seis telas anteriores, três diagnósticos, modais, orientação MED, Pix seguro/suspeito, alteração de valor e recarga. Resultado final registrado abaixo após a conclusão da execução.
+
+Os testes do extrato disparam eventos DOM: verificam lógica e estado, sem atestar coordenadas, aparência ou sobreposição. O teste anterior usa cliques forçados e evento DOM no leitor animado. Essas condições são limites do teste, não evidência de validação visual completa.
+
+### Limitações e pendências técnicas
+
+As CDNs continuam bloqueadas neste ambiente: Tailwind, Font Awesome e Google Fonts não carregam. O navegador registra `tailwind is not defined` na configuração visual; os testes rejeitam outros erros de execução. A conferência dos glifos, layout final, responsividade visual, rolagem e ausência de sobreposição com a barra inferior ainda exige navegador com esses recursos carregados. Nenhum teste visual foi declarado aprovado.
+
+O Live Server do VS Code não foi executado; o servidor HTTP estático foi usado como equivalente para validação funcional. A Clipboard API depende de contexto seguro (HTTPS ou localhost) e permissão do navegador; há mensagem de falha quando indisponível. O HTML alternativo antigo permanece fora do escopo. Nenhuma publicação da Etapa 4 ou envio dessas alterações ao GitHub foi executado nesta tarefa.
+
+### Como reproduzir e próximas etapas
+
+No Live Server, abra `index.html`, teste ocultar saldo e clique em “Ver extrato”. Verifique os filtros, os detalhes e o aviso de simulação; copie um comprovante; selecione uma saída suspeita e acesse as orientações de contestação e os guias educativos. Feche também com Escape. Volte ao início e confirme a sincronização do saldo. Confira a lista longa rolando sem cobrir a barra inferior em telas estreitas.
+
+Para automatizar em ambiente com Playwright e Chromium já instalados, sirva a raiz com `python -m http.server 8000 --bind 127.0.0.1 --directory /workspace/Justec-Bank` e execute os dois arquivos em `tests`. O teste do extrato aceita `JUSTEC_TEST_URL` e `CHROMIUM_PATH` para outro endereço ou executável. A aplicação em si não precisa desses pacotes para funcionar.
+
+Próximas verificações recomendadas: inspeção visual com CDNs acessíveis em desktop e celular, navegação por teclado/leitor de tela e testes em outros navegadores. Se houver publicação futura, repetir os fluxos no endereço HTTPS e confirmar permissões de área de transferência.
+
+Resultado final da regressão após as últimas alterações: `node tests/balance.cjs` concluiu com código 0; todos os cenários funcionais listados passaram. Permaneceram apenas as falhas externas de CDN e os dois registros `tailwind is not defined` (carga e recarga), já descritos como pendências visuais.

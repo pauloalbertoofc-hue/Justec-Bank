@@ -1,6 +1,6 @@
 
 const bankState = {
-    balance: 2480.50,
+    balance: calculateTotals(statementScenario.transactions).net + statementScenario.openingBalance,
     isBalanceVisible: true
 };
 
@@ -9,11 +9,14 @@ let currentPixType = 'safe';
 
 function navigateTo(screenId) {
     // Oculta todas as telas
-    const screens = ['home', 'pix', 'screening', 'action-post', 'rights', 'edu-center'];
+    const screens = ['home', 'pix', 'screening', 'action-post', 'rights', 'edu-center', 'statement'];
     screens.forEach(id => {
         const el = document.getElementById(`screen-${id}`);
         if (el) el.classList.add('hidden');
     });
+
+    document.getElementById('app-content').scrollTop = 0;
+    if (screenId === 'statement') renderTransactions();
 
     // Reseta destaques dos botões do menu inferior
     const navIds = ['home', 'pix', 'screening', 'action', 'rights'];
@@ -55,10 +58,7 @@ function renderBalance() {
 
     if (bankState.isBalanceVisible) {
         balanceDisplay.textContent =
-            bankState.balance.toLocaleString("pt-BR", {
-                style: "currency",
-                currency: "BRL"
-            });
+            formatMoney(bankState.balance);
 
         eyeIcon.className = "fa-solid fa-eye";
     } else {
@@ -70,9 +70,11 @@ function renderBalance() {
 function toggleBalance() {
     bankState.isBalanceVisible = !bankState.isBalanceVisible;
     renderBalance();
+    renderStatementBalance();
 }
 
 renderBalance();
+renderStatementBalance();
 
 
 function openPixFlow(type) {
@@ -97,7 +99,7 @@ function openPixFlow(type) {
         badgeEl.innerText = "CONTA VERIFICADA";
 
         titleEl.innerHTML = `<i class="fa-solid fa-shield-check text-emerald-400 mr-1"></i> Análise de Segurança JUSTEC Guard`;
-        descEl.innerText = "Chave Pix frequente. Sem registros de contestação ou comportamentos suspeitos registrados no Banco Central.";
+        descEl.innerText = "Cenário fictício de Pix seguro para fins educativos. Nenhum dado bancário ou registro do Banco Central foi consultado.";
     } else {
         btnSafe.className = "py-2 px-2 text-[10px] font-bold rounded-lg bg-slate-800 text-emerald-400 border border-emerald-500/40 hover:bg-slate-700 transition flex items-center justify-center gap-1.5";
         btnSuspect.className = "py-2 px-2 text-[10px] font-bold rounded-lg bg-rose-600 text-white shadow transition flex items-center justify-center gap-1.5";
@@ -108,7 +110,7 @@ function openPixFlow(type) {
         badgeEl.innerText = "ALERTA MÁXIMO DE GOLPE";
 
         titleEl.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-rose-400 mr-1"></i> ALERTA PREVENTIVO DE FRAUDE`;
-        descEl.innerText = "Esta chave foi criada recentemente e tem denúncias de estelionato ativas. Recomendamos NÃO realizar esta transferência!";
+        descEl.innerText = "Cenário fictício com sinais de golpe para fins educativos. Nenhuma denúncia real foi consultada. Em uma situação semelhante, pare e confirme pelos canais oficiais.";
     }
 }
 
@@ -264,4 +266,128 @@ function closeAppModal() {
     const modal = document.getElementById('app-modal');
     modal.classList.remove('flex');
     modal.classList.add('hidden');
+}
+// Extrato exclusivamente demonstrativo. Centavos inteiros evitam erros de soma.
+function formatMoney(value) {
+    return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+}
+
+function calculateTotals(transactions) {
+    const totals = transactions.reduce((sum, item) => {
+        const cents = Math.round(item.amount * 100);
+        if (cents > 0) sum.incoming += cents;
+        else sum.outgoing -= cents;
+        return sum;
+    }, { incoming: 0, outgoing: 0 });
+    return { incoming: totals.incoming / 100, outgoing: totals.outgoing / 100,
+        net: (totals.incoming - totals.outgoing) / 100 };
+}
+
+function filterTransactions(period, type) {
+    const end = Date.parse(`${statementScenario.referenceDate}T23:59:59.999-03:00`);
+    const start = Date.parse(`${statementScenario.referenceDate}T00:00:00-03:00`) - (Number(period) - 1) * 86400000;
+    return statementScenario.transactions.filter(item => {
+        const date = Date.parse(item.date);
+        return date >= start && date <= end &&
+            (type === 'all' || (type === 'incoming' && item.amount > 0) || (type === 'outgoing' && item.amount < 0));
+    }).sort((a, b) => Date.parse(b.date) - Date.parse(a.date));
+}
+
+function transactionDate(value) {
+    return new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short', timeZone: 'America/Sao_Paulo' }).format(new Date(value));
+}
+
+function transactionStatus(status) {
+    return { completed: 'Concluída', review: 'Em análise', suspicious: 'Sinalizada como suspeita' }[status];
+}
+
+function renderStatementBalance() {
+    const el = document.getElementById('statement-balance');
+    if (!el) return;
+    el.textContent = bankState.isBalanceVisible ? formatMoney(bankState.balance) : 'R$ ••••••';
+    document.getElementById('statement-eye').className = bankState.isBalanceVisible ? 'fa-solid fa-eye' : 'fa-solid fa-eye-slash';
+    document.getElementById('statement-balance-toggle').setAttribute('aria-label', bankState.isBalanceVisible ? 'Ocultar saldo' : 'Exibir saldo');
+}
+
+function renderTransactions() {
+    const items = filterTransactions(document.getElementById('statement-period').value, document.getElementById('statement-type').value);
+    const totals = calculateTotals(items);
+    renderStatementBalance();
+    document.getElementById('statement-incoming').textContent = formatMoney(totals.incoming);
+    document.getElementById('statement-outgoing').textContent = formatMoney(totals.outgoing);
+    document.getElementById('statement-opening').textContent = formatMoney(statementScenario.openingBalance);
+    document.getElementById('statement-count').textContent = `${items.length} movimentações fictícias no filtro`;
+    const list = document.getElementById('statement-list');
+    list.replaceChildren();
+    if (!items.length) list.textContent = 'Nenhuma movimentação neste filtro.';
+    items.forEach(item => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = `transaction-item ${item.amount > 0 ? 'incoming' : 'outgoing'}`;
+        const heading = document.createElement('strong');
+        heading.textContent = `${item.amount > 0 ? '↓ Entrada' : '↑ Saída'} · ${item.description}`;
+        const participant = document.createElement('span');
+        participant.textContent = item.participant.name;
+        const value = document.createElement('b');
+        value.textContent = formatMoney(item.amount);
+        const date = document.createElement('small');
+        date.textContent = transactionDate(item.date);
+        const status = document.createElement('small');
+        status.className = `transaction-status ${item.status}`;
+        status.textContent = `${item.status === 'suspicious' ? '⚠ ' : ''}${transactionStatus(item.status)} · Simulação`;
+        button.append(heading, value, participant, date, status);
+        button.addEventListener('click', () => showTransactionDetails(item.id));
+        list.append(button);
+    });
+}
+
+let selectedTransaction = null;
+let receiptReturnFocus = null;
+function showTransactionDetails(id) {
+    const item = statementScenario.transactions.find(transaction => transaction.id === id);
+    if (!item) return;
+    selectedTransaction = item;
+    receiptReturnFocus = document.activeElement;
+    const details = document.getElementById('receipt-details');
+    details.replaceChildren();
+    for (const [label, value] of [
+        ['Identificador fictício', item.id], ['Data e horário', transactionDate(item.date)],
+        ['Operação', item.description], ['Participante fictício', item.participant.name],
+        ['Instituição fictícia', item.participant.institution], ['Valor', formatMoney(item.amount)],
+        ['Status simulado', transactionStatus(item.status)]
+    ]) {
+        const line = document.createElement('p'); line.textContent = `${label}: ${value}`; details.append(line);
+    }
+    document.getElementById('receipt-feedback').textContent = '';
+    document.getElementById('receipt-dispute').hidden = item.amount > 0;
+    document.getElementById('receipt-education').hidden = true;
+    document.getElementById('receipt-alert').hidden = item.status !== 'suspicious';
+    document.getElementById('statement-dialog').showModal();
+}
+
+function closeTransactionDetails() {
+    document.getElementById('statement-dialog').close();
+    receiptReturnFocus?.focus();
+}
+
+function navigateFromReceipt(screen) {
+    closeTransactionDetails();
+    navigateTo(screen);
+}
+
+function showDisputeEducation() {
+    if (!selectedTransaction || selectedTransaction.amount >= 0) return;
+    document.getElementById('receipt-education').hidden = false;
+}
+
+async function copyReceipt() {
+    const item = selectedTransaction;
+    if (!item) return;
+    const text = `SIMULAÇÃO EDUCACIONAL — SEM VALIDADE BANCÁRIA\nJUSTEC Bank — Comprovante demonstrativo\n${item.id}\n${transactionDate(item.date)}\n${item.description}\nParticipante fictício: ${item.participant.name}\n${formatMoney(item.amount)}\nStatus simulado: ${transactionStatus(item.status)}\nNenhuma operação bancária real foi realizada.`;
+    try {
+        await navigator.clipboard.writeText(text);
+        document.getElementById('receipt-feedback').textContent = 'Comprovante simulado copiado. Sem validade bancária.';
+    } catch {
+        document.getElementById('receipt-feedback').textContent = 'Não foi possível copiar. Permita acesso à área de transferência ou selecione os dados manualmente. Simulação sem validade bancária.';
+    }
 }

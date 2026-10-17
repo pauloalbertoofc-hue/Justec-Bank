@@ -74,6 +74,7 @@
             100% { transform: scale(0.95); opacity: 0.8; }
         }
     </style>
+    <link rel="stylesheet" href="./css/style.css">
 </head>
 <body class="min-h-screen flex items-center justify-center p-2 sm:p-6 text-slate-100">
 
@@ -116,7 +117,7 @@
         </div>
 
         <!-- Main Scrollable App Content -->
-        <div class="flex-1 bg-slate-950 px-4 py-3 overflow-y-auto no-scrollbar relative flex flex-col justify-between">
+        <div id="app-content" class="flex-1 min-h-0 bg-slate-950 px-4 py-3 overflow-y-auto no-scrollbar relative flex flex-col justify-between">
 
             <!-- ================= TELA 1: HOME DO BANCO DIGITAL ================= -->
             <div id="screen-home" class="space-y-3.5 my-auto">
@@ -146,6 +147,7 @@
                             <i id="eye-icon" class="fa-solid fa-eye"></i>
                         </button>
                     </div>
+                    <button type="button" class="statement-link" onclick="navigateTo('statement')"><i class="fa-solid fa-receipt" aria-hidden="true"></i> Ver extrato <span aria-hidden="true">›</span></button>
                 </div>
 
                 <!-- Destaque Central de Segurança Educacional -->
@@ -246,6 +248,27 @@
                 </div>
 
             </div>
+
+            <section id="screen-statement" class="hidden statement-screen" aria-labelledby="statement-title">
+                <header class="statement-heading">
+                    <button type="button" onclick="navigateTo('home')" aria-label="Voltar ao início">←</button>
+                    <div><small>JUSTEC BANK · SIMULAÇÃO</small><h2 id="statement-title">Extrato da conta</h2></div>
+                </header>
+                <p class="statement-notice">Dados fictícios · Sem validade bancária. Cenário demonstrativo até 17/10/2026.</p>
+                <div class="statement-summary">
+                    <div><span>Saldo disponível</span><strong id="statement-balance"></strong><button type="button" id="statement-balance-toggle" onclick="toggleBalance()" aria-controls="statement-balance" aria-label="Ocultar saldo"><i id="statement-eye" class="fa-solid fa-eye" aria-hidden="true"></i></button></div>
+                    <div><span>Entradas no filtro</span><strong id="statement-incoming"></strong></div>
+                    <div><span>Saídas no filtro</span><strong id="statement-outgoing"></strong></div>
+                </div>
+                <p class="statement-caption">Saldo atual do cenário: saldo inicial fictício + todas as movimentações. Valores em análise e suspeitos já estão contabilizados nesta simulação.</p>
+                <div class="statement-filters">
+                    <label>Período<select id="statement-period" onchange="renderTransactions()"><option value="7">7 dias</option><option value="30">30 dias</option><option value="90" selected>90 dias</option></select></label>
+                    <label>Tipo<select id="statement-type" onchange="renderTransactions()"><option value="all">Todas</option><option value="incoming">Entradas</option><option value="outgoing">Saídas</option></select></label>
+                </div>
+                <p id="statement-count" class="statement-caption" aria-live="polite"></p>
+                <div id="statement-list" class="statement-list"></div>
+                <p class="statement-caption">Saldo inicial fictício: <span id="statement-opening"></span>. Ocultar o saldo não oculta os valores das movimentações ou dos comprovantes.</p>
+            </section>
 
             <!-- ================= TELA 2: FLUXO PIX COM BIOMETRIA DIGITAL ================= -->
             <div id="screen-pix" class="hidden space-y-3.5">
@@ -549,7 +572,7 @@
         </div>
 
         <!-- Bottom Navigation Bar (Bancária) -->
-        <div class="bg-slate-900 border-t border-slate-800/80 px-3 py-2 flex justify-around items-center z-20">
+        <div class="bg-slate-900 border-t border-slate-800/80 px-3 py-2 flex-none flex justify-around items-center z-20">
             <button onclick="navigateTo('home')" id="nav-btn-home" class="flex flex-col items-center text-bb-yellow transition">
                 <i class="fa-solid fa-house text-sm"></i>
                 <span class="text-[9px] font-bold mt-1">Início</span>
@@ -602,6 +625,28 @@
         </div>
     </div>
 
+    <dialog id="statement-dialog" class="statement-dialog" aria-labelledby="receipt-title">
+        <div class="statement-receipt">
+            <button type="button" class="receipt-close" onclick="closeTransactionDetails()" aria-label="Fechar comprovante">×</button>
+            <p class="statement-notice">SIMULAÇÃO EDUCACIONAL · SEM VALIDADE BANCÁRIA</p>
+            <h2 id="receipt-title">Comprovante demonstrativo</h2>
+            <div id="receipt-details"></div>
+            <button type="button" id="receipt-copy" onclick="copyReceipt()">Copiar comprovante simulado</button>
+            <p id="receipt-feedback" role="status"></p>
+            <button type="button" id="receipt-dispute" onclick="showDisputeEducation()">Não reconheço esta transação</button>
+            <div id="receipt-education" hidden>
+                <h3>Orientação educativa</h3>
+                <p>Nenhuma contestação foi aberta. Se isso acontecer de verdade, procure o banco pelo aplicativo ou telefone oficial, preserve evidências e solicite avaliação da movimentação. Não compartilhe senhas nem faça transferências de teste.</p>
+                <button type="button" onclick="navigateFromReceipt('action-post')">Ver guia pós-golpe</button>
+            </div>
+            <div id="receipt-alert" hidden>
+                <p>Alerta fictício deste cenário. Nenhuma conta ou fraude real foi verificada.</p>
+                <button type="button" onclick="navigateFromReceipt('screening')">Ver prevenção</button>
+                <button type="button" onclick="navigateFromReceipt('action-post')">Ver guia pós-golpe</button>
+            </div>
+        </div>
+    </dialog>
+    <script src="./js/transactions.js"></script>
     <script src="./js/app.js"></script>
 </body>
 </html>
