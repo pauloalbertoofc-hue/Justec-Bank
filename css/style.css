@@ -4,9 +4,6 @@ font-family: 'Plus Jakarta Sans', sans-serif;
     background: radial-gradient(circle at top center, #0F172A 0%, #080D1A 60%, #030712 100%);
     min-height: 100vh;
 }
-.phone-frame {
-    box-shadow: 0 35px 70px -15px rgba(0, 0, 0, 0.95), 0 0 0 12px #1E293B, 0 0 0 14px #334155, 0 0 45px rgba(255, 204, 0, 0.25);
-}
 .yellow-gradient-btn {
     background: linear-gradient(135deg, #FFCC00 0%, #E6B800 100%);
 }
@@ -94,3 +91,76 @@ font-family: 'Plus Jakarta Sans', sans-serif;
 .demo-screen button:disabled { opacity: .5; cursor: default; }
 .demo-notice, #pix-feedback, #review-feedback { font-size: 11px; color: #fde68a; line-height: 1.6; }
 [hidden], .hidden { display: none !important; }
+
+/* Etapa 7: página responsiva, com uma única área de rolagem. */
+html { scroll-padding-top: 88px; }
+body.app-body { margin: 0; padding: 0; display: block; background: #080d1a; }
+.app-shell { min-height: 100dvh; width: 100%; background: #080d1a; }
+.app-header { position: sticky; top: 0; z-index: 30; min-height: 76px; }
+.app-content { width: 100%; min-width: 0; padding: 16px 16px calc(96px + env(safe-area-inset-bottom)); }
+.app-content > [id^="screen-"] { min-width: 0; }
+.home-dashboard { display: grid; gap: 16px; align-items: start; }
+.home-dashboard > * { min-width: 0; margin: 0; }
+.app-sidebar { display: none; }
+.app-mobile-nav { position: fixed; bottom: 0; left: 0; right: 0; z-index: 40; display: grid; grid-template-columns: repeat(5,minmax(0,1fr)); padding: 8px 4px calc(8px + env(safe-area-inset-bottom)); }
+.app-mobile-nav button { min-height: 48px; justify-content: center; gap: 3px; color: #94a3b8; border-radius: 10px; }
+.app-nav [aria-current="page"] { color: #ffcc00; background: #ffcc0010; }
+.app-nav button:hover { color: #ffcc00; background: #ffcc000a; }
+.app-nav button:focus-visible, .app-header button:focus-visible { outline: 2px solid #ffcc00; outline-offset: -2px; }
+.app-content button, .app-header button { min-height: 44px; }
+.statement-heading { align-items: center; }
+.statement-heading > div { min-width: 0; }
+#app-modal { overflow-y: auto; }
+#modal-box { max-height: calc(100dvh - 40px); overflow-y: auto; }
+.statement-dialog { width: min(560px, calc(100% - 32px)); max-height: calc(100dvh - 40px); }
+body:has(#app-modal:not(.hidden)), body:has(dialog[open]) { overflow: hidden; }
+.skip-link { position: fixed; left: 12px; top: -80px; z-index: 100; background: #ffcc00; color: #080d1a; padding: 12px; border-radius: 8px; }
+.skip-link:focus { top: 12px; }
+@media (min-width: 640px) {
+    .app-content { padding-left: 28px; padding-right: 28px; }
+    .statement-filters { max-width: 640px; }
+    .demo-screen, .statement-screen { max-width: 1000px; margin-inline: auto; }
+    .demo-services { gap: 12px; }
+    .demo-panel .demo-services button { min-height: 92px; font-size: 12px; }
+}
+@media (min-width: 768px) {
+    .home-dashboard { grid-template-columns: minmax(240px, .85fr) minmax(320px, 1.15fr); gap: 20px; }
+    #home-security { grid-column: 1 / -1; }
+    #home-security > .grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+    #home-balance { padding: 24px; }
+    #balance-display { font-size: 32px; }
+    .demo-panel { padding: 20px; font-size: 14px; }
+    .demo-banner { font-size: 12px; padding: 12px 16px; margin-bottom: 24px; }
+    .statement-heading h2 { font-size: 22px; }
+    .statement-summary { grid-template-columns: 2fr 1fr 1fr; }
+    .statement-summary > div:first-child { grid-column: auto; }
+    .statement-summary strong { font-size: 20px; }
+    .transaction-item { padding: 16px; }
+    .transaction-item strong, .transaction-item b { font-size: 14px; }
+    .transaction-item span, .transaction-item small, .statement-caption { font-size: 12px; }
+    .statement-receipt { font-size: 14px; padding: 28px; }
+    #screen-rights, #screen-screening, #screen-action-post, #screen-edu-center { max-width: 1000px; margin-inline: auto; }
+    #screen-rights p, #screen-screening p, #screen-action-post p, #screen-edu-center p, #home-security p { font-size: 13px; }
+}
+@media (min-width: 1024px) {
+    .app-shell { display: grid; grid-template-columns: 232px minmax(0,1fr); align-items: start; }
+    .app-header { grid-column: 1 / -1; padding-inline: 28px; }
+    .app-sidebar { display: flex; flex-direction: column; position: sticky; top: 76px; min-height: calc(100dvh - 76px); padding: 24px 16px; border-right: 1px solid #1e293b; background: #0a0f1d; }
+    .app-sidebar button { display: flex; align-items: center; gap: 12px; padding: 12px; margin: 2px 0; color: #cbd5e1; text-align: left; font-size: 12px; border-radius: 12px; min-height: 44px; }
+    .app-sidebar i { width: 20px; text-align: center; }
+    .sidebar-label { color: #64748b; font-size: 10px; font-weight: 800; letter-spacing: .12em; padding: 0 12px 16px; }
+    .sidebar-disclaimer { margin: 28px 12px 0; color: #94a3b8; font-size: 11px; line-height: 1.8; }
+    .app-content { grid-column: 2; width: 100%; max-width: 1520px; margin-inline: auto; padding: 28px 32px 48px; }
+    .app-mobile-nav { display: none; }
+    .demo-services i { font-size: 23px; }
+    .home-dashboard h2 { font-size: 16px; }
+    #screen-security .demo-panel > button { padding: 12px 20px; }
+}
+@media (min-width: 1600px) {
+    .home-dashboard { grid-template-columns: minmax(260px,.85fr) minmax(360px,1.2fr) minmax(320px,1fr); gap: 24px; }
+    #home-security { grid-column: auto; }
+    #home-security > .grid { grid-template-columns: 1fr; }
+}
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { scroll-behavior: auto !important; animation: none !important; transition: none !important; }
+}

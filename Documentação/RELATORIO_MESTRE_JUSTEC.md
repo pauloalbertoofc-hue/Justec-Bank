@@ -126,3 +126,52 @@ No terminal integrado do VS Code, na raiz do projeto, executar `node js/guard/de
 A auditoria é local em memória e serializável, sem persistência automática, assinatura criptográfica ou identidade real de revisores. A imutabilidade é lógica, não garantia contra reconstrução externa de históricos. Migração dos registros provisórios 0.1.0 não foi implementada; versões incompatíveis são rejeitadas. Não há avaliação empírica de precisão ou validade jurídica. Pontuação não é probabilidade nem prova de fraude. Chave, conta e operação permanecem objetos distintos; nenhuma medida real é executada. Integração futura, persistência e adaptações oficiais continuam fora do escopo desta etapa.
 
 Resultado final da regressão após a adequação: `JUSTEC_RESOURCE_BRIDGE=1 node tests/pix.cjs` passou, sem erros JavaScript, incluindo preservação do saldo nas interrupções, lançamentos únicos e revisão de falso positivo. A comparação Git confirmou que HTML, CSS e todos os scripts do fluxo atual permanecem inalterados.
+
+
+## Etapa 7 — Aplicação web responsiva
+
+### Diagnóstico e arquivos
+
+O layout estava limitado ao contêiner max-w-[400px], h-[850px], phone-frame, bordas/arredondamento externos, barra de status fictícia e indicador inferior de aparelho. O conteúdo usava overflow-y-auto dentro da altura fixa, concorrendo com a rolagem do navegador. Essa estrutura foi substituída por shell responsivo, sem reescrever as telas ou os módulos bancários.
+
+Modificados: `index.html`, `css/style.css`, `js/app.js`, `tests/layout.cjs`, `tests/balance.cjs` e relatórios. O HTML recebeu landmarks header/main/nav, navegação lateral, atributos data-nav-screen, IDs dos cartões da Home e link de pular para o conteúdo. O logotipo passou a ser um link acessível para o início. Foram removidos os elementos simulados do dispositivo. A barra inferior continua no HTML para mobile. CSS e funções bancárias não foram duplicados para cada formato.
+
+### Estratégia e breakpoints
+
+- Base mobile: largura integral da tela, saldo acima dos serviços, Rota da Segurança abaixo, cabeçalho sticky e navegação inferior fixed. A área de conteúdo possui espaçamento inferior de 96px mais safe-area-inset-bottom para que as últimas ações não fiquem cobertas. Botões da aplicação têm alvo mínimo de 44px e navegação inferior de 48px.
+- 640px: margens mais amplas e formulários/listas com largura de leitura limitada; serviços maiores.
+- 768px: Home em duas colunas para saldo/serviços e Rota da Segurança em largura integral com duas ações lado a lado; resumo do extrato em três colunas. Tipografia e espaçamentos ampliados para tablet/desktop.
+- 1024px: menu lateral de 232px substitui a barra inferior. Cabeçalho e lateral são sticky, e o conteúdo central usa a largura restante com máximo de 1520px, mantendo margens proporcionais em monitores grandes.
+- 1600px: saldo, serviços e segurança passam a ocupar três colunas. A Rota da Segurança volta a dispor suas ações verticalmente dentro do cartão.
+
+A paleta azul-escuro/amarelo, Plus Jakarta Sans, Font Awesome e cartões arredondados foram preservados. O limite central é para leitura e distribuição de dashboard, não uma moldura ampliada de smartphone.
+
+### Navegação e rolagem
+
+`navigateTo()` continua sendo a função compartilhada de troca de tela. `syncNavigation(screenId)` atualiza ambos os menus usando data-nav-screen e aria-current="page", sem duplicar estado. No desktop cada tela tem entrada própria. No mobile, Extrato destaca Início; Proteção, Revisões, Central e Centro educativo destacam Triagem como seção relacionada. Pix chama a função existente openPixFlow em ambos os formatos. A seleção permanece coerente ao redimensionar sem reinicializar saldo ou cenário.
+
+A área app-content deixou de ter altura fixa, overflow interno e barra de rolagem escondida. A página usa a rolagem natural do documento em todos os formatos. Navegar reinicia a rolagem da janela. Cabeçalho/lateral mantêm contexto, e o rodapé mobile respeita a área segura do dispositivo. Modais têm altura máxima pela viewport e rolagem própria somente enquanto abertos; o documento é bloqueado nesse período, evitando rolagens concorrentes. O comprovante fica centralizado com largura máxima de 560px.
+
+### Testes executados e resultados
+
+`JUSTEC_RESOURCE_BRIDGE=1 node tests/layout.cjs`: passou em **360, 390, 768, 1024, 1366 e 1920px**, com altura de 900px. Em cada largura, foram exercitadas por cliques as telas Início, Pix, Extrato, Central de segurança, Pós-golpe, Proteção, Revisões e Direitos. Asserções verificaram uma única tela ativa, navegação correta, destaque sincronizado nos dois menus, largura real do shell, aproveitamento horizontal desktop, ausência de overflow horizontal, ausência de overflow-y scroll/auto no conteúdo e acessibilidade dos últimos botões acima da barra mobile. Verificados também modal de diagnóstico e comprovante dentro da viewport, fechamento e saldo oculto preservado entre formatos. Resultado: seis larguras, oito telas por largura e dois modais por largura, sem erros JavaScript.
+
+Capturas de Home em 390, 1366 e 1920px foram inspecionadas visualmente: mobile preserva ordem dos elementos e identidade; desktop usa menu lateral e cartões distribuídos em colunas, sem aparelho simulado. As capturas das seis larguras são geradas em /tmp/justec-responsive-<largura>.png durante o teste, sem garantia de retenção em outras máquinas.
+
+Regressões executadas: `tests/pix.cjs` passou (baixo/moderado/alto, confirmações, valores inválidos, saldo insuficiente, débito/extrato único, interrupções, revisão e reinício); `tests/statement.cjs` passou (filtros, totais, detalhes, clipboard, modais e contestação educativa); `tests/balance.cjs` passou (ocultação, ícones, navegação, triagem e MED). Os três usaram JUSTEC_RESOURCE_BRIDGE=1 para carregar os recursos oficiais via HTTPS pelo adaptador de teste previamente documentado, sem desativar TLS. Não foram observados erros JavaScript nas execuções finais.
+
+`node --test tests/guard.test.mjs`: **39 aprovados, 0 falhas, 0 ignorados**. `node --check js/app.js` e verificação de espaços/diff passaram. Comparação Git confirmou ausência de alterações em js/pix.js, js/state.js, js/risk.js, js/transactions.js e js/guard: motores e regras não foram alterados nem integrados pela responsividade.
+
+### Problemas encontrados e soluções
+
+A regressão antiga tentava clicar na barra mobile com a viewport desktop padrão, onde ela agora está intencionalmente oculta. O teste foi configurado para 390px; o comportamento desktop é coberto pela nova suíte de layout com cliques no menu lateral. O seletor antigo do acesso educativo também precisava distinguir o cabeçalho da nova entrada lateral; foi limitado à app-header. Nenhuma funcionalidade foi desativada para fazer os testes passarem.
+
+Os antigos estilos phone-frame e restrições de 400x850 foram removidos. A lógica antiga que substituía classes de um único menu foi trocada por aria-current compartilhado; os estilos de estado não dependem de cada função bancária. A nova navegação não reinicia o saldo ao trocar apenas o tamanho da janela.
+
+### Validação local, publicação e limitações
+
+No VS Code, abrir index.html com Live Server. No modo responsivo do navegador, testar as seis larguras citadas, acessar menus/serviços, ocultar saldo, navegar ao extrato, simular Pix, consultar Proteção/Revisões e abrir orientações MED. Rolar até os últimos controles e conferir que o rodapé mobile não os cobre. Alternar desktop/mobile sem recarregar para conferir estado e destaque.
+
+Na configuração existente, enviar o commit para a branch main do GitHub aciona o deploy automático conectado à Vercel. Acompanhar o status Vercel do commit e conferir o endereço público após a conclusão; se houver cache, recarregar sem cache. Publicação não integra o motor experimental ao Pix.
+
+As verificações foram executadas em Chromium headless com servidor HTTP estático; a extensão Live Server em si não foi executada. Não foram testados dispositivos físicos, Safari/Firefox, leitor de tela, ampliação de texto em 200% ou todas as alturas/orientações possíveis. O uso de safe-area e prefers-reduced-motion está implementado, mas não foi validado em aparelho real. Recursos visuais continuam dependendo de CDNs. Recomenda-se uma rodada posterior de acessibilidade e dispositivos físicos. A aplicação permanece demonstrativa, sem operações financeiras reais.

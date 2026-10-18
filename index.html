@@ -38,9 +38,6 @@
             background: radial-gradient(circle at top center, #0F172A 0%, #080D1A 60%, #030712 100%);
             min-height: 100vh;
         }
-        .phone-frame {
-            box-shadow: 0 35px 70px -15px rgba(0, 0, 0, 0.95), 0 0 0 12px #1E293B, 0 0 0 14px #334155, 0 0 45px rgba(255, 204, 0, 0.25);
-        }
         .yellow-gradient-btn {
             background: linear-gradient(135deg, #FFCC00 0%, #E6B800 100%);
         }
@@ -76,26 +73,14 @@
     </style>
     <link rel="stylesheet" href="./css/style.css">
 </head>
-<body class="min-h-screen flex items-center justify-center p-2 sm:p-6 text-slate-100">
+<body class="app-body text-slate-100">
+    <a class="skip-link" href="#app-content">Pular para o conteúdo</a>
 
-    <div class="w-full max-w-[400px] h-[850px] bg-slate-950 rounded-[48px] phone-frame relative overflow-hidden flex flex-col justify-between border-2 border-amber-500/30 shadow-2xl">
+    <div class="app-shell">
         
-        <!-- Status Bar -->
-        <div class="w-full px-7 pt-3.5 pb-2 flex justify-between items-center text-xs z-30 bg-bb-blueDark/90 backdrop-blur-md text-slate-200 border-b border-amber-500/20">
-            <span class="font-bold tracking-tight text-bb-yellow">09:42</span>
-            <div class="w-20 h-4 bg-slate-950 rounded-full border border-slate-800/80 flex items-center justify-center">
-                <div class="w-2.5 h-2.5 bg-bb-yellow/80 rounded-full"></div>
-            </div>
-            <div class="flex items-center space-x-2 text-slate-300 text-[11px]">
-                <i class="fa-solid fa-signal text-bb-yellow"></i>
-                <i class="fa-solid fa-wifi text-bb-yellow"></i>
-                <i class="fa-solid fa-battery-three-quarters text-emerald-400"></i>
-            </div>
-        </div>
-
         <!-- App Header (JUSTEC Bank) -->
-        <div class="bg-gradient-to-r from-bb-blueDark via-slate-900 to-bb-blue px-4 py-3 flex items-center justify-between z-20 border-b border-amber-500/30 shadow-md">
-            <div class="flex items-center space-x-2.5 cursor-pointer" onclick="navigateTo('home')">
+        <header class="app-header bg-gradient-to-r from-bb-blueDark via-slate-900 to-bb-blue px-4 py-3 flex items-center justify-between border-b border-amber-500/30 shadow-md">
+            <a href="#screen-home" class="flex items-center space-x-2.5 cursor-pointer" aria-label="JUSTEC Bank — início" onclick="event.preventDefault(); navigateTo('home')">
                 <div class="w-10 h-10 bg-bb-yellow rounded-xl flex items-center justify-center text-bb-blueDark shadow-lg shadow-amber-500/20 font-black text-lg border border-white/20">
                     <i class="fa-solid fa-building-columns"></i>
                 </div>
@@ -108,23 +93,24 @@
                         <i class="fa-solid fa-shield-halved text-emerald-400"></i> Proteção Ativa
                     </p>
                 </div>
-            </div>
+            </a>
             
             <button onclick="navigateTo('edu-center')" class="p-2 bg-amber-500/10 hover:bg-amber-500/20 rounded-xl text-bb-yellow transition border border-amber-500/30 flex items-center gap-1.5 text-xs">
                 <i class="fa-solid fa-graduation-cap text-bb-yellow"></i>
                 <span class="text-[10px] font-bold text-white">Segurança</span>
             </button>
-        </div>
+        </header>
 
-        <!-- Main Scrollable App Content -->
-        <div id="app-content" class="flex-1 min-h-0 bg-slate-950 px-4 py-3 overflow-y-auto no-scrollbar relative flex flex-col justify-between">
+<nav id="desktop-nav" class="app-sidebar app-nav" aria-label="Navegação principal" data-nav-variant="desktop"><p class="sidebar-label">SEU JUSTEC</p><button type="button" data-nav-screen="home" onclick="navigateTo('home')"><i class="fa-solid fa-house" aria-hidden="true"></i><span>Visão geral</span></button><button type="button" data-nav-screen="pix" onclick="openPixFlow('safe')"><i class="fa-solid fa-paper-plane" aria-hidden="true"></i><span>Fazer Pix</span></button><button type="button" data-nav-screen="statement" onclick="navigateTo('statement')"><i class="fa-solid fa-receipt" aria-hidden="true"></i><span>Movimentações</span></button><button type="button" data-nav-screen="screening" onclick="navigateTo('screening')"><i class="fa-solid fa-magnifying-glass-chart" aria-hidden="true"></i><span>Triagem preventiva</span></button><button type="button" data-nav-screen="protection" onclick="navigateTo('protection')"><i class="fa-solid fa-key" aria-hidden="true"></i><span>Proteção de chaves</span></button><button type="button" data-nav-screen="reviews" onclick="navigateTo('reviews')"><i class="fa-solid fa-file-signature" aria-hidden="true"></i><span>Contestações</span></button><button type="button" data-nav-screen="security" onclick="navigateTo('security')"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i><span>Central de segurança</span></button><button type="button" data-nav-screen="action-post" onclick="navigateTo('action-post')"><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i><span>Pós-golpe e MED</span></button><button type="button" data-nav-screen="rights" onclick="navigateTo('rights')"><i class="fa-solid fa-book-bookmark" aria-hidden="true"></i><span>Seus direitos</span></button><button type="button" data-nav-screen="edu-center" onclick="navigateTo('edu-center')"><i class="fa-solid fa-graduation-cap" aria-hidden="true"></i><span>Centro educativo</span></button><p class="sidebar-disclaimer">JUSTEC Guard<br>Proteção demonstrativa.<br>Sem operações bancárias reais.</p></nav>
+        <!-- Conteúdo com rolagem natural da página -->
+        <main id="app-content" tabindex="-1" class="app-content">
 
             <p class="demo-banner">Ambiente de demonstração — operações fictícias</p>
             <!-- ================= TELA 1: HOME DO BANCO DIGITAL ================= -->
-            <div id="screen-home" class="space-y-3.5 my-auto">
+            <div id="screen-home" class="home-dashboard">
                 
                 <!-- Card de Saldo e Conta -->
-                <div class="glass-card p-4 rounded-2xl relative overflow-hidden border-l-4 border-l-bb-yellow shadow-lg">
+                <div id="home-balance" class="glass-card p-4 rounded-2xl relative overflow-hidden border-l-4 border-l-bb-yellow shadow-lg">
                     <div class="flex justify-between items-start text-xs text-slate-400 mb-1">
                         <span class="font-bold text-slate-300">Olá, Ana Paula!</span>
                         <span class="text-[10px] bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-full font-bold flex items-center gap-1 border border-emerald-500/30">
@@ -151,9 +137,9 @@
                     <button type="button" class="statement-link" onclick="navigateTo('statement')"><i class="fa-solid fa-receipt" aria-hidden="true"></i> Ver extrato <span aria-hidden="true">›</span></button>
                 </div>
 
-                <section class="demo-panel" aria-labelledby="services-title"><h2 id="services-title">Serviços Bancários</h2><div class="demo-services"><button type="button" onclick="openPixFlow('safe')"><i class="fa-solid fa-paper-plane" aria-hidden="true"></i><span>Fazer Pix</span></button><button type="button" onclick="navigateTo('statement')"><i class="fa-solid fa-receipt" aria-hidden="true"></i><span>Consultar movimentações</span></button><button type="button" onclick="navigateTo('protection')"><i class="fa-solid fa-key" aria-hidden="true"></i><span>Verificar chave Pix</span></button><button type="button" onclick="navigateTo('protection')"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i><span>Bloqueios preventivos</span></button><button type="button" onclick="navigateTo('reviews')"><i class="fa-solid fa-file-signature" aria-hidden="true"></i><span>Contestações</span></button><button type="button" onclick="navigateTo('security')"><i class="fa-solid fa-lock" aria-hidden="true"></i><span>Central de segurança</span></button></div></section>
+                <section id="home-services" class="demo-panel" aria-labelledby="services-title"><h2 id="services-title">Serviços Bancários</h2><div class="demo-services"><button type="button" onclick="openPixFlow('safe')"><i class="fa-solid fa-paper-plane" aria-hidden="true"></i><span>Fazer Pix</span></button><button type="button" onclick="navigateTo('statement')"><i class="fa-solid fa-receipt" aria-hidden="true"></i><span>Consultar movimentações</span></button><button type="button" onclick="navigateTo('protection')"><i class="fa-solid fa-key" aria-hidden="true"></i><span>Verificar chave Pix</span></button><button type="button" onclick="navigateTo('protection')"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i><span>Bloqueios preventivos</span></button><button type="button" onclick="navigateTo('reviews')"><i class="fa-solid fa-file-signature" aria-hidden="true"></i><span>Contestações</span></button><button type="button" onclick="navigateTo('security')"><i class="fa-solid fa-lock" aria-hidden="true"></i><span>Central de segurança</span></button></div></section>
                 <!-- Destaque Central de Segurança Educacional -->
-                <div class="bg-gradient-to-r from-amber-950/90 via-slate-900 to-bb-blueDark/80 border border-amber-500/40 p-3.5 rounded-2xl shadow-xl space-y-2">
+                <div id="home-security" class="bg-gradient-to-r from-amber-950/90 via-slate-900 to-bb-blueDark/80 border border-amber-500/40 p-3.5 rounded-2xl shadow-xl space-y-2">
                     <div class="flex items-center justify-between">
                         <span class="text-[10px] font-extrabold uppercase text-bb-yellow tracking-wider flex items-center gap-1.5">
                             <i class="fa-solid fa-shield-cat"></i> ROTA DA SEGURANÇA JUSTEC
@@ -471,36 +457,32 @@
                 </button>
             </div>
 
-        </div>
+        </main>
 
         <!-- Bottom Navigation Bar (Bancária) -->
-        <div class="bg-slate-900 border-t border-slate-800/80 px-3 py-2 flex-none flex justify-around items-center z-20">
-            <button onclick="navigateTo('home')" id="nav-btn-home" class="flex flex-col items-center text-bb-yellow transition">
+        <nav id="mobile-nav" class="app-mobile-nav app-nav bg-slate-900 border-t border-slate-800/80" aria-label="Navegação principal mobile" data-nav-variant="mobile">
+            <button onclick="navigateTo('home')" id="nav-btn-home" data-nav-screen="home" class="flex flex-col items-center text-bb-yellow transition">
                 <i class="fa-solid fa-house text-sm"></i>
                 <span class="text-[9px] font-bold mt-1">Início</span>
             </button>
-            <button onclick="openPixFlow('safe')" id="nav-btn-pix" class="flex flex-col items-center text-slate-500 hover:text-slate-300 transition">
+            <button onclick="openPixFlow('safe')" id="nav-btn-pix" data-nav-screen="pix" class="flex flex-col items-center text-slate-500 hover:text-slate-300 transition">
                 <i class="fa-solid fa-paper-plane text-sm"></i>
                 <span class="text-[9px] font-bold mt-1">Pix</span>
             </button>
-            <button onclick="navigateTo('screening')" id="nav-btn-screening" class="flex flex-col items-center text-slate-500 hover:text-slate-300 transition">
+            <button onclick="navigateTo('screening')" id="nav-btn-screening" data-nav-screen="screening" class="flex flex-col items-center text-slate-500 hover:text-slate-300 transition">
                 <i class="fa-solid fa-magnifying-glass-chart text-sm"></i>
                 <span class="text-[9px] font-bold mt-1">Triagem</span>
             </button>
-            <button onclick="navigateTo('action-post')" id="nav-btn-action" class="flex flex-col items-center text-slate-500 hover:text-slate-300 transition">
+            <button onclick="navigateTo('action-post')" id="nav-btn-action" data-nav-screen="action-post" class="flex flex-col items-center text-slate-500 hover:text-slate-300 transition">
                 <i class="fa-solid fa-triangle-exclamation text-sm"></i>
                 <span class="text-[9px] font-bold mt-1">Pós-Golpe</span>
             </button>
-            <button onclick="navigateTo('rights')" id="nav-btn-rights" class="flex flex-col items-center text-slate-500 hover:text-slate-300 transition">
+            <button onclick="navigateTo('rights')" id="nav-btn-rights" data-nav-screen="rights" class="flex flex-col items-center text-slate-500 hover:text-slate-300 transition">
                 <i class="fa-solid fa-book-bookmark text-sm"></i>
                 <span class="text-[9px] font-bold mt-1">Direitos</span>
             </button>
-        </div>
+        </nav>
 
-        <!-- Home Indicator -->
-        <div class="w-full py-1.5 bg-slate-950 flex justify-center items-center">
-            <div class="w-28 h-1 bg-slate-700 rounded-full"></div>
-        </div>
 
     </div>
 

@@ -7,32 +7,24 @@ function navigateTo(screenId) {
         if (el) el.classList.add('hidden');
     });
 
-    document.getElementById('app-content').scrollTop = 0;
     if (screenId === 'statement') renderTransactions();
     if (['protection', 'reviews', 'security'].includes(screenId)) renderProtection();
 
-    // Reseta destaques dos botões do menu inferior
-    const navIds = ['home', 'pix', 'screening', 'action', 'rights'];
-    navIds.forEach(id => {
-        const btn = document.getElementById(`nav-btn-${id}`);
-        if (btn) btn.className = "flex flex-col items-center text-slate-500 hover:text-slate-300 transition";
-    });
-
-    // Exibe a tela desejada e atualiza botão
     document.getElementById(`screen-${screenId}`).classList.remove('hidden');
-
-    if (screenId === 'home') {
-        document.getElementById('nav-btn-home').className = "flex flex-col items-center text-bb-yellow transition";
-    } else if (screenId === 'pix') {
-        document.getElementById('nav-btn-pix').className = "flex flex-col items-center text-bb-yellow transition";
-    } else if (screenId === 'screening') {
-        document.getElementById('nav-btn-screening').className = "flex flex-col items-center text-amber-400 transition";
-    } else if (screenId === 'action-post') {
-        document.getElementById('nav-btn-action').className = "flex flex-col items-center text-rose-400 transition";
-    } else if (screenId === 'rights') {
-        document.getElementById('nav-btn-rights').className = "flex flex-col items-center text-bb-yellow transition";
-    }
+    syncNavigation(screenId);
+    window.scrollTo(0, 0);
 }
+
+function syncNavigation(screenId) {
+    const mobileParents = { statement: 'home', protection: 'screening', reviews: 'screening', security: 'screening', 'edu-center': 'screening' };
+    document.querySelectorAll('[data-nav-screen]').forEach(button => {
+        const isMobile = button.closest('[data-nav-variant]').dataset.navVariant === 'mobile';
+        const active = button.dataset.navScreen === (isMobile ? mobileParents[screenId] || screenId : screenId);
+        if (active) button.setAttribute('aria-current', 'page');
+        else button.removeAttribute('aria-current');
+    });
+}
+syncNavigation('home');
 
 
 function renderBalance() {

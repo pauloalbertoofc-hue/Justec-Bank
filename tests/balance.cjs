@@ -3,7 +3,7 @@ const assert=require('node:assert/strict');
 (async()=>{
  const b=await chromium.launch({executablePath:'/usr/bin/chromium',args:['--no-sandbox']});
  try {
- const p=await b.newPage();await require('./resources.cjs')(p);const errors=[],failed=[];
+ const p=await b.newPage({viewport:{width:390,height:900}});await require('./resources.cjs')(p);const errors=[],failed=[];
  p.on('pageerror',e=>errors.push(e.message));p.on('requestfailed',r=>failed.push(r.url()));
  const response=await p.goto('http://127.0.0.1:8000/',{waitUntil:'networkidle'});assert.equal(response.status(),200);
  const text=async s=>(await p.locator(s).textContent()).trim().replace(/\u00a0/g,' ');
@@ -23,7 +23,7 @@ const assert=require('node:assert/strict');
  await p.locator('#nav-btn-'+id).click({force:true});assert.equal(await p.locator('#screen-'+target).evaluate(el=>el.classList.contains('hidden')),false);
  assert.equal(await p.locator('[id^="screen-"]:not(.hidden)').count(),1);
  }
- await p.locator('[onclick="navigateTo(\'edu-center\')"]').click({force:true});assert.equal(await p.locator('#screen-edu-center').evaluate(e=>e.classList.contains('hidden')),false);
+ await p.locator('.app-header [onclick="navigateTo(\'edu-center\')"]').click({force:true});assert.equal(await p.locator('#screen-edu-center').evaluate(e=>e.classList.contains('hidden')),false);
  console.log('PASS navegação nas seis telas');
  await p.locator('#nav-btn-screening').click({force:true});
  for(const [kind,title] of [['bank_call','Falsa Central do Banco'],['whatsapp','Golpe do Falso Parente'],['offer','Oferta Suspeita em Rede Social']]){
