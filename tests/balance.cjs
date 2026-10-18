@@ -23,7 +23,7 @@ const assert=require('node:assert/strict');
  await p.locator('#nav-btn-'+id).click({force:true});assert.equal(await p.locator('#screen-'+target).evaluate(el=>el.classList.contains('hidden')),false);
  assert.equal(await p.locator('[id^="screen-"]:not(.hidden)').count(),1);
  }
- await p.locator('.app-header [onclick="navigateTo(\'edu-center\')"]').click({force:true});assert.equal(await p.locator('#screen-edu-center').evaluate(e=>e.classList.contains('hidden')),false);
+ await p.locator('#header-security').click({force:true});await p.locator('#screen-security [onclick="navigateTo(\'edu-center\')"]').click({force:true});assert.equal(await p.locator('#screen-edu-center').evaluate(e=>e.classList.contains('hidden')),false);
  console.log('PASS navegação nas seis telas');
  await p.locator('#nav-btn-screening').click({force:true});
  for(const [kind,title] of [['bank_call','Falsa Central do Banco'],['whatsapp','Golpe do Falso Parente'],['offer','Oferta Suspeita em Rede Social']]){
