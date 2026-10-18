@@ -136,3 +136,90 @@ Resultado final da regressão após as últimas alterações: `node tests/balanc
 Removido o atalho Guia MED dos serviços da tela inicial e ajustada essa grade para três colunas. Adicionado “Acessar Guia MED” no cartão explicativo do MED em Direitos, apontando para o fluxo educativo existente. Mantidos os acessos emergenciais pós-golpe.
 
 Teste executado em Chromium/Playwright: ausência do atalho na Home, três serviços, navegação Home → Direitos → Guia MED e abertura do roteiro para o banco passaram. Validação por eventos DOM; a conferência visual com CDNs carregadas continua pendente. Alteração funcional limitada a `index.html`.
+
+## Etapa 5 — Home, simulador Pix e proteção preventiva — 17/10/2026 (horário de Brasília)
+
+### Inspeção e decisões de arquitetura
+
+Inspecionados HTML, estilos, dados das movimentações, funções de saldo, navegação, extrato, triagem, modais, guia MED e testes existentes. A versão anterior tinha Pix de dois cenários com resultado visual e “digital”, sem lançamento no extrato ou débito do saldo. O estado do saldo estava em `app.js` e os dados iniciais em `transactions.js`. Foram preservados HTML/CSS/JavaScript sem framework, backend ou novas dependências de execução. O HTML alternativo antigo, não publicado nem integrado à aplicação principal, continua preservado fora do fluxo.
+
+O novo Pix substitui a implementação anterior; não mantém outra função homônima nem código de suposta biometria. O gerenciamento de estado foi extraído, e o extrato passou a ler a mesma coleção atualizada pelo simulador.
+
+### Arquivos e estrutura de dados
+
+- `index.html`: Home com saldo/extrato, seis serviços e Rota da Segurança abaixo; novo formulário Pix em etapas; telas Proteção de Chaves Pix, Central de revisão e Central de segurança; aviso global “Ambiente de demonstração — operações fictícias”; quatro seções educativas adicionadas ao pós-golpe, preservando checklist emergencial, provas, ocorrência e roteiro MED.
+- `css/style.css`: componentes escuros/amarelos, grade de serviços, formulários, mensagens e foco visível. A regra local de ocultação não depende da CDN, preservando telas e seções escondidas mesmo se ela falhar.
+- `js/state.js` (novo): `bankState` único contém visibilidade, saldo inicial, transações, tentativas, restrições e sequência de identificadores. O saldo é derivado da soma em centavos, em vez de manter valor e lançamentos separados. `demoId()` gera IDs sequenciais únicos na sessão; `demoDate()` mantém datas no cenário fixo de 17/10/2026. `recordApprovedPix()` verifica saldo e deduplica pelo ID; `recordInterruptedPix()` registra tentativas fora do extrato e cria restrição interna se necessário.
+- `js/risk.js` (novo): configurações `riskRules`, destinatários `demoRecipients` e função independente `evaluateRisk()`. Inicializa duas restrições fictícias para apresentação, uma revisável por falso positivo e outra mantida.
+- `js/pix.js` (novo): formulário, estados da operação, análise demonstrativa, confirmação, resultado, listagens de proteção e revisão. Não faz requisições bancárias.
+- `js/app.js`: navegação ampliada e extrato/detalhes integrados a `bankState.transactions`. Mantidas funções de saldo, formatação, triagem, MED, comprovante e contestação educativa de movimentações. Removidas as antigas funções `changePixValue`, `startBiometricVerification`, `confirmBiometricSuccess` e a antiga cópia de `openPixFlow`.
+- `tests/pix.cjs`, `tests/layout.cjs` e `tests/resources.cjs` (novos); testes anteriores adaptados ao estado compartilhado e ao novo fluxo Pix. O adaptador de recursos é opcional e restrito aos testes.
+
+Movimentação aprovada: ID PIX, data do cenário, tipo pix-out, descrição explícita de simulação, valor negativo, status completed e participante/instituição fictícios. Tentativa: ID da operação, destinatário, data, valor e motivos, sem lançamento financeiro. Restrição: ID REV, destinatário, motivos, data, estado, justificativa e histórico; a marca `falsePositive` seleciona o resultado educativo pré-definido. Chaves digitadas não são mantidas completas no estado: somente uma representação mascarada, com destinatário fictício.
+
+### Fluxo e funções do Pix
+
+`openPixFlow()` abre nova operação, limpa confirmações e preserva o saldo/históricos da sessão. `resetPixSteps()` invalida qualquer conferência anterior; alterações nos campos obrigam nova conferência. `updatePixRecipient()` permite selecionar os quatro destinatários fictícios ou informar chave ilustrativa.
+
+`isDemoKey()` reconhece somente formatos ilustrativos: CPF/CNPJ com ou sem pontuação, telefone internacional com + e dígitos, e-mail ou UUID. Não valida dígitos verificadores, existência ou titularidade. O formulário avisa para não informar dados reais. `parsePixAmount()` aceita valores brasileiros (50,00; 1.234,56), rejeita negativos, exponentes e mais de duas casas; `formatPixAmount()` normaliza a apresentação ao sair do campo. O limite por operação é R$ 2.000,00; valores não positivos e acima do saldo fictício não avançam.
+
+`preparePix()` captura os dados validados e cria rascunho com ID e etapa confirmation. `analyzePix()` exige checkbox de conferência, mostra carregamento/aria-busy e aplica o Guard após pequena espera ilustrativa. Alterações feitas durante a espera invalidam o resultado antigo. Nenhuma análise externa ocorre.
+
+`showDemoAuthentication()` exige confirmação adicional no risco moderado; apresenta apenas checkbox de operação fictícia, sem senha ou impressão digital. `completePix()` exige essa confirmação, reavalia risco e saldo, registra uma única operação e atualiza ambos os saldos. Estados do rascunho impedem reenvio por clique repetido. `interruptPix()` não debita, registra a tentativa e oferece revisão. `openPixReceipt()` abre a movimentação no extrato com o comprovante demonstrativo existente, sem validade bancária.
+
+### Guard: regras, pesos e limites
+
+| Indicador exclusivamente fictício | Pontos |
+| --- | ---: |
+| Chave recém-cadastrada | 20 |
+| Destinatário não habitual | 15 |
+| Valor superior a R$ 1.000,00 | 25 |
+| Mudança de comportamento no cenário | 20 |
+| Alerta interno fictício | 40 |
+| Duas ou mais tentativas interrompidas anteriores | 15 |
+
+Baixo: menos de 30 pontos. Moderado: de 30 até 59, com alerta e confirmação adicional. Elevado: 60 ou mais, interrompendo a operação. Uma restrição interna ainda não retirada também impede envio, independentemente da pontuação. Nenhum indicador individual alcança o limiar elevado nem constitui prova de fraude. Valores de pesos/limiares podem ser ajustados no objeto `riskRules`; o seletor de chave informada permite apresentar cenários baixo, moderado e elevado.
+
+Resultados de exemplo com R$ 50,00: Escola A = 0, baixo; Escola B = 35, moderado; Escola C = 75 e restrição interna ativa, elevado; Escola D = 60 e restrição ativa, cenário de falso positivo. Valores maiores e repetição podem aumentar a classificação. A retirada no cenário D limpa os indicadores incorretos simulados e as tentativas anteriores para essa avaliação, mas o indicador de valor continua aplicável. Estes pesos não foram validados para uso financeiro real e podem gerar falsos positivos/negativos.
+
+### Proteção, contestações e revisão
+
+`renderProtection()` preenche lista de destinatários com chave mascarada, risco, motivos, data e estado da revisão, além de central de revisões e histórico separado de tentativas. `demoElement()` usa textContent, inclusive para justificativas, evitando interpretar HTML fornecido nos campos. `demoButton()` liga ações específicas aos botões das listagens.
+
+`requestReview()` exige justificativa fictícia entre 10 e 500 caracteres. Transição: Restrição ativa (ou mantida) → Revisão solicitada. `advanceReview()` permite avançar manualmente para Em análise e então apresentar Restrição mantida ou Restrição retirada, conforme o cenário previamente informado. O histórico e a justificativa ficam disponíveis no cartão; mensagens de status indicam que nenhum pedido foi enviado a um banco.
+
+A Escola D demonstra falso positivo com revisão procedente e retirada interna, permitindo novo Pix fictício. A Escola C mantém a restrição após revisão. Não existe promessa de decisão individualizada: os resultados são pré-definidos para a apresentação. A retirada não exclui registros oficiais, não modifica DICT nem desbloqueia contas reais.
+
+### Navegação, interface e orientações emergenciais
+
+Os seis serviços da Home levam a Fazer Pix, Movimentações, Proteção de chaves (verificar/bloqueios), Revisões (contestações) e Central de segurança. A barra inferior e as telas anteriores continuam disponíveis. A área de conteúdo rola sem cobrir a navegação. O extrato mantém os filtros por período/tipo e os comprovantes; os novos Pix usam a data do cenário para permanecerem visíveis nos filtros atuais.
+
+O pós-golpe agora diferencia alerta, interrupção, restrição interna fictícia e medidas oficiais. Inclui esclarecimentos/revisão e mantém os passos essenciais de contato imediato com o banco, MED quando cabível, preservação de provas, protocolo e ocorrência. O botão do roteiro orientativo continua funcional. Não há garantia de recuperação de valores.
+
+### Validação efetivamente executada
+
+Todos os scripts novos e `app.js` passaram em `node --check`.
+
+`tests/pix.cjs`: passou em Chromium usando cliques reais nos campos/botões do fluxo (funções de abertura/navegação também usadas para preparar cenários). Exercitados: Pix comum aprovado; risco moderado sem e com confirmação adicional; risco elevado; valor zero, negativo, texto, casas extras, notação exponencial e limite excedido; saldo insuficiente dentro do limite; confirmação de dados e de simulação obrigatórias; edição invalidando conferência; débito/extrato e totais coerentes; comprovante; múltiplas chamadas sem duplicação; interrupções mantendo saldo e extrato; repetição de tentativas; cinco formatos de chave; chave inválida; chave customizada elevada e mascarada; revisão com motivo inválido/válido; Revisão solicitada → Em análise → retirada por falso positivo; novo Pix após retirada; manutenção no outro cenário; reinício por recarga. Um alerta isolado de 40 pontos foi confirmado como moderado.
+
+Exemplo financeiro observado: saldo 2.480,50 → Pix baixo 50,00 → 2.430,50 → Pix moderado 60,00 → 2.370,50. Duas interrupções não mudaram esse valor. Após revisão procedente, Pix 20,00 → 2.350,50. Os lançamentos foram de 12 para 15, com tentativas mantidas separadamente.
+
+`tests/statement.cjs`: passou após ajustar o seletor do link da Home e a coleção compartilhada. Validou filtros 7/30/90, entradas/saídas, totais iniciais, saldo compartilhado, detalhes, cópia real em clipboard e falha controlada, Escape/fechamento, contestação educativa, prevenção/pós-golpe e estado vazio.
+
+`tests/balance.cjs`: passou para saldo, ícone, nomes acessíveis, navegação antiga, diagnósticos de triagem, modais, orientação MED e recarga. As verificações do Pix antigo foram substituídas pelos cenários de `tests/pix.cjs`, pois os controles antigos foram intencionalmente removidos.
+
+`tests/layout.cjs`: passou com larguras 320, 375 e 430 pixels para Home, Pix, Extrato, Proteção, Revisões, Central e Pós-golpe. Verificou limites do conteúdo em relação à barra inferior e ausência de overflow horizontal. Capturas de Home e Revisões foram inspecionadas, preservando tema e moldura; páginas longas exigem rolagem vertical.
+
+O Chromium inicialmente falhou ao carregar CDNs diretamente, mas curl obteve os mesmos recursos oficiais por HTTPS com verificação TLS. `JUSTEC_RESOURCE_BRIDGE=1` habilita um adaptador de teste que repassa esses bytes ao navegador apenas para cdn.tailwindcss.com, cdnjs.cloudflare.com, fonts.googleapis.com e fonts.gstatic.com. Nenhuma configuração de confiança foi desativada, e a aplicação publicada continua usando suas referências normais. Na execução final com esse adaptador, as três suítes funcionais não registraram erros JavaScript. Sem ele, a execução inicial do Pix passou na lógica, mas teve os erros de Tailwind já conhecidos do ambiente.
+
+### Erros encontrados e correções
+
+A suíte antiga procurava `.statement-link` sem contexto; o novo link educativo de revisão tornou o seletor ambíguo. Foi limitado a `#screen-home .statement-link`, mantendo a verificação de navegação. O teste de estado vazio antes alterava a coleção inicial em vez do estado atual; foi atualizado para `bankState.transactions`. O código antigo de digital e os dados estáticos que sugeriam conta verificada/consulta ao Bacen foram removidos junto ao fluxo Pix substituído.
+
+### Uso no Live Server, reinício e pendências
+
+Abra `index.html` pelo Live Server. Em Fazer Pix, use Escola A e 50,00, confira os dados, execute a análise, confirme a simulação e confira saldo/extrato/comprovante. Repita com Escola B e confirme o alerta moderado. Use Escola C para observar interrupção, sem desconto, e consulte Central de segurança → histórico. Em Contestações, selecione o cartão da Escola D, informe justificativa fictícia, solicite revisão, inicie análise e exiba o resultado; novo Pix para D deverá poder prosseguir em valores baixos. Para demonstrar manutenção, use Escola C. Recarregue para reiniciar tudo: não há localStorage, banco de dados ou persistência.
+
+Para repetir as suítes em ambiente com Playwright/Chromium instalados, sirva a raiz por HTTP e execute `JUSTEC_RESOURCE_BRIDGE=1 node tests/pix.cjs`, `node tests/statement.cjs`, `node tests/balance.cjs` e `node tests/layout.cjs`, usando o mesmo prefixo em todos se o Chromium precisar do adaptador. Esse pacote de testes não é necessário para abrir o projeto no Live Server.
+
+Não foi executada a extensão Live Server do VS Code, nem testes em Safari/Firefox, leitor de tela ou dispositivos físicos. A revisão tem decisões manuais determinísticas, não fila real. Datas e padrões são fixos para apresentação; nenhuma regra é adequada a produção financeira. Valores customizados e justificativas devem ser fictícios. Próximos passos recomendados: testes com tecnologia assistiva, navegação completa somente por teclado e avaliação em outros navegadores; eventual persistência deve preservar o caráter acadêmico e exigir projeto específico. Nenhuma integração financeira real foi implementada ou proposta como pronta.

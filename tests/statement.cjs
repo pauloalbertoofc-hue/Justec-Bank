@@ -7,17 +7,18 @@ const assert = require('node:assert/strict');
     try {
         const context = await browser.newContext({ permissions: ['clipboard-read', 'clipboard-write'] });
         const page = await context.newPage();
+        await require('./resources.cjs')(page);
         const errors = [];
         page.on('pageerror', error => errors.push(error.message));
         await page.goto(process.env.JUSTEC_TEST_URL || 'http://127.0.0.1:8000/', { waitUntil: 'networkidle' });
         const click = selector => page.locator(selector).dispatchEvent('click');
         const balance = () => page.locator('#balance-display').innerText();
         assert.match(await balance(), /2\.480,50/);
-        const totals = await page.evaluate(() => calculateTotals(statementScenario.transactions));
+        const totals = await page.evaluate(() => calculateTotals(bankState.transactions));
         assert.deepEqual(totals, { incoming: 2650, outgoing: 1169.5, net: 1480.5 });
-        assert.equal(await page.evaluate(() => new Set(statementScenario.transactions.map(t => t.id)).size), 12);
+        assert.equal(await page.evaluate(() => new Set(bankState.transactions.map(t => t.id)).size), 12);
         await click('#balance-toggle');
-        await click('.statement-link');
+        await click('#screen-home .statement-link');
         assert.equal(await page.locator('#statement-balance').innerText(), 'R$ ••••••');
         assert.equal(await page.locator('#statement-list button').count(), 12);
         await click('#statement-balance-toggle');
@@ -62,10 +63,10 @@ const assert = require('node:assert/strict');
         assert.equal(await page.locator('#statement-dialog').evaluate(el => el.open), false);
         // Exercita o estado vazio sem mudar os dados de produção.
         await page.evaluate(() => {
-            const original = statementScenario.transactions;
-            statementScenario.transactions = [];
+            const original = bankState.transactions;
+            bankState.transactions = [];
             renderTransactions();
-            statementScenario.transactions = original;
+            bankState.transactions = original;
         });
         assert.match(await page.locator('#statement-list').innerText(), /Nenhuma movimentação/);
         await click('#screen-statement [aria-label="Voltar ao início"]');

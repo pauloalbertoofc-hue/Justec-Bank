@@ -119,6 +119,7 @@
         <!-- Main Scrollable App Content -->
         <div id="app-content" class="flex-1 min-h-0 bg-slate-950 px-4 py-3 overflow-y-auto no-scrollbar relative flex flex-col justify-between">
 
+            <p class="demo-banner">Ambiente de demonstração — operações fictícias</p>
             <!-- ================= TELA 1: HOME DO BANCO DIGITAL ================= -->
             <div id="screen-home" class="space-y-3.5 my-auto">
                 
@@ -150,6 +151,7 @@
                     <button type="button" class="statement-link" onclick="navigateTo('statement')"><i class="fa-solid fa-receipt" aria-hidden="true"></i> Ver extrato <span aria-hidden="true">›</span></button>
                 </div>
 
+                <section class="demo-panel" aria-labelledby="services-title"><h2 id="services-title">Serviços Bancários</h2><div class="demo-services"><button type="button" onclick="openPixFlow('safe')"><i class="fa-solid fa-paper-plane" aria-hidden="true"></i><span>Fazer Pix</span></button><button type="button" onclick="navigateTo('statement')"><i class="fa-solid fa-receipt" aria-hidden="true"></i><span>Consultar movimentações</span></button><button type="button" onclick="navigateTo('protection')"><i class="fa-solid fa-key" aria-hidden="true"></i><span>Verificar chave Pix</span></button><button type="button" onclick="navigateTo('protection')"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i><span>Bloqueios preventivos</span></button><button type="button" onclick="navigateTo('reviews')"><i class="fa-solid fa-file-signature" aria-hidden="true"></i><span>Contestações</span></button><button type="button" onclick="navigateTo('security')"><i class="fa-solid fa-lock" aria-hidden="true"></i><span>Central de segurança</span></button></div></section>
                 <!-- Destaque Central de Segurança Educacional -->
                 <div class="bg-gradient-to-r from-amber-950/90 via-slate-900 to-bb-blueDark/80 border border-amber-500/40 p-3.5 rounded-2xl shadow-xl space-y-2">
                     <div class="flex items-center justify-between">
@@ -219,76 +221,23 @@
                 <p class="statement-caption">Saldo inicial fictício: <span id="statement-opening"></span>. Ocultar o saldo não oculta os valores das movimentações ou dos comprovantes.</p>
             </section>
 
-            <!-- ================= TELA 2: FLUXO PIX COM BIOMETRIA DIGITAL ================= -->
-            <div id="screen-pix" class="hidden space-y-3.5">
-                <div class="flex items-center space-x-2 border-b border-slate-800 pb-2">
-                    <button onclick="navigateTo('home')" class="p-1.5 rounded-lg bg-slate-800 text-slate-300 hover:text-white">
-                        <i class="fa-solid fa-arrow-left text-xs"></i>
-                    </button>
-                    <div>
-                        <h3 class="text-xs font-bold text-bb-yellow uppercase tracking-wider">Transferência Protegida</h3>
-                        <h2 class="text-sm font-extrabold text-white">JUSTEC Pix com Leitura Biométrica</h2>
-                    </div>
-                </div>
-
-                <!-- Seletor do cenário de simulação -->
-                <div class="bg-slate-900/90 p-2.5 rounded-xl border border-slate-800 space-y-1.5">
-                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Simular Segurança da Transferência:</span>
-                    <div class="grid grid-cols-2 gap-2">
-                        <button onclick="openPixFlow('safe')" id="btn-pix-safe" class="py-2 px-2 text-[10px] font-bold rounded-lg bg-emerald-600 text-white shadow transition flex items-center justify-center gap-1.5">
-                            <i class="fa-solid fa-circle-check"></i> Pix Comum (Seguro)
-                        </button>
-                        <button onclick="openPixFlow('suspicious')" id="btn-pix-suspect" class="py-2 px-2 text-[10px] font-bold rounded-lg bg-slate-800 text-rose-400 border border-rose-500/40 hover:bg-slate-700 transition flex items-center justify-center gap-1.5">
-                            <i class="fa-solid fa-triangle-exclamation"></i> Chave Suspeita (Alerta)
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Card do Valor -->
-                <div class="glass-card p-4 rounded-2xl relative shadow-md border-slate-800">
-                    <span class="text-[10px] text-slate-400 uppercase font-bold block mb-1">Valor da transferência</span>
-                    <div class="flex items-baseline justify-between">
-                        <span class="text-3xl font-black text-white tracking-tight">R$ <span id="pix-val-display">350,00</span></span>
-                        <button onclick="changePixValue()" class="text-xs text-bb-yellow font-bold hover:underline">Alterar</button>
-                    </div>
-                </div>
-
-                <!-- Card de Dados do Destinatário -->
-                <div class="glass-card rounded-2xl p-4 space-y-3 shadow-md border-slate-800">
-                    <div class="flex justify-between items-start border-b border-slate-800 pb-2.5">
-                        <div>
-                            <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider block">Destinatário</span>
-                            <h4 class="text-xs font-bold text-white mt-0.5" id="pix-dest-name">Lucas Andrade Ribeiro</h4>
-                            <p class="text-[10px] text-slate-400 mt-0.5" id="pix-dest-doc">CPF: ***.842.108-** • Banco Nubank</p>
-                        </div>
-                        <div id="pix-status-badge" class="px-2 py-1 rounded text-[9px] font-extrabold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-                            CONTA VERIFICADA
-                        </div>
-                    </div>
-
-                    <!-- Análise Prévia da Inteligência de Segurança -->
-                    <div id="pix-analysis-box" class="bg-slate-950 p-3 rounded-xl border border-slate-800 text-[11px] space-y-1">
-                        <p class="font-bold text-slate-200 flex items-center gap-1.5" id="pix-analysis-title">
-                            <i class="fa-solid fa-shield-check text-emerald-400"></i> Análise de Segurança JUSTEC Guard
-                        </p>
-                        <p class="text-[10px] text-slate-400 leading-relaxed" id="pix-analysis-desc">
-                            Chave mantida há mais de 2 anos sem registros de contestação no Bacen.
-                        </p>
-                    </div>
-                </div>
-
-                <!-- Botão de Confirmação com Digital -->
-                <div class="space-y-2 pt-2">
-                    <button onclick="startBiometricVerification()" class="w-full yellow-gradient-btn text-slate-950 font-black py-3.5 px-4 rounded-xl shadow-xl text-xs uppercase tracking-wider transition-all transform active:scale-[0.98] flex items-center justify-center space-x-2 border border-amber-300">
-                        <i class="fa-solid fa-fingerprint text-lg"></i>
-                        <span>Confirmar Transferência com Digital</span>
-                    </button>
-                    <p class="text-[9px] text-center text-slate-500 font-medium">
-                        Sua biometria valida a autenticidade e ativa a proteção legal do JUSTEC.
-                    </p>
-                </div>
-            </div>
-
+            <section id="screen-pix" class="hidden demo-screen" aria-labelledby="pix-title">
+                <header class="statement-heading"><button type="button" onclick="navigateTo('home')" aria-label="Voltar ao início">←</button><div><small>SIMULADOR JUSTEC</small><h2 id="pix-title">Fazer Pix fictício</h2></div></header>
+                <p class="demo-notice">Não informe dados reais. Nenhuma chave é consultada. Limite demonstrativo por operação: R$ 2.000,00.</p>
+                <form id="pix-form" class="demo-panel" onsubmit="preparePix(event)">
+                    <h3>A · Destinatário</h3>
+                    <label>Destinatário fictício<select id="pix-recipient" onchange="updatePixRecipient()"><option value="demo-low">Escola A · baixo risco</option><option value="demo-medium">Escola B · risco moderado</option><option value="demo-high">Escola C · risco elevado</option><option value="demo-false">Escola D · falso positivo</option><option value="custom">Informar chave de demonstração</option></select></label>
+                    <div id="pix-custom" hidden><label>Chave ilustrativa<input id="pix-key" maxlength="100" autocomplete="off" placeholder="Ex.: escola@example.invalid"></label><label>Cenário da chave informada<select id="pix-scenario"><option value="low">Baixo</option><option value="moderate">Moderado</option><option value="elevated">Elevado</option></select></label><p>Formatos: CPF, CNPJ, telefone, e-mail ou UUID. Validação apenas de formato, sem verificar titularidade.</p></div>
+                    <h3>B · Valor</h3><label>Valor em reais<input id="pix-amount" inputmode="decimal" autocomplete="off" placeholder="50,00" onblur="formatPixAmount()" required></label>
+                    <button type="submit">Conferir dados</button>
+                </form>
+                <section id="pix-confirm" class="demo-panel" hidden><h3>C · Conferência</h3><p id="pix-summary"></p><label><input type="checkbox" id="pix-data-confirm"> Conferi os dados fictícios</label><button type="button" onclick="analyzePix()">Analisar com JUSTEC Guard</button></section>
+                <section id="pix-guard" class="demo-panel" hidden><h3>D · JUSTEC Guard demonstrativo</h3><p id="pix-risk"></p><label id="pix-extra-label" hidden><input type="checkbox" id="pix-extra"> Entendi o alerta e quero continuar a simulação</label><button type="button" id="pix-continue" onclick="showDemoAuthentication()">Continuar</button></section>
+                <section id="pix-auth" class="demo-panel" hidden><h3>E · Confirmação demonstrativa</h3><p>Sem senha, digital ou autenticação bancária real.</p><label><input type="checkbox" id="pix-demo-confirm"> Confirmo apenas esta operação fictícia</label><button type="button" id="pix-submit" onclick="completePix()">Simular envio</button></section>
+                <section id="pix-result" class="demo-panel" hidden><h3>F · Resultado da simulação</h3><p id="pix-result-text"></p><button type="button" id="pix-receipt" onclick="openPixReceipt()" hidden>Ver comprovante demonstrativo</button><button type="button" id="pix-review" onclick="navigateTo('reviews')" hidden>Ir à central de revisão</button><button type="button" onclick="openPixFlow()">Nova simulação</button></section>
+                <p id="pix-feedback" role="status" aria-live="polite"></p>
+            </section>
+<section id="screen-protection" class="hidden demo-screen"><header class="statement-heading"><button type="button" onclick="navigateTo('home')" aria-label="Voltar ao início">←</button><h2>Proteção de Chaves Pix</h2></header><div class="demo-panel"><p>Alerta é uma orientação; interrupção impede uma tentativa; restrição interna simulada impede novos envios neste protótipo. Não há bloqueio real de chave no DICT ou de conta bancária.</p><div id="protection-list"></div></div></section><section id="screen-reviews" class="hidden demo-screen"><header class="statement-heading"><button type="button" onclick="navigateTo('home')" aria-label="Voltar ao início">←</button><h2>Central de revisão e contestações</h2></header><div class="demo-panel"><p>Revisões exclusivamente educativas. Não informe dados reais. A decisão segue o cenário acadêmico escolhido, sem comunicação com bancos.</p><p id="review-feedback" role="status" aria-live="polite"></p><div id="review-list"></div></div></section><section id="screen-security" class="hidden demo-screen"><header class="statement-heading"><button type="button" onclick="navigateTo('home')" aria-label="Voltar ao início">←</button><h2>Central de segurança</h2></header><div class="demo-panel"><p>Conheça as regras do JUSTEC Guard e o histórico separado de tentativas. Nenhum indicador isolado prova fraude.</p><button type="button" onclick="navigateTo('protection')">Proteção de chaves</button><button type="button" onclick="navigateTo('reviews')">Revisões simuladas</button><button type="button" onclick="navigateTo('screening')">Triagem preventiva</button><button type="button" onclick="navigateTo('action-post')">Orientação pós-golpe</button><h3>Tentativas interrompidas · fora do extrato</h3><div id="attempt-list"></div><p>Para reiniciar toda a demonstração, recarregue a página. Nenhum dado é persistido.</p></div></section>
             <!-- ================= TELA 3A: TRIAGEM PREVENTIVA ("Estou desconfiado") ================= -->
             <div id="screen-screening" class="hidden space-y-3.5">
                 <div class="flex items-center space-x-2 border-b border-slate-800 pb-2">
@@ -370,7 +319,7 @@
                     </button>
                     <div>
                         <h3 class="text-xs font-bold text-rose-400 uppercase tracking-wider">Pilar 2 • Pós-Golpe</h3>
-                        <h2 class="text-sm font-extrabold text-white">Guia de Reação Immediata (MED)</h2>
+                        <h2 class="text-sm font-extrabold text-white">Proteção preventiva e ação pós-golpe</h2>
                     </div>
                 </div>
 
@@ -383,6 +332,7 @@
                     </p>
                 </div>
 
+<section class="glass-card p-3 rounded-xl border-slate-800"><h3 class="text-xs font-bold text-bb-yellow">1 · Entendendo a proteção preventiva</h3><p class="text-[11px] text-slate-300 mt-1">Indicadores fictícios podem gerar alerta, confirmação adicional ou interrupção. Eles não provam fraude. O JUSTEC Guard é uma regra educativa, sem consulta externa.</p></section><section class="glass-card p-3 rounded-xl border-slate-800"><h3 class="text-xs font-bold text-bb-yellow">2 · O que acontece com uma chave suspeita?</h3><p class="text-[11px] text-slate-300 mt-1">Sinalização de risco não equivale a bloqueio no sistema Pix. A restrição aqui é apenas uma política interna simulada de envio; medidas oficiais dependem das instituições competentes.</p></section><section class="glass-card p-3 rounded-xl border-slate-800"><h3 class="text-xs font-bold text-bb-yellow">3 · Como contestar uma restrição indevida?</h3><p class="text-[11px] text-slate-300 mt-1">Na central de revisão, apresente esclarecimentos fictícios e acompanhe as etapas. O cenário de falso positivo permite retirar a restrição interna, sem alterar registros oficiais ou desbloquear contas.</p></section><section class="glass-card p-3 rounded-xl border-slate-800"><h3 class="text-xs font-bold text-bb-yellow">4 · O que fazer após um golpe real?</h3><p class="text-[11px] text-slate-300 mt-1">Entre imediatamente em contato com seu banco pelo canal oficial, solicite avaliação do MED quando cabível, preserve provas e registre ocorrência. A devolução não é garantida.</p></section><button type="button" class="statement-link" onclick="navigateTo('reviews')">Abrir central de revisão demonstrativa</button>
                 <!-- Checklist de Reação Passo a Passo -->
                 <div class="space-y-2">
                     
@@ -599,6 +549,9 @@
         </div>
     </dialog>
     <script src="./js/transactions.js"></script>
+    <script src="./js/state.js"></script>
+    <script src="./js/risk.js"></script>
     <script src="./js/app.js"></script>
+    <script src="./js/pix.js"></script>
 </body>
 </html>

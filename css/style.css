@@ -77,3 +77,20 @@ font-family: 'Plus Jakarta Sans', sans-serif;
 #receipt-details p { margin: 8px 0; }
 #receipt-education, #receipt-alert { margin-top: 10px; padding: 10px; background: #020617; border-radius: 12px; }
 .statement-link:focus-visible, .transaction-item:focus-visible, .statement-screen button:focus-visible, .statement-receipt button:focus-visible { outline: 2px solid #FFCC00; outline-offset: 3px; }
+
+/* Etapa 5: fluxos acadêmicos e mensagens independentes das CDNs. */
+.demo-banner { color: #ffcc00; border: 1px solid #ffcc0040; padding: 8px; border-radius: 10px; font-size: 10px; margin-bottom: 12px; flex: none; }
+.demo-panel { background: #121929; border: 1px solid #334155; border-radius: 16px; padding: 12px; margin: 10px 0; font-size: 12px; line-height: 1.6; overflow-wrap: anywhere; }
+.demo-panel h2, .demo-panel h3 { color: #ffcc00; font-weight: 800; margin-bottom: 8px; }
+.demo-services { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 8px; }
+.demo-panel .demo-services button { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; margin: 0; padding: 12px 5px; font-size: 10px; }
+.demo-services i { font-size: 18px; }
+.demo-screen label { display: block; margin: 10px 0; color: #e2e8f0; }
+.demo-screen select, .demo-screen input:not([type=checkbox]), .demo-screen textarea { display: block; width: 100%; padding: 10px; border-radius: 10px; border: 1px solid #64748b; background: #0a0f1d; color: white; }
+.demo-screen textarea { min-height: 80px; }
+.demo-panel button { color: #ffcc00; background: #ffcc000d; border: 1px solid #ffcc0060; border-radius: 10px; padding: 8px; margin: 8px 4px 0 0; }
+.demo-screen input[type=checkbox] { accent-color: #ffcc00; margin-right: 5px; }
+.demo-screen button:focus-visible, .demo-services button:focus-visible { outline: 2px solid #ffcc00; outline-offset: 2px; }
+.demo-screen button:disabled { opacity: .5; cursor: default; }
+.demo-notice, #pix-feedback, #review-feedback { font-size: 11px; color: #fde68a; line-height: 1.6; }
+[hidden], .hidden { display: none !important; }

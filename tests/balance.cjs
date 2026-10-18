@@ -3,7 +3,7 @@ const assert=require('node:assert/strict');
 (async()=>{
  const b=await chromium.launch({executablePath:'/usr/bin/chromium',args:['--no-sandbox']});
  try {
- const p=await b.newPage();const errors=[],failed=[];
+ const p=await b.newPage();await require('./resources.cjs')(p);const errors=[],failed=[];
  p.on('pageerror',e=>errors.push(e.message));p.on('requestfailed',r=>failed.push(r.url()));
  const response=await p.goto('http://127.0.0.1:8000/',{waitUntil:'networkidle'});assert.equal(response.status(),200);
  const text=async s=>(await p.locator(s).textContent()).trim().replace(/\u00a0/g,' ');
@@ -31,12 +31,7 @@ const assert=require('node:assert/strict');
  }
  console.log('PASS três diagnósticos de triagem e abrir/fechar modais');
  await p.locator('#nav-btn-action').click({force:true});await p.locator('[onclick="openMedWizard()"]').click({force:true});assert.equal(await text('#modal-title'),'Roteiro de Texto para o Banco');await p.locator('#modal-close-btn').click({force:true});
- for(const [type,title] of [['safe','Pix Realizado com Segurança!'],['suspect','Transferência Retida!']]){
- await p.locator('#nav-btn-pix').click({force:true});await p.locator('#btn-pix-'+type).click({force:true});
- await p.locator('[onclick="startBiometricVerification()"]').click({force:true});await p.locator('#modal-icon-container').dispatchEvent('click');assert.equal(await text('#modal-title'),title);await p.locator('#modal-close-btn').click({force:true});
- }
- p.once('dialog',d=>d.accept('125,75'));await p.locator('[onclick="changePixValue()"]').click({force:true});assert.equal(await text('#pix-val-display'),'125,75');
- console.log('PASS orientação MED, Pix seguro/suspeito e alteração do valor simulado');
+ console.log('PASS orientação MED; novo Pix validado em tests/pix.cjs');
  await p.reload({waitUntil:'networkidle'});assert.equal(await text('#balance-display'),'R$ 2.480,50');
  assert.deepEqual(errors.filter(e=>e!=='tailwind is not defined'),[]);
  console.log('PASS reinicialização ao recarregar e ausência de outros erros JS');
