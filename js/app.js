@@ -127,11 +127,11 @@ function openMedWizard() {
     badge.innerText = "ROTEIRO PRÁTICO • SOLICITAÇÃO MED";
     title.innerText = "Roteiro de Texto para o Banco";
     desc.innerHTML = `
-        <p class="text-blue-300 font-bold text-xs"><i class="fa-solid fa-copy mr-1"></i> Copie e envie para o chat do seu banco:</p>
+        <p class="text-blue-300 font-bold text-xs"><i class="fa-solid fa-copy mr-1"></i> Exemplo orientativo para adaptar ao atendimento oficial do seu banco:</p>
         <div class="bg-slate-950 p-2.5 rounded-lg border border-slate-800 font-mono text-[10px] text-slate-300 select-all">
-            "Solicito a abertura imediata do procedimento do MED (Mecanismo Especial de Devolução - Resolução BCB nº 103/2021) para o Pix realizado sob fraude e estelionato."
+            "Informo uma movimentação Pix que suspeito estar relacionada a um golpe. Solicito avaliação do ocorrido, orientação sobre o MED quando cabível e um número de protocolo. Tenho comprovantes e outras evidências para apresentar pelo canal oficial."
         </div>
-        <p class="text-slate-400 text-[10px]">Exija e anote o número do protocolo do atendimento.</p>
+        <p class="text-slate-400 text-[10px]">Nenhum pedido foi enviado por este protótipo. Anote o protocolo fornecido pelo banco; a devolução não é garantida.</p>
     `;
 
     iconContainer.onclick = null;

@@ -391,3 +391,38 @@ Criado tests/shortcuts.cjs: **49 verificações passaram** em 390 e 1366px com c
 Reexecutados e aprovados: tests/pix.cjs (confirmações, risco baixo/moderado/elevado, saldo insuficiente, valores inválidos, débito único, tentativas sem débito e revisões); tests/statement.cjs (filtros, totais, comprovante, cópia e contestação); tests/balance.cjs (saldo, navegação, triagem e MED); tests/layout.cjs nas seis larguras 360/390/768/1024/1366/1920; e os **39 testes isolados do Guard**, sem falhas. Testes de navegador usaram o adaptador HTTPS de recursos já documentado. A matriz de layout verificou oito telas e dois modais por largura, sem sobreposição/overflow horizontal. Não foram alteradas regras dos motores nem foi integrado o motor experimental ao Pix.
 
 As verificações de funcionalidade continuam sendo locais em Chromium headless; não equivalem a validação de todos os dispositivos, navegadores ou do domínio público. O deploy é confirmado pelo status da integração Vercel no GitHub. Para conferência independente, abrir o endereço público em navegador autorizado e testar os atalhos e fluxos após recarregar sem cache.
+
+
+## Correção de regressões de conteúdo e identidade de chave Pix
+
+### Problema reportado e investigação
+
+O usuário apontou que a tela explicativa do mecanismo de proteção Pix voltava a orientar bloqueio de conta. A inspeção confirmou que a explicação acrescentada na Etapa 5 coexistia com o checklist legado “Bloqueio Preventivo da Conta”. A busca no histórico Git mostrou que o checklist já vinha do primeiro commit importado, não foi reintroduzido pela responsividade: a falha foi deixá-lo junto do conteúdo novo. Os testes anteriores verificavam comportamento e navegação, mas não essa contradição semântica. Esta correção amplia a cobertura de conteúdo, sem apagar os registros anteriores de validação.
+
+### Conteúdo corrigido
+
+`index.html`: a página agora se intitula “Como funciona a proteção do Pix”. O checklist legado foi removido e substituído por quatro explicações: análise e ação por risco, interrupção de uma tentativa versus restrição interna do destinatário/chave, preservação do saldo e histórico separado de tentativas, e revisão de restrição indevida. A página afirma que a conta do usuário e o DICT não são bloqueados pelo protótipo. Foram incluídos acessos diretos a Proteção de chaves, histórico na Central e Revisões.
+
+As orientações sobre golpe real e MED foram preservadas em uma seção separada, sem recomendação genérica de bloquear conta/cartões e sem promessa de retenção ou devolução. Em Direitos, o texto antigo que equiparava MED a bloqueio de contas de estelionatários foi substituído por explicação de avaliação pelo banco, sem restituição garantida ou bloqueio universal de chaves. Em `js/app.js`, o roteiro MED deixou de pedir abertura automática com uma referência normativa não verificada; passou a ser exemplo de relato e solicitação de avaliação pelo canal oficial, esclarecendo que o protótipo não enviou pedido algum.
+
+### Outro defeito reproduzido e corrigido
+
+A revisão do fluxo revelou que uma chave digitada recebia um novo ID CUSTOM a cada conferência. Reprodução antes da correção: a mesma chave fictícia repeticao@example.invalid foi interrompida no cenário elevado com ID CUSTOM-3; digitada novamente no cenário baixo, virou CUSTOM-6 e avançou como baixo risco. Isso contornava a identidade do destinatário usada pela política de restrições.
+
+`js/pix.js`: preparePix agora identifica a chave localmente por impressão SHA-256 e reutiliza o destinatário da sessão. Apenas a impressão e a representação mascarada são mantidas; a chave completa não fica armazenada no estado, e nenhum serviço externo é consultado. A normalização trata diferenças de maiúsculas em e-mail/UUID e pontuação numérica. Selecionar outro cenário pode alterar os indicadores, mas não apaga a restrição interna ativa ligada àquela chave. O hash serve à identidade fictícia local, não autentica titularidade nem garante anonimização de dados reais. A interface continua instruindo o uso exclusivo de dados fictícios.
+
+A identificação usa Web Crypto nativa, sem dependências. Em origens sem crypto.subtle, a interface informa a necessidade de HTTPS/localhost ou oferece os destinatários prontos; não cria um novo ID inseguro como alternativa. O contador pixPreparation invalida resultados assíncronos obsoletos se os campos mudarem durante a identificação. A sessão ainda é reiniciada por recarga; não há persistência. Motor da Etapa 5, estado financeiro, dados iniciais e motor experimental isolado da Etapa 6 não foram substituídos ou integrados nesta correção.
+
+### Testes executados
+
+Criado `tests/guard-content.cjs`: passou em 390 e 1366px. Verifica quatro explicações do mecanismo, ausência do checklist antigo, conta/DICT distintos da operação, preservação de saldo e ausência de comprovante em interrupções, sequência de revisão, orientações MED em seção separada, atalhos funcionais e roteiro sem pedido enviado. Também executa uma interrupção no simulador e confirma saldo/quantidade do extrato inalterados, tentativa registrada separadamente e comprovante oculto. Captura corrigida inspecionada em `/tmp/justec-guard-guide-corrected.png`.
+
+Ampliado e reexecutado `tests/pix.cjs`: passou com repetição da mesma chave em caixa diferente e mudança de cenário elevado para baixo. Verificou mesmo ID de destinatário, interrupção mantida, nenhuma alteração no saldo/extrato, incremento de tentativa e ausência de comprovante. Teste adicional segurou a resposta do digest local, alterou o valor e liberou a resposta: a conferência antiga foi descartada, sem criar outro destinatário ou rascunho. Os cenários anteriores de aprovação, risco moderado/elevado, saldo insuficiente, valores inválidos, revisão de falso positivo e reinício continuaram passando. Nenhum erro JavaScript observado.
+
+Também reexecutados e aprovados nesta revisão: tests/statement.cjs; tests/balance.cjs; 49 verificações de tests/shortcuts.cjs; tests/layout.cjs em 360, 390, 768, 1024, 1366 e 1920px; e os 39 testes isolados de tests/guard.test.mjs. Após a mudança assíncrona, a suíte Pix ampliada e as verificações de conteúdo/layout foram novamente concluídas. Testes de navegador usaram o adaptador HTTPS de recursos documentado, sem desativar TLS. Verificação de sintaxe e diff passaram.
+
+### Limites e publicação
+
+A auditoria encontrou e corrigiu as contradições de conteúdo e o defeito de identidade acima; não é garantia de ausência de qualquer outro defeito. Os cenários executados não mostraram outras regressões funcionais. A validação foi local em Chromium, não em todos os navegadores ou dispositivos físicos. A integridade jurídica das normas Pix não foi revisada neste trabalho: a redação foi mantida genérica e demonstrativa. O motor da Etapa 6 continua isolado, conforme solicitado.
+
+O commit corretivo é enviado à branch main e seu deploy automático é acompanhado pelo status Vercel. A rede do ambiente continua limitando verificação direta do domínio público; confirmação de deploy não equivale a teste funcional direto em produção.

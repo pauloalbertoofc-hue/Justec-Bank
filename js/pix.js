@@ -1,6 +1,8 @@
 let pixDraft = null;
+let pixPreparation = 0;
 function pixMessage(message) { document.getElementById('pix-feedback').textContent = message; }
 function resetPixSteps() {
+    pixPreparation++;
     pixDraft = null;
     for (const id of ['pix-confirm', 'pix-guard', 'pix-auth', 'pix-result']) document.getElementById(id).hidden = true;
     for (const id of ['pix-data-confirm', 'pix-extra', 'pix-demo-confirm']) document.getElementById(id).checked = false;
@@ -31,9 +33,10 @@ function formatPixAmount() {
 function isDemoKey(key) {
     return /^(?:\d{11}|\d{3}\.\d{3}\.\d{3}-\d{2}|\d{14}|\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}|\+\d{10,15}|[^\s@]+@[^\s@]+\.[^\s@]+|[a-f\d]{8}-(?:[a-f\d]{4}-){3}[a-f\d]{12})$/i.test(key);
 }
-function preparePix(event) {
+async function preparePix(event) {
     event.preventDefault();
     resetPixSteps();
+    const preparation = pixPreparation;
     const amount = parsePixAmount(document.getElementById('pix-amount').value);
     if (!Number.isFinite(amount) || amount <= 0) return pixMessage('Informe um valor positivo no formato 50,00.');
     if (amount > 2000) return pixMessage('Limite demonstrativo: R$ 2.000,00 por operação.');
@@ -43,9 +46,22 @@ function preparePix(event) {
         const key = document.getElementById('pix-key').value.trim();
         if (!isDemoKey(key)) return pixMessage('Formato de chave ilustrativa inválido. Use apenas dados fictícios.');
         const scenario = document.getElementById('pix-scenario').value;
-        // A chave completa não é armazenada no estado nem enviada a serviços.
-        recipient = { id: demoId('CUSTOM'), name: 'Destinatário informado (fictício)', maskedKey: `${key.slice(0, 2)}***${key.slice(-2)}`, flags: scenario === 'low' ? {} : scenario === 'moderate' ? { newKey: true, unfamiliar: true } : { newKey: true, internalAlert: true, behaviorChange: true } };
-        demoRecipients.push(recipient);
+        // Impressão local de dados fictícios: a chave completa não é retida.
+        if (!globalThis.crypto?.subtle) return pixMessage('Para digitar uma chave fictícia, abra em HTTPS ou localhost. Você também pode selecionar um destinatário de demonstração.');
+        const normalized = key.includes('@') ? key.toLowerCase() : /^[\d.+/\-]+$/.test(key) ? key.replace(/\D/g, '') : key.toLowerCase();
+        let fingerprint;
+        try {
+            const bytes = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(normalized));
+            fingerprint = Array.from(new Uint8Array(bytes), byte => byte.toString(16).padStart(2, '0')).join('');
+        } catch { return pixMessage('Não foi possível identificar a chave fictícia localmente. Selecione um destinatário da lista.'); }
+        if (preparation !== pixPreparation) return;
+        const flags = scenario === 'low' ? {} : scenario === 'moderate' ? { newKey: true, unfamiliar: true } : { newKey: true, internalAlert: true, behaviorChange: true };
+        recipient = demoRecipients.find(item => item.keyFingerprint === fingerprint);
+        if (recipient) recipient.flags = flags;
+        else {
+            recipient = { id: demoId('CUSTOM'), name: 'Destinatário informado (fictício)', maskedKey: `${key.slice(0, 2)}***${key.slice(-2)}`, keyFingerprint: fingerprint, flags };
+            demoRecipients.push(recipient);
+        }
     }
     pixDraft = { id: demoId('PIX'), recipient, amount, stage: 'confirmation' };
     document.getElementById('pix-summary').textContent = `${recipient.name} · Instituição fictícia JUSTEC · Chave ${recipient.maskedKey} · ${formatMoney(amount)}`;
