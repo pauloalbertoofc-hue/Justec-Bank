@@ -223,3 +223,109 @@ Abra `index.html` pelo Live Server. Em Fazer Pix, use Escola A e 50,00, confira 
 Para repetir as suítes em ambiente com Playwright/Chromium instalados, sirva a raiz por HTTP e execute `JUSTEC_RESOURCE_BRIDGE=1 node tests/pix.cjs`, `node tests/statement.cjs`, `node tests/balance.cjs` e `node tests/layout.cjs`, usando o mesmo prefixo em todos se o Chromium precisar do adaptador. Esse pacote de testes não é necessário para abrir o projeto no Live Server.
 
 Não foi executada a extensão Live Server do VS Code, nem testes em Safari/Firefox, leitor de tela ou dispositivos físicos. A revisão tem decisões manuais determinísticas, não fila real. Datas e padrões são fixos para apresentação; nenhuma regra é adequada a produção financeira. Valores customizados e justificativas devem ser fictícios. Próximos passos recomendados: testes com tecnologia assistiva, navegação completa somente por teclado e avaliação em outros navegadores; eventual persistência deve preservar o caráter acadêmico e exigir projeto específico. Nenhuma integração financeira real foi implementada ou proposta como pronta.
+
+## Etapa 6 — Motor experimental isolado do JUSTEC Guard
+
+### Escopo, inspeção e especificação pendente
+
+Inspecionados estrutura, estado Git, motor da Etapa 5 e testes Pix. O motor atual `js/risk.js` depende do estado bancário e continua intacto. Os arquivos de interface, saldo, extrato e navegação não foram modificados; nenhum script de `js/guard` foi incluído no HTML. Esta etapa adiciona uma biblioteca experimental independente, não integra nem substitui o motor usado pelo site.
+
+O documento citado `JUSTEC_Guard_Etapa_6_Especificacao.md` não foi encontrado no workspace nem nos materiais anexados disponíveis. Seu conteúdo foi solicitado ao usuário. A implementação segue os requisitos explícitos da mensagem, com pesos e limiares provisoriamente reaproveitados da Etapa 5. Não se declara conformidade com uma especificação que não foi recebida. Validá-la contra o documento permanece uma pendência.
+
+### Arquivos e funções implementados
+
+- `js/guard/risk-engine.js`: `evaluateRisk()` recebe somente `{ simulation: true, indicators: string[] }`; valida campos e indicadores, elimina duplicatas, ordena pela tabela de regras e soma pesos. Retorna score, classification, indicadores acionados com pesos/justificativas, justifications, rulesVersion e aviso de simulação. `validateEvaluation()` reconstitui os resultados e rejeita pontuação, classificação, pesos, justificativas ou versão inconsistentes. `assertPlainObject()`/`assertKeys()` validam objetos simples e o contrato de campos. `freezeDeep()` cria uma cópia profundamente congelada; não modifica nem congela objetos do chamador.
+- `js/guard/policy-engine.js`: `determinePolicy()` valida a avaliação e descreve allow_simulation, require_additional_confirmation ou interrupt_simulation. Inclui versão de política, versão de risco, pontuação, classificação, necessidade de confirmação adicional, disponibilidade de revisão e justificativa. Não realiza a ação descrita.
+- `js/guard/scenarios.js`: quatro cenários imutáveis com expectativas explícitas de pontuação, classificação e ação. O rótulo educativo do falso positivo fica fora da entrada do motor.
+- `js/guard/audit-log.js`: `createEvaluationRecord()` monta snapshot imutável com entrada normalizada, avaliação e decisão originais, versões, ID e data fornecidos pelo chamador. `appendReview()` valida o registro e devolve outro snapshot com revisão acrescentada. `getReviewStatus()` informa a ação original separadamente do resultado de revisão mais recente. Valida IDs, datas ISO UTC, cronologia, justificativas e duplicação de IDs de revisão. Funções auxiliares normalizam revisões e comparam snapshots sem mutar os argumentos.
+- `js/guard/demo.js`: executável separado que imprime quatro avaliações e exemplo de revisão. É o único arquivo do módulo que escreve no console; os módulos de risco, política, cenário e auditoria não realizam IO.
+- `js/guard/package.json`: declara apenas `type: module` e `private: true`, sem dependências. Seu escopo fica restrito à pasta, preservando a execução dos scripts antigos.
+- `js/guard/README.md`: contrato, exemplos, comandos, regras e limitações.
+- `tests/guard.test.mjs`: suíte isolada usando exclusivamente node:test e node:assert, sem frameworks adicionais.
+
+### Critérios provisórios de risco e política
+
+Pesos: newKey = 20; unfamiliar = 15; outlier = 25; behaviorChange = 20; internalAlert = 40; repeated = 15. São indicadores fornecidos explicitamente pelo cenário, não inferidos de dados transacionais. Não há leitura de saldo, relógio, histórico Pix ou serviços externos. A pontuação máxima é 135, não percentual ou probabilidade.
+
+Menos de 30 pontos: low, permitir a simulação; 30–59: moderate, exigir confirmação adicional; 60 ou mais: high, descrever interrupção demonstrativa com opção de revisão. Nenhum indicador isolado alcança o limiar de interrupção. Os resultados são determinísticos e incluem `justec-guard-risk/0.1.0`; a política inclui `justec-guard-policy/0.1.0`. Alterações futuras dos critérios exigem novas versões.
+
+| Cenário | Indicadores | Pontuação | Classificação | Decisão |
+| --- | --- | ---: | --- | --- |
+| Baixo | Nenhum | 0 | low | allow_simulation |
+| Moderado | newKey, unfamiliar | 35 | moderate | require_additional_confirmation |
+| Alto | newKey, unfamiliar, internalAlert | 75 | high | interrupt_simulation |
+| Falso positivo | newKey, internalAlert | 60 | high | interrupt_simulation |
+
+Duplicatas são normalizadas, não somadas novamente. Indicadores desconhecidos, tipos inválidos, arrays esparsos, modo real e campos extras são rejeitados. O motor não aceita pontuação ou pesos arbitrários fornecidos pelo chamador. A política também rejeita avaliações inconsistentes e versões desconhecidas.
+
+### Auditoria e revisão sem reescrita da decisão
+
+O registro usa `justec-guard-audit/0.1.0`. Não usa relógio ou aleatoriedade: identificadores e datas são parâmetros explícitos. A avaliação original permanece preservada após qualquer revisão. Revisões aceitam maintained ou withdrawn, identificador fictício do revisor, data e justificativa fictícia de 10 a 1000 caracteres. A mesma revisão não pode ser incluída duas vezes, nem anteceder a avaliação ou revisão anterior.
+
+No falso positivo, o motor produz inicialmente 60/high/interrupção. A revisão acrescenta withdrawn sem reduzir a pontuação original nem substituir a decisão registrada. Isso demonstra a diferença entre avaliação automática e esclarecimento posterior. Não é implementada concessão de desbloqueio real, alteração no DICT ou autorização bancária.
+
+Os snapshots são serializáveis em JSON e imutáveis em memória, mas não são um sistema de auditoria persistente ou inviolável. Sem assinatura, banco append-only ou controle de acesso, alguém com acesso aos dados pode reconstruir um histórico matematicamente coerente. A validação não equivale à verificação de autenticidade ou identidade do revisor. O suporte a regras antigas após uma futura atualização exige validadores por versão; atualmente versões desconhecidas são rejeitadas.
+
+### Testes executados e resultados
+
+Comando `node --test tests/guard.test.mjs`, executado em Node.js 24.19.0: **33 testes passaram, 0 falharam, 0 ignorados**. Foram verificados os quatro cenários; pontos 25, 30, 55, 60 e máximo 135; decisões esperadas; indicador isolado sem interrupção; deduplicação e ordem independente; justificativas; entradas inválidas; cenários congelados; ausência de mutação ou congelamento da entrada; avaliações adulteradas; versões inconsistentes; falso positivo e revisão; múltiplas revisões; serialização; metadados inválidos; cronologia; revisão duplicada; preservação da decisão original.
+
+`node js/guard/demo.js`: executado com sucesso; saída contém os quatro cenários e o exemplo de revisão withdrawn mantendo interrupt_simulation como ação original.
+
+Teste de regressão `JUSTEC_RESOURCE_BRIDGE=1 node tests/pix.cjs`: passou, sem erros JavaScript, validando Pix baixo/moderado/alto, confirmações, valores inválidos, saldo insuficiente, extrato/débito único, interrupções, revisões e reinício. O adaptador HTTPS de recursos é exclusivo do teste, já documentado na Etapa 5. Comparação Git confirmou que HTML, CSS, scripts do fluxo atual e testes anteriores não foram alterados nesta etapa.
+
+Nenhuma instalação de dependências foi necessária. O motor não foi integrado à interface, não avalia pessoas ou chaves reais e não realiza transferências, autenticação, consulta externa ou coleta de biometria. Pontuação nunca é apresentada como comprovação de fraude.
+
+### Execução isolada no VS Code e pendências
+
+Abra a pasta do projeto e use o terminal integrado com Node.js 20 ou superior:
+
+```sh
+node js/guard/demo.js
+node --test tests/guard.test.mjs
+```
+
+Não é necessário iniciar Live Server para esses comandos. O exemplo de importação ES module está em `js/guard/README.md`. O site continua usando o motor anterior; não existe integração oculta do novo módulo.
+
+Pendência principal: receber a especificação citada e comparar contratos, pesos, limiares, decisões e estrutura de auditoria. Também ficam fora do escopo persistência, autenticação de revisores, proteção criptográfica, métricas de precisão, calibração estatística e integração com Pix. O material é experimental e acadêmico, sem validade operacional ou jurídica. Não houve avaliação de desempenho em escala nem testes em outras versões de Node; essas verificações não são declaradas aprovadas.
+
+
+## Etapa 6 — Adequação à especificação recebida em Documentação.zip
+
+### Referências e preservação de histórico
+
+Recebidos e lidos `Documentação/JUSTEC_Guard_Etapa_6_Especificacao.md`, `Documentação/JUSTEC_Guard_Requisitos_Arquitetura_v1.md` e o relatório local do usuário. Os três arquivos foram extraídos para a pasta Documentação sem substituir o relatório da raiz. Os registros anteriores dos dois relatórios foram preservados. A pendência anterior de acesso à especificação está resolvida; as descrições provisórias da versão 0.1.0 permanecem apenas como histórico e são substituídas tecnicamente por este registro e pelo README atual.
+
+### Correções realizadas conforme o documento
+
+`js/guard/risk-engine.js` agora oferece `evaluateRisk(indicators)` recebendo array de códigos R01 a R06. Pesos: R01 chave recente 10; R02 sem relacionamento 10; R03 valor fora do padrão 20; R04 dispositivo incomum 15; R05 múltiplas tentativas 15; R06 alerta fictício 30. Soma explicitamente limitada a 100; faixas 0–29 low, 30–59 moderate, 60–100 high. Foram removidos desse módulo os nomes/pesos provisórios herdados da Etapa 5. A saída registra score, classification, indicadores com pesos/justificativas, justificativas gerais, versão e simulation: true. Os indicadores são definidos pelo cenário, sem consulta a chaves, dispositivos, DICT, Bacen ou dados reais.
+
+`js/guard/policy-engine.js` foi ajustado para a função pura `decideAction(assessment)`: allow_simulation, require_additional_confirmation ou interrupt_simulation, com justificativa e versão. A avaliação é validada/reconstituída para impedir inconsistências de pontuação, classificação ou motivos. A política apenas descreve a decisão, sem executar bloqueios, transferências ou alterações na interface.
+
+`js/guard/scenarios.js` contém os quatro cenários pedidos e o caso adicional de todos os indicadores: nenhum = 0/baixo/prosseguir; R01+R02+R03 = 40/moderado/verificação; R01+R03+R04+R05+R06 = 90/elevado/interrupção; todos = 100/elevado/interrupção; falso positivo R01+R03+R06 = 60/elevado/interrupção antes da revisão. O conhecimento educativo de legitimidade não é usado para reduzir o risco antecipadamente.
+
+O arquivo provisório `audit-log.js` foi substituído pelo nome especificado `js/guard/audit.js`. `createEvaluationRecord()` exige evaluationId, transactionId e timestamp fictícios fornecidos pelo chamador. O registro contém os dados mínimos da arquitetura: evaluationId, transactionId, timestamp, riskLevel, indicators, policyVersion, decision, reasons e simulation: true, além de entrada normalizada, avaliação/decisão originais e revisões.
+
+`appendReview()` cria outro snapshot e mantém a decisão original. `getReviewStatus()` informa separadamente a ação original e o resultado mais recente da revisão. Duplicações de revisão, datas inválidas/retroativas e registros inconsistentes são rejeitados. Uma revisão withdrawn não altera a decisão original interrupt_simulation. A retirada continua sendo apenas registro educativo; não produz desbloqueio ou reavaliação automática.
+
+As versões de risco, política e auditoria passaram para 0.2.0 para distinguir o contrato correto do provisório. `demo.js`, `README.md` e `tests/guard.test.mjs` foram atualizados para as assinaturas, dados e nomes especificados. Não há alias ou integração silenciosa com o motor antigo. `package.json` continua apenas declarando ES modules na pasta, sem novas dependências.
+
+### Pureza e proteção das entradas
+
+O motor e a política são funções determinísticas, sem IO, DOM, relógio, rede ou acesso ao estado bancário. O executor demo.js escreve no console de forma explícita. Duplicatas de indicadores contam uma só vez; código desconhecido, valor inválido, envelope em vez de array ou lista esparsa produz TypeError controlado, sem pontuação silenciosa. Saídas são cópias profundamente congeladas; não há congelamento ou modificação de objetos fornecidos pelo chamador.
+
+### Validação executada após o recebimento da especificação
+
+`node --test tests/guard.test.mjs`: **39 testes passaram, 0 falharam, 0 ignorados**. Inclui os resultados mínimos 0, 40, 90 e 100; tabela exata de códigos/pesos; faixas nos pontos 30 e 60; deduplicação; indicador inválido; imutabilidade; consistência da política; dados mínimos de auditoria; revisões sucessivas; falso positivo preservando decisão original; serialização; cronologia; IDs duplicados; adulteração e versões desconhecidas. Teste adicional instala sentinelas que rejeitam acesso a bankState, document e localStorage e confirma que avaliação, política e criação de auditoria funcionam sem acessá-los.
+
+`node js/guard/demo.js`: executado com sucesso, imprimindo os cinco cenários e o exemplo de revisão separado da decisão original.
+
+A exigência de não descontar saldo nem emitir comprovante de Pix concluído ao interromper é respeitada estruturalmente: os módulos isolados não possuem nem chamam APIs de saldo, lançamento ou comprovante. O fluxo Pix permanece no motor da Etapa 5; sua regressão é verificada separadamente. Não se afirma que o novo motor esteja integrado ao Pix.
+
+### Execução e limitações
+
+No terminal integrado do VS Code, na raiz do projeto, executar `node js/guard/demo.js` e `node --test tests/guard.test.mjs`. Não é necessário npm install, Live Server ou backend para o motor. Exemplos de importação e auditoria estão em js/guard/README.md.
+
+A auditoria é local em memória e serializável, sem persistência automática, assinatura criptográfica ou identidade real de revisores. A imutabilidade é lógica, não garantia contra reconstrução externa de históricos. Migração dos registros provisórios 0.1.0 não foi implementada; versões incompatíveis são rejeitadas. Não há avaliação empírica de precisão ou validade jurídica. Pontuação não é probabilidade nem prova de fraude. Chave, conta e operação permanecem objetos distintos; nenhuma medida real é executada. Integração futura, persistência e adaptações oficiais continuam fora do escopo desta etapa.
+
+Resultado final da regressão após a adequação: `JUSTEC_RESOURCE_BRIDGE=1 node tests/pix.cjs` passou, sem erros JavaScript, incluindo preservação do saldo nas interrupções, lançamentos únicos e revisão de falso positivo. A comparação Git confirmou que HTML, CSS e todos os scripts do fluxo atual permanecem inalterados.
