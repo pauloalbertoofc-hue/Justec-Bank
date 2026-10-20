@@ -426,3 +426,58 @@ Também reexecutados e aprovados nesta revisão: tests/statement.cjs; tests/bala
 A auditoria encontrou e corrigiu as contradições de conteúdo e o defeito de identidade acima; não é garantia de ausência de qualquer outro defeito. Os cenários executados não mostraram outras regressões funcionais. A validação foi local em Chromium, não em todos os navegadores ou dispositivos físicos. A integridade jurídica das normas Pix não foi revisada neste trabalho: a redação foi mantida genérica e demonstrativa. O motor da Etapa 6 continua isolado, conforme solicitado.
 
 O commit corretivo é enviado à branch main e seu deploy automático é acompanhado pelo status Vercel. A rede do ambiente continua limitando verificação direta do domínio público; confirmação de deploy não equivale a teste funcional direto em produção.
+
+
+## 20/10/2026 — Refinamento responsivo baseado no código atual (sem publicação)
+
+### Inspeção e comparação dos relatórios
+
+A inspeção confirmou que o diagnóstico de moldura de 400x850 descrevia uma versão anterior: o código atual já usava app-shell, menu lateral, barra mobile e rolagem natural, implementados na Etapa 7. Não foi necessário refazer a arquitetura. Os dez destinos são Home, Pix, Extrato, Proteção, Revisões, Central, Triagem, Pós-golpe, Direitos e Centro educativo.
+
+Os dois relatórios foram comparados antes da atualização. Este arquivo da raiz agrega o histórico principal de implementação, testes, correções e decisões desta colaboração, desde a correção da Etapa 3. Documentação/RELATORIO_MESTRE_JUSTEC.md começa com os Registros 001–003 do desenvolvimento local original do usuário e preserva sua origem documental, além de registros posteriores compartilhados. Os arquivos não são cópias intercambiáveis e nenhum foi substituído pelo outro. Somente este relatório principal recebeu o presente acréscimo; o arquivo em Documentação permaneceu byte a byte intacto. Todos os registros anteriores deste arquivo foram preservados integralmente.
+
+### Alterações incrementais e arquivos
+
+- index.html: removido exclusivamente o bloco CSS inline duplicado. Antes de remover, a equivalência de todas as regras com o início de css/style.css foi conferida desconsiderando espaços. O script inline de configuração Tailwind permanece. Nenhum ID, onclick, tela, conteúdo educativo, modal, diálogo ou formulário foi removido ou remapeado.
+- css/style.css: as regras visuais agora ficam somente no arquivo externo. Adicionado scroll-padding-bottom compatível com a navegação fixa e margem de rolagem nos controles; em desktop o espaçamento inferior de rolagem é reduzido a 24px. Em larguras até 374px, os seis serviços usam duas colunas para evitar a quebra excessiva dos nomes em cartões estreitos. A partir de 375px, mantêm três colunas.
+- tests/layout.cjs: matriz ampliada para 320, 375, 390, 768, 1024, 1366 e 1920px e todas as dez telas. Acrescentadas verificações de campos, mensagens de erro do Pix e número de colunas dos serviços.
+- tests/balance.cjs: passou a aceitar JUSTEC_TEST_URL, como as outras suítes, permitindo usar o servidor de teste escolhido sem alterar a aplicação. Não foram removidas as verificações existentes.
+- RELATORIO_MESTRE_JUSTEC.md: este registro, apenas por acréscimo.
+
+Os módulos js/transactions.js, js/state.js, js/risk.js, js/app.js, js/pix.js e todos os módulos de js/guard permanecem byte a byte iguais ao início da tarefa, comprovado por SHA-256. O cálculo do saldo, as regras de risco e o fluxo transacional não foram alterados. Não houve instalação de framework ou biblioteca, duplicação de navegação ou mudança de estado compartilhado.
+
+### Estratégia responsiva preservada
+
+Mobile: largura real da tela, saldo acima dos serviços e Rota da Segurança, barra inferior fixa e conteúdo com espaço para rolar além dela. Até 374px, serviços em duas colunas; a partir de 375px, três. A rolagem do documento respeita as margens do cabeçalho e da barra inferior ao alinhar controles.
+
+Tablet: a partir de 640px, margens e larguras de leitura maiores; a partir de 768px, Home em duas colunas, com a Rota da Segurança ocupando a largura da grade e resumo do extrato em colunas.
+
+Desktop: a partir de 1024px, navegação lateral de 232px, barra mobile oculta e conteúdo com largura máxima de 1520px. A partir de 1600px, saldo, serviços e segurança ficam em três colunas. O documento mantém rolagem natural, sem overflow interno em app-content. Somente modais/diálogos podem rolar internamente durante sua abertura. Ambos os menus usam navigateTo/syncNavigation e o mesmo estado existentes.
+
+### Problema encontrado na ampliação da cobertura
+
+A matriz anterior não incluía 320px e cobria apenas oito telas. No primeiro teste a 320px, a parte inferior do último botão da Home ficava cerca de 6px atrás da barra inferior quando a página ainda estava no topo. O documento já tinha espaço inferior para torná-lo acessível por rolagem, mas scrollIntoViewIfNeeded não reconhecia a sobreposição por um elemento fixo e não rolava. Foram adicionadas margens de rolagem e o teste agora alinha explicitamente o último controle ao fim da área segura antes de medir sua acessibilidade. Isso valida acesso por rolagem, sem exigir que todo o conteúdo de uma página longa caiba simultaneamente na viewport.
+
+A inspeção visual também mostrou quebra excessiva de “movimentações” na grade de três colunas a 320px. O breakpoint de duas colunas para essa largura resolveu o estreitamento sem reduzir textos, esconder serviços ou modificar seus vínculos. O número de colunas é verificado na suíte.
+
+### Testes realizados
+
+Executados em Chromium headless, altura de 900px, servidor HTTP estático em 127.0.0.1:8765. Como já documentado, JUSTEC_RESOURCE_BRIDGE=1 repassa recursos das CDNs oficiais via curl com HTTPS/TLS verificado exclusivamente durante os testes; a aplicação mantém suas URLs normais.
+
+- tests/layout.cjs: matriz de sete larguras e dez telas, incluindo Triagem e Centro educativo. Verificou navegação por botões, destaque ativo nos dois menus, estado do saldo preservado entre formatos, uma única tela ativa, ausência de rolagem horizontal, ausência de overflow-y scroll/auto no conteúdo, largura do shell e uso horizontal desktop. Também verificou campos dentro da largura da viewport e fora do cabeçalho/barra inferior, mensagem de valor inválido do Pix visível e desobstruída, últimos botões alcançáveis por rolagem e dois tipos de modal por largura. As capturas são geradas em /tmp/justec-responsive-<largura>.png.
+- tests/balance.cjs: passou, incluindo alternância, ícones, nomes acessíveis, navegação, triagem, MED e recarga. Nenhum erro JavaScript.
+- tests/statement.cjs: passou, incluindo filtros, totais, detalhes, cópia e falha de cópia, fechamento de diálogo e orientações educativas. Nenhum erro JavaScript.
+- tests/pix.cjs: passou, incluindo cenários de risco, valores inválidos, saldo insuficiente, débito único, extrato, interrupções sem débito, revisão/falso positivo, repetição da mesma chave com cenário diferente e cancelamento de conferência assíncrona obsoleta. Nenhum erro JavaScript.
+- Comparação de integridade: todos os módulos JavaScript, sequência de IDs e atributos onclick preservados; relatório de Documentação intacto; histórico anterior do relatório principal preservado.
+
+As capturas de 320px e 1366px foram inspecionadas; o refinamento de duas colunas foi aplicado após observar a quebra de nomes a 320px e a matriz foi novamente executada para validar a versão final.
+
+### Validação local e limitações
+
+Abrir index.html pelo Live Server e usar o modo responsivo do navegador nas sete larguras indicadas. Conferir Home, Pix, Extrato, Central, Pós-golpe, Proteção, Revisões, Direitos, Triagem e Centro educativo; rolar até os controles finais; abrir alertas/comprovantes; ocultar/revelar saldo e repetir os cenários Pix. Para repetir os testes com Playwright/Chromium já disponíveis, usar JUSTEC_RESOURCE_BRIDGE=1 JUSTEC_TEST_URL=http://127.0.0.1:8765/ node tests/layout.cjs, trocando o endereço pelo servidor em execução. A mesma variável de URL funciona nas três suítes funcionais reutilizadas.
+
+A extensão Live Server não foi executada nesta máquina; foi usado servidor HTTP estático equivalente. Não foram testados aparelhos físicos, Safari/Firefox, leitor de tela, zoom de 200%, todas as alturas/orientações ou safe areas em iPhone real. As CDNs continuam sendo dependência visual. A validação automatizada não comprova ausência absoluta de falhas. Nenhum problema transacional novo foi observado nos cenários executados.
+
+Não houve commit enviado ao GitHub nem publicação na Vercel: o push em main acionaria deploy automático e foi evitado conforme a instrução explícita desta tarefa. As alterações permanecem locais para revisão.
+
+Resultado final da matriz ampliada: as 70 combinações de largura/tela e as 14 verificações de modais passaram, sem erros JavaScript. A inspeção final confirmou a preservação dos módulos e dos dois históricos.

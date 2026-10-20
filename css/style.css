@@ -93,12 +93,13 @@ font-family: 'Plus Jakarta Sans', sans-serif;
 [hidden], .hidden { display: none !important; }
 
 /* Etapa 7: página responsiva, com uma única área de rolagem. */
-html { scroll-padding-top: 88px; }
+html { scroll-padding-top: 88px; scroll-padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
 body.app-body { margin: 0; padding: 0; display: block; background: #080d1a; }
 .app-shell { min-height: 100dvh; width: 100%; background: #080d1a; }
 .app-header { position: sticky; top: 0; z-index: 30; min-height: 76px; }
 .app-content { width: 100%; min-width: 0; padding: 16px 16px calc(96px + env(safe-area-inset-bottom)); }
 .app-content > [id^="screen-"] { min-width: 0; }
+.app-content :is(button, a, input, select, textarea) { scroll-margin-block: 12px; }
 .home-dashboard { display: grid; gap: 16px; align-items: start; }
 .home-dashboard > * { min-width: 0; margin: 0; }
 .app-sidebar { display: none; }
@@ -116,6 +117,9 @@ body.app-body { margin: 0; padding: 0; display: block; background: #080d1a; }
 body:has(#app-modal:not(.hidden)), body:has(dialog[open]) { overflow: hidden; }
 .skip-link { position: fixed; left: 12px; top: -80px; z-index: 100; background: #ffcc00; color: #080d1a; padding: 12px; border-radius: 8px; }
 .skip-link:focus { top: 12px; }
+@media (max-width: 374px) {
+    .demo-services { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
 @media (min-width: 640px) {
     .app-content { padding-left: 28px; padding-right: 28px; }
     .statement-filters { max-width: 640px; }
@@ -143,6 +147,7 @@ body:has(#app-modal:not(.hidden)), body:has(dialog[open]) { overflow: hidden; }
     #screen-rights p, #screen-screening p, #screen-action-post p, #screen-edu-center p, #home-security p { font-size: 13px; }
 }
 @media (min-width: 1024px) {
+    html { scroll-padding-bottom: 24px; }
     .app-shell { display: grid; grid-template-columns: 232px minmax(0,1fr); align-items: start; }
     .app-header { grid-column: 1 / -1; padding-inline: 28px; }
     .app-sidebar { display: flex; flex-direction: column; position: sticky; top: 76px; min-height: calc(100dvh - 76px); padding: 24px 16px; border-right: 1px solid #1e293b; background: #0a0f1d; }

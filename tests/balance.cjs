@@ -5,7 +5,7 @@ const assert=require('node:assert/strict');
  try {
  const p=await b.newPage({viewport:{width:390,height:900}});await require('./resources.cjs')(p);const errors=[],failed=[];
  p.on('pageerror',e=>errors.push(e.message));p.on('requestfailed',r=>failed.push(r.url()));
- const response=await p.goto('http://127.0.0.1:8000/',{waitUntil:'networkidle'});assert.equal(response.status(),200);
+ const response=await p.goto(process.env.JUSTEC_TEST_URL || 'http://127.0.0.1:8000/',{waitUntil:'networkidle'});assert.equal(response.status(),200);
  const text=async s=>(await p.locator(s).textContent()).trim().replace(/\u00a0/g,' ');
  assert.equal(await text('#balance-display'),'R$ 2.480,50');
  assert.equal(await p.locator('#eye-icon').getAttribute('class'),'fa-solid fa-eye');
