@@ -606,3 +606,9 @@ Alterados nesta solicitação index.html, css/style.css e tests/layout.cjs. A su
 O usuário autorizou enviar ao GitHub e publicar as alterações locais, substituindo a restrição de publicação das solicitações anteriores. Foram reexecutados os 58 testes de invariantes do estado, todos aprovados, e as suítes de saldo, extrato, Pix e layout, todas concluídas com código 0 e sem erros JavaScript. A matriz de layout confirmou Rota da Segurança antes do saldo nas sete larguras 320/375/390/768/1024/1366/1920, cobrindo dez telas e dois modais por largura. Testes locais em Chromium, com servidor HTTP na porta 8770 e adaptador HTTPS de recursos já documentado.
 
 A entrega inclui validação de domínio de js/state.js, testes correspondentes, reorganização da Home, ajuste de grade e teste da ordem visual/DOM, além dos registros deste relatório. A publicação não altera os pesos de risco e não integra o motor experimental ao Pix. O HTML alternativo legado, preexistente e não rastreado, permanece preservado fora da entrega da aplicação principal.
+
+## Ajuste visual — Rota da Segurança compacta
+
+Removidos os dois parágrafos introdutórios entre o título da Rota e os pilares. Reduzidos discretamente o preenchimento do cartão e dos botões e os ícones de 32 para 28 px; preservados textos dos pilares, cores, IDs, ações e posição acima do saldo. A altura mínima global de 44 px dos botões continua aplicada. Apenas index.html e este relatório foram alterados; lógica financeira preservada.
+
+Executado tests/layout.cjs com JUSTEC_RESOURCE_BRIDGE=1 e JUSTEC_TEST_URL=http://127.0.0.1:8770/: aprovado nas sete larguras 320/375/390/768/1024/1366/1920, dez telas e dois modais por largura, sem erros JavaScript. Publicação segue a autorização do usuário para atualizar GitHub e site. A verificação local não equivale a inspeção do site em produção.
