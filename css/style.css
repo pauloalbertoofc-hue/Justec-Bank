@@ -163,8 +163,7 @@ body:has(#app-modal:not(.hidden)), body:has(dialog[open]) { overflow: hidden; }
 }
 @media (min-width: 1600px) {
     .home-dashboard { grid-template-columns: minmax(260px,.85fr) minmax(360px,1.2fr) minmax(320px,1fr); gap: 24px; }
-    #home-security { grid-column: auto; }
-    #home-security > .grid { grid-template-columns: 1fr; }
+    #home-services { grid-column: span 2; }
 }
 @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { scroll-behavior: auto !important; animation: none !important; transition: none !important; }

@@ -70,35 +70,6 @@
             <!-- ================= TELA 1: HOME DO BANCO DIGITAL ================= -->
             <div id="screen-home" class="home-dashboard">
                 
-                <!-- Card de Saldo e Conta -->
-                <div id="home-balance" class="glass-card p-4 rounded-2xl relative overflow-hidden border-l-4 border-l-bb-yellow shadow-lg">
-                    <div class="flex justify-between items-start text-xs text-slate-400 mb-1">
-                        <span class="font-bold text-slate-300">Olá, Ana Paula!</span>
-                        <span class="text-[10px] bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-full font-bold flex items-center gap-1 border border-emerald-500/30">
-                            <i class="fa-solid fa-circle text-[6px]"></i> Conta Protegida
-                        </span>
-                    </div>
-                    <div class="flex items-baseline justify-between mt-1">
-                        <div>
-                            <p class="text-[10px] text-slate-400 font-medium">Saldo disponível</p>
-                            
-                            <h2
-                                id="balance-display"
-                                class="text-2xl font-black text-white tracking-tight"
-                                aria-label="Saldo disponível"
-                            >
-                                R$ 2.480,50
-                            </h2>
-
-                        </div>
-                        <button id="balance-toggle" type="button" aria-label="Ocultar saldo" aria-controls="balance-display" onclick="toggleBalance()" class="text-xs text-bb-yellow hover:underline flex items-center gap-1">
-                            <i id="eye-icon" class="fa-solid fa-eye"></i>
-                        </button>
-                    </div>
-                    <button type="button" class="statement-link" onclick="navigateTo('statement')"><i class="fa-solid fa-receipt" aria-hidden="true"></i> Ver extrato <span aria-hidden="true">›</span></button>
-                </div>
-
-                <section id="home-services" class="demo-panel" aria-labelledby="services-title"><h2 id="services-title">Serviços Bancários</h2><div class="demo-services"><button type="button" onclick="openPixFlow('safe')"><i class="fa-solid fa-paper-plane" aria-hidden="true"></i><span>Fazer Pix</span></button><button type="button" onclick="navigateTo('statement')"><i class="fa-solid fa-receipt" aria-hidden="true"></i><span>Consultar movimentações</span></button><button type="button" onclick="navigateTo('protection')"><i class="fa-solid fa-key" aria-hidden="true"></i><span>Verificar chave Pix</span></button><button type="button" onclick="navigateTo('protection')"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i><span>Bloqueios preventivos</span></button><button type="button" onclick="navigateTo('reviews')"><i class="fa-solid fa-file-signature" aria-hidden="true"></i><span>Contestações</span></button><button type="button" onclick="navigateTo('security')"><i class="fa-solid fa-lock" aria-hidden="true"></i><span>Central de segurança</span></button></div></section>
                 <!-- Destaque Central de Segurança Educacional -->
                 <div id="home-security" class="bg-gradient-to-r from-amber-950/90 via-slate-900 to-bb-blueDark/80 border border-amber-500/40 p-3.5 rounded-2xl shadow-xl space-y-2">
                     <div class="flex items-center justify-between">
@@ -144,6 +115,37 @@
 
                     </div>
                 </div>
+
+                <!-- Card de Saldo e Conta -->
+                <div id="home-balance" class="glass-card p-4 rounded-2xl relative overflow-hidden border-l-4 border-l-bb-yellow shadow-lg">
+                    <div class="flex justify-between items-start text-xs text-slate-400 mb-1">
+                        <span class="font-bold text-slate-300">Olá, Ana Paula!</span>
+                        <span class="text-[10px] bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-full font-bold flex items-center gap-1 border border-emerald-500/30">
+                            <i class="fa-solid fa-circle text-[6px]"></i> Conta Protegida
+                        </span>
+                    </div>
+                    <div class="flex items-baseline justify-between mt-1">
+                        <div>
+                            <p class="text-[10px] text-slate-400 font-medium">Saldo disponível</p>
+
+                            <h2
+                                id="balance-display"
+                                class="text-2xl font-black text-white tracking-tight"
+                                aria-label="Saldo disponível"
+                            >
+                                R$ 2.480,50
+                            </h2>
+
+                        </div>
+                        <button id="balance-toggle" type="button" aria-label="Ocultar saldo" aria-controls="balance-display" onclick="toggleBalance()" class="text-xs text-bb-yellow hover:underline flex items-center gap-1">
+                            <i id="eye-icon" class="fa-solid fa-eye"></i>
+                        </button>
+                    </div>
+                    <button type="button" class="statement-link" onclick="navigateTo('statement')"><i class="fa-solid fa-receipt" aria-hidden="true"></i> Ver extrato <span aria-hidden="true">›</span></button>
+                </div>
+
+                <section id="home-services" class="demo-panel" aria-labelledby="services-title"><h2 id="services-title">Serviços Bancários</h2><div class="demo-services"><button type="button" onclick="openPixFlow('safe')"><i class="fa-solid fa-paper-plane" aria-hidden="true"></i><span>Fazer Pix</span></button><button type="button" onclick="navigateTo('statement')"><i class="fa-solid fa-receipt" aria-hidden="true"></i><span>Consultar movimentações</span></button><button type="button" onclick="navigateTo('protection')"><i class="fa-solid fa-key" aria-hidden="true"></i><span>Verificar chave Pix</span></button><button type="button" onclick="navigateTo('protection')"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i><span>Bloqueios preventivos</span></button><button type="button" onclick="navigateTo('reviews')"><i class="fa-solid fa-file-signature" aria-hidden="true"></i><span>Contestações</span></button><button type="button" onclick="navigateTo('security')"><i class="fa-solid fa-lock" aria-hidden="true"></i><span>Central de segurança</span></button></div></section>
+
 
             </div>
 

@@ -495,3 +495,114 @@ Criado Documentação/DIAGNOSTICO_E_PLANO_JUSTEC_2026-10-20.md, autocontido para
 Tentativas de acesso online a Planalto, Banco Central, STJ, W3C e OWASP foram bloqueadas pela rede. O documento explicita que as referências externas não foram lidas com sucesso nesta sessão. Referências bibliográficas, súmulas e o REsp indicado para pesquisa não são apresentados como citações literais, inteiro teor conferido ou parecer jurídico atualizado. A verificação oficial da vigência e pertinência continua pendente.
 
 O relatório de Documentação/ não foi alterado. O motor experimental continua isolado do Pix, e as recomendações não equivalem a funcionalidades implementadas. A publicação adicional deste diagnóstico e deste registro não altera a lógica bancária. O estado de cada entrega e suas limitações são informados separadamente ao usuário.
+
+## 20/10/2026 — Integridade do núcleo transacional: validação de domínio
+
+### Escopo e inspeção
+
+Implementada exclusivamente a correção de validação de operações aprovadas em js/state.js, conforme solicitação. Inspecionados recordApprovedPix(), getter de saldo, demoId(), demoDate(), recordInterruptedPix(), dados iniciais e os chamadores preparePix()/completePix(). A interface envia amount como number em reais e destinatário com id/nome; os campos adicionais de etapa/risco permanecem fora do contrato financeiro desta função.
+
+Arquivos alterados: js/state.js; criado tests/state-invariants.cjs; este relatório principal atualizado somente por acréscimo. Não foram alterados index.html, css/style.css, js/app.js, js/pix.js, js/risk.js, js/transactions.js, módulos js/guard ou o relatório de Documentação/. As funções demoId(), demoDate(), recordInterruptedPix() e o getter de saldo foram preservados. Não houve integração do motor experimental, mudança de pesos ou publicação.
+
+### Defeito e causa técnica
+
+A implementação original verificava somente amount <= 0 ou amount > balance. Comparações com NaN não satisfazem nenhuma dessas condições, permitindo criar um lançamento inválido e contaminar o saldo derivado. Coerções de tipo e arredondamento posterior também podiam aceitar strings, booleanos e frações de centavo. Não havia validação completa do rascunho/destinatário. Além disso, o retorno por ID duplicado ocorria antes da validação, aceitando reenvios inconsistentes como se fossem idempotentes.
+
+### Contrato adotado
+
+A API permanece compatível com a interface: recordApprovedPix({ id, amount, recipient: { id, name }, ...outrosCampos }). Não foi criado um segundo parâmetro monetário nem exigida alteração de js/pix.js.
+
+- Rascunho e destinatário são objetos simples de dados; os campos obrigatórios devem ser propriedades próprias, não getters/setters. Isso evita executar acessores durante a validação. Campos extras usados pela interface não são lidos nem rejeitados.
+- id da operação, id do destinatário e nome são strings não vazias/não compostas apenas de espaços. Não há coerção nem geração automática de identificador nesta função.
+- amount deve ser number primitivo finito, estritamente positivo, canônico em BRL com precisão máxima de centavos. Rejeitados NaN, infinitos, strings, null, undefined, booleanos, BigInt, Number encapsulado, zero, -0, negativos e frações de centavo.
+- pixAmountInCents() calcula Math.round(amount * 100), exige Number.isSafeInteger e confere a igualdade exata amount === cents / 100. O arredondamento serve para reconhecer a representação binária de valores válidos como 0.29 e 1.15, não para aceitar silenciosamente 1.001 ou 0.1 + 0.2. Resultados não canônicos de cálculos devem ser normalizados pelo chamador antes da fronteira de domínio.
+- Comparação de disponibilidade feita em centavos inteiros. O saldo disponível também deve ser finito, não negativo e representar centavos seguros; zero é admitido para o saldo, não para uma nova transferência.
+- O lançamento continua contendo amount negativo em reais, preservando o formato do extrato e o getter existente. Não se mantém uma segunda cópia mutável do valor em centavos.
+- Nenhum novo limite de negócio foi introduzido. O limite demonstrativo de R$ 2.000,00 permanece no formulário/fluxo atual; o contrato desta função valida valor e saldo. Isso permite testar a quitação integral do saldo pela API de domínio sem mudar o comportamento da interface.
+
+### Implementação e atomicidade
+
+validateApprovedPix() lê apenas os campos próprios de dados, valida tipos/identificação/destinatário e devolve os valores primitivos validados e amountCents. recordApprovedPix() só modifica o estado depois de validar o contrato, resolver idempotência/colisão, conferir a disponibilidade e montar o lançamento completo.
+
+Entradas rejeitadas não geram IDs, não incrementam sequence, não alteram saldo, transações, tentativas, restrições ou históricos e não substituem as coleções existentes. A função não tenta reparar silenciosamente estado previamente corrompido: para uma nova operação, saldo já inválido produz rejeição sem acrescentar lançamento.
+
+O participante dos novos lançamentos também passa a guardar id, além dos campos já existentes name/institution. Isso permite conferir a identidade do destinatário durante reenvios sem depender só do nome visível e sem compartilhar o objeto recipient do rascunho. Não foram adicionados dados bancários ou chaves completas ao lançamento.
+
+### Duplicidade e colisões
+
+Depois da validação completa do rascunho, um ID existente só é tratado como reenvio idempotente se corresponder a Pix de saída concluído, mesmo valor, mesmo ID de destinatário e mesmo nome. Nesse caso, devolve o ID original sem novo débito, data ou alteração de estado. Essa conferência ocorre antes da disponibilidade para permitir repetir uma operação que já consumiu todo o saldo.
+
+Mesmo ID com dados divergentes ou incompletos é rejeitado. IDs de movimentações iniciais não são reaproveitados para criar outro Pix. Registros antigos sem identidade de participante verificável não são presumidos equivalentes. O cenário atual reinicia por recarga e não possui persistência de sessões antigas; migração de registros persistidos não foi necessária nem implementada.
+
+### Testes de regressão antes da correção
+
+O arquivo tests/state-invariants.cjs foi criado e executado antes de alterar js/state.js. A primeira suíte tinha 56 testes: 17 passaram e 39 falharam. As falhas incluem o defeito monetário e os requisitos adicionais de contrato/idempotência; não representam 39 defeitos independentes.
+
+O teste específico “Rejeita NaN sem alterar saldo, transações, IDs ou históricos” falhou no comportamento original porque o lançamento modificava o snapshot do estado. A cópia original foi preservada em /tmp/justec-state-before.js. Depois da correção, o mesmo teste isolado foi executado contra as duas implementações:
+
+```text
+Original:  tests 1, pass 0, fail 1, exit 1
+Corrigida: tests 1, pass 1, fail 0, exit 0
+```
+
+### Resultados finais executados
+
+A suíte foi ampliada com recuperação após rejeição e lançamentos sucessivos. A comparação final usou o mesmo arquivo de 58 testes contra a cópia original e a versão corrigida:
+
+```text
+Cópia original:  tests 58, pass 18, fail 40, exit 1
+Versão corrigida: tests 58, pass 58, fail 0, exit 0
+```
+
+A suíte usa somente node:test, node:assert, node:vm e fs/path. Cada teste roda em contexto descartável com dados iniciais reais do projeto e históricos/sequence preexistentes. Compara snapshots integrais do estado e cenário, além da identidade das coleções. Não há dependência adicional nem mutação dos dados do site publicado.
+
+Casos cobertos: valores não finitos e tipos inválidos; precisão inválida; centavos e valores BRL canônicos como 0.01, 0.07, 0.29, 1.15 e 350.35; saldo insuficiente; esgotamento exato do saldo; objetos/campos ausentes ou inválidos; reenvio idêntico inclusive com saldo zero; colisões de ID/valor/destinatário/nome; NaN e objeto incompleto com ID já usado; ID inicial indevidamente reutilizado; saldo previamente inválido; entrada congelada; snapshot independente do destinatário; rejeição de acessor sem executá-lo; operação válida após rejeição; e sequência de 0.10 + 0.20 + 0.29 em lançamentos distintos, com saldo esperado de R$ 2.479,91.
+
+Regressões obrigatórias reexecutadas e concluídas com código 0:
+
+- tests/balance.cjs: saldo, visibilidade, ícones, nomes acessíveis, navegação, triagem, MED e reinício.
+- tests/statement.cjs: filtros, totais, detalhes, clipboard/falha, diálogo, contestação educativa e estado vazio.
+- tests/pix.cjs: Pix baixo/moderado/elevado, confirmações, limites/valores inválidos, saldo insuficiente, débito único, extrato, tentativas sem débito, revisão, identidade de chave repetida e cancelamento de conferência obsoleta.
+
+Nenhum erro JavaScript foi registrado nessas três suítes de navegador. Executadas em Chromium com servidor local 127.0.0.1:8765 e JUSTEC_RESOURCE_BRIDGE=1, adaptador HTTPS já documentado. Não foi desativada verificação TLS. A extensão Live Server não foi executada; foi usado servidor HTTP estático equivalente. Testes de layout ou de outros navegadores não foram reexecutados, pois nenhuma regra visual ou navegação foi modificada.
+
+node --check js/state.js e git diff --check passaram. SHA-256 confirmou que os arquivos fora do escopo funcional, incluindo interface, Pix, riscos e Guard, permanecem intactos. O histórico anterior deste relatório e o relatório em Documentação/ foram preservados.
+
+### Como reproduzir e revisar
+
+Na raiz do projeto, com Node disponível:
+
+```sh
+node --test tests/state-invariants.cjs
+```
+
+Para reconstruir a implementação original do commit-base e repetir a comparação, em shell compatível com Unix:
+
+```sh
+git show cfc4099:js/state.js > /tmp/justec-state-original.js
+JUSTEC_STATE_FILE=/tmp/justec-state-original.js node --test tests/state-invariants.cjs
+node --test tests/state-invariants.cjs
+```
+
+O comando com a implementação original deve falhar; isso comprova a regressão, não é uma falha remanescente da versão corrigida. Os arquivos TAP desta execução estão em /tmp/justec-state-before.tap, /tmp/justec-state-final-vs-original.tap, /tmp/justec-state-final.tap, /tmp/justec-state-nan-before.tap e /tmp/justec-state-nan-after.tap; são evidências temporárias e podem não persistir em outra máquina.
+
+Para as regressões de navegador, iniciar o servidor HTTP e executar os três testes com JUSTEC_TEST_URL=http://127.0.0.1:8765/ e JUSTEC_RESOURCE_BRIDGE=1 quando necessário para as CDNs. No PowerShell, configurar as variáveis por $env: e adaptar o caminho temporário; o teste unitário principal não exige navegador ou servidor.
+
+### Estado de entrega e limites
+
+Correção pronta para revisão e publicação posterior, com os testes descritos aprovados. Não houve commit, push ou publicação automática na Vercel nesta tarefa. O diagnóstico anterior do valor NaN fica resolvido por esta alteração local; outras recomendações do diagnóstico continuam pendentes e fora do escopo.
+
+Esta é validação de domínio de um protótipo cliente: não constitui autenticação, autorização bancária ou defesa contra alguém que controle o JavaScript/global state no próprio navegador. A função não passou a executar análise de risco nem autenticação; esses fluxos permanecem como antes. Nenhuma transferência, bloqueio ou integração financeira real foi implementada.
+
+
+## Reorganização da Home — Rota da Segurança antes do saldo
+
+A pedido do usuário, o bloco home-security foi movido no HTML para antes de home-balance. A ordem de leitura, foco e exibição mobile agora é Rota da Segurança, Saldo e Serviços Bancários, mantendo todos os IDs, conteúdos e ações. No tablet/desktop, a Rota ocupa a primeira linha inteira; saldo e serviços continuam organizados abaixo em colunas. Em monitores a partir de 1600px, Serviços ocupa as duas colunas restantes para evitar uma célula vazia.
+
+Alterados nesta solicitação index.html, css/style.css e tests/layout.cjs. A suíte passou nas sete larguras 320/375/390/768/1024/1366/1920, dez telas e dois modais por largura, sem erros JavaScript. Foram acrescentadas asserções da ordem real do DOM e da posição visual da Rota acima do saldo. O servidor anterior não respondeu; a validação foi concluída com servidor HTTP local na porta 8770. A correção anterior de domínio em js/state.js e seus testes locais foram preservados. Não houve commit, push ou publicação na Vercel.
+
+## Publicação autorizada — Núcleo transacional e ordem da Home
+
+O usuário autorizou enviar ao GitHub e publicar as alterações locais, substituindo a restrição de publicação das solicitações anteriores. Foram reexecutados os 58 testes de invariantes do estado, todos aprovados, e as suítes de saldo, extrato, Pix e layout, todas concluídas com código 0 e sem erros JavaScript. A matriz de layout confirmou Rota da Segurança antes do saldo nas sete larguras 320/375/390/768/1024/1366/1920, cobrindo dez telas e dois modais por largura. Testes locais em Chromium, com servidor HTTP na porta 8770 e adaptador HTTPS de recursos já documentado.
+
+A entrega inclui validação de domínio de js/state.js, testes correspondentes, reorganização da Home, ajuste de grade e teste da ordem visual/DOM, além dos registros deste relatório. A publicação não altera os pesos de risco e não integra o motor experimental ao Pix. O HTML alternativo legado, preexistente e não rastreado, permanece preservado fora da entrega da aplicação principal.

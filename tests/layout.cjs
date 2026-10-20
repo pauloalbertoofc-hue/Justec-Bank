@@ -27,6 +27,11 @@ const assert = require('node:assert/strict');
                 assert.equal(await page.locator('#desktop-nav [aria-current=page]').getAttribute('data-nav-screen'),screen);
                 assert.equal(await page.locator('#mobile-nav [aria-current=page]').getAttribute('data-nav-screen'),mobileParents[screen]||screen);
                 if (screen === 'home') {
+                    const homeOrder = await page.locator('#screen-home > [id]').evaluateAll(nodes => nodes.map(node => node.id));
+                    assert.deepEqual(homeOrder, ['home-security', 'home-balance', 'home-services']);
+                    const securityBox = await page.locator('#home-security').boundingBox();
+                    const balanceBox = await page.locator('#home-balance').boundingBox();
+                    assert(securityBox.y + securityBox.height <= balanceBox.y, `${width} Rota da Segurança deve ficar acima do saldo`);
                     const columns = await page.locator('.demo-services').evaluate(el => getComputedStyle(el).gridTemplateColumns.split(' ').length);
                     assert.equal(columns, width < 375 ? 2 : 3);
                 }
