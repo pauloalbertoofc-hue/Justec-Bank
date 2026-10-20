@@ -612,3 +612,9 @@ A entrega inclui validação de domínio de js/state.js, testes correspondentes,
 Removidos os dois parágrafos introdutórios entre o título da Rota e os pilares. Reduzidos discretamente o preenchimento do cartão e dos botões e os ícones de 32 para 28 px; preservados textos dos pilares, cores, IDs, ações e posição acima do saldo. A altura mínima global de 44 px dos botões continua aplicada. Apenas index.html e este relatório foram alterados; lógica financeira preservada.
 
 Executado tests/layout.cjs com JUSTEC_RESOURCE_BRIDGE=1 e JUSTEC_TEST_URL=http://127.0.0.1:8770/: aprovado nas sete larguras 320/375/390/768/1024/1366/1920, dez telas e dois modais por largura, sem erros JavaScript. Publicação segue a autorização do usuário para atualizar GitHub e site. A verificação local não equivale a inspeção do site em produção.
+
+## Ajuste visual — Remoção do aviso acima da Home
+
+Removido, a pedido do usuário, o quadro “Ambiente de demonstração — operações fictícias” de index.html e suas duas regras CSS sem uso em css/style.css. Nenhuma lógica de negócio foi alterada. Histórico deste relatório preservado.
+
+Executado tests/layout.cjs com JUSTEC_RESOURCE_BRIDGE=1 e servidor local na porta 8770: aprovado nas sete larguras 320/375/390/768/1024/1366/1920, dez telas e dois modais por largura, sem erros JavaScript. Publicação segue a autorização vigente para atualizar GitHub e site; teste de navegador realizado localmente.

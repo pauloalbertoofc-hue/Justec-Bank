@@ -76,7 +76,6 @@ font-family: 'Plus Jakarta Sans', sans-serif;
 .statement-link:focus-visible, .transaction-item:focus-visible, .statement-screen button:focus-visible, .statement-receipt button:focus-visible { outline: 2px solid #FFCC00; outline-offset: 3px; }
 
 /* Etapa 5: fluxos acadêmicos e mensagens independentes das CDNs. */
-.demo-banner { color: #ffcc00; border: 1px solid #ffcc0040; padding: 8px; border-radius: 10px; font-size: 10px; margin-bottom: 12px; flex: none; }
 .demo-panel { background: #121929; border: 1px solid #334155; border-radius: 16px; padding: 12px; margin: 10px 0; font-size: 12px; line-height: 1.6; overflow-wrap: anywhere; }
 .demo-panel h2, .demo-panel h3 { color: #ffcc00; font-weight: 800; margin-bottom: 8px; }
 .demo-services { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 8px; }
@@ -134,7 +133,6 @@ body:has(#app-modal:not(.hidden)), body:has(dialog[open]) { overflow: hidden; }
     #home-balance { padding: 24px; }
     #balance-display { font-size: 32px; }
     .demo-panel { padding: 20px; font-size: 14px; }
-    .demo-banner { font-size: 12px; padding: 12px 16px; margin-bottom: 24px; }
     .statement-heading h2 { font-size: 22px; }
     .statement-summary { grid-template-columns: 2fr 1fr 1fr; }
     .statement-summary > div:first-child { grid-column: auto; }
