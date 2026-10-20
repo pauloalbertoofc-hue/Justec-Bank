@@ -618,3 +618,9 @@ Executado tests/layout.cjs com JUSTEC_RESOURCE_BRIDGE=1 e JUSTEC_TEST_URL=http:/
 Removido, a pedido do usuário, o quadro “Ambiente de demonstração — operações fictícias” de index.html e suas duas regras CSS sem uso em css/style.css. Nenhuma lógica de negócio foi alterada. Histórico deste relatório preservado.
 
 Executado tests/layout.cjs com JUSTEC_RESOURCE_BRIDGE=1 e servidor local na porta 8770: aprovado nas sete larguras 320/375/390/768/1024/1366/1920, dez telas e dois modais por largura, sem erros JavaScript. Publicação segue a autorização vigente para atualizar GitHub e site; teste de navegador realizado localmente.
+
+## Experimento visual — Título antes da transferência
+
+Substituído “ROTA DA SEGURANÇA JUSTEC” por “Antes de transferir, confira.” em index.html. O texto agora é um título semântico h2, branco, de 16 px e em negrito, preservando o ícone, o cartão e as ações dos pilares. Nenhuma regra de negócio foi modificada. Ponto de referência anterior ao experimento: commit a3a824a; é possível restaurar apenas o título sem desfazer alterações posteriores.
+
+Executado tests/layout.cjs com JUSTEC_RESOURCE_BRIDGE=1 e servidor local na porta 8770: aprovado nas sete larguras 320/375/390/768/1024/1366/1920, dez telas e dois modais por largura, sem erros JavaScript. Publicação para avaliação visual segue a autorização vigente do usuário.
