@@ -481,3 +481,17 @@ A extensão Live Server não foi executada nesta máquina; foi usado servidor HT
 Não houve commit enviado ao GitHub nem publicação na Vercel: o push em main acionaria deploy automático e foi evitado conforme a instrução explícita desta tarefa. As alterações permanecem locais para revisão.
 
 Resultado final da matriz ampliada: as 70 combinações de largura/tela e as 14 verificações de modais passaram, sem erros JavaScript. A inspeção final confirmou a preservação dos módulos e dos dois históricos.
+
+## 20/10/2026 — Validação, publicação autorizada e documento de recomendações
+
+O usuário autorizou publicar o refinamento responsivo antes mantido local e pediu avaliação das funcionalidades e um documento para continuar a discussão no ChatGPT. Reexecutadas as sete suítes: layout (sete larguras, dez telas, 70 combinações e 14 verificações de modais), saldo, extrato, Pix, atalhos (49 verificações), conteúdo Guard e unidade do motor isolado (39 testes). Todas concluíram com código 0; nenhum erro JavaScript registrado nas execuções finais dos testes de navegador. Os testes usaram o servidor local na porta 8765 e o adaptador HTTPS de recursos já documentado.
+
+O refinamento responsivo foi enviado à main no commit 07dcecd. O status da integração Vercel retornou success / Deployment has completed. A confirmação de deploy é distinta da navegação funcional direta no domínio público, ainda limitada pelo acesso de rede deste ambiente.
+
+Foram realizadas sondagens adicionais em contextos descartáveis, sem alterar a lógica de negócio ou os dados da aplicação publicada. Achados: recordApprovedPix aceita NaN em chamada programática direta, corrompendo o saldo desse contexto de teste; uma retirada anterior de restrição faz o motor antigo ignorar inclusive flags posteriormente adicionados; a listagem de proteção calcula risco para R$ 50,00 e pode diferir do risco de uma operação de R$ 1.500,00; o modal de diagnóstico não tem semântica completa de diálogo nem fecha por Escape. Os fluxos normais da interface continuaram aprovados. Essas limitações não foram corrigidas silenciosamente nesta entrega: foram registradas como prioridades para trabalho posterior, distinguindo defeitos confirmados de propostas.
+
+Criado Documentação/DIAGNOSTICO_E_PLANO_JUSTEC_2026-10-20.md, autocontido para envio ao ChatGPT, com arquitetura atual, matriz de testes, evidências, prioridades, critérios de aceitação, referências doutrinárias/normativas/jurisprudenciais a confirmar e prompt de continuidade. Foi gerada uma versão Word correspondente em /workspace/entregas/DIAGNOSTICO_E_PLANO_JUSTEC_2026-10-20.docx, reaberta e conferida estruturalmente, com cinco tabelas. Não houve renderização de paginação em suíte de escritório nesta máquina.
+
+Tentativas de acesso online a Planalto, Banco Central, STJ, W3C e OWASP foram bloqueadas pela rede. O documento explicita que as referências externas não foram lidas com sucesso nesta sessão. Referências bibliográficas, súmulas e o REsp indicado para pesquisa não são apresentados como citações literais, inteiro teor conferido ou parecer jurídico atualizado. A verificação oficial da vigência e pertinência continua pendente.
+
+O relatório de Documentação/ não foi alterado. O motor experimental continua isolado do Pix, e as recomendações não equivalem a funcionalidades implementadas. A publicação adicional deste diagnóstico e deste registro não altera a lógica bancária. O estado de cada entrega e suas limitações são informados separadamente ao usuário.
