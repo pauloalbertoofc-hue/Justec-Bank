@@ -10,7 +10,7 @@ let pixEditCount = 0;
 const pixElement = id => document.getElementById(id);
 function pixMessage(message) { pixElement('pix-feedback').textContent = message; }
 function stopPixTimer() { if (pixTimer !== null) clearInterval(pixTimer); pixTimer=null; }
-function clearPixCredential() { pixElement('pix-demo-code').value=''; pixElement('pix-demo-confirm').checked=false; }
+function clearPixCredential() { pixElement('pix-demo-code').value=''; pixElement('pix-demo-confirm').checked=false; syncPixAuthButton(); }
 function hidePixPanels() {
     for (const id of ['pix-confirm','pix-guard','pix-pause','pix-auth','pix-result']) pixElement(id).hidden=true;
     for(const id of ['pix-triage','pix-extra-label','pix-start-pause']) pixElement(id).hidden=true;
@@ -32,6 +32,7 @@ function openPixFlow(type) {
     changePixMethod(); showPixEntry('pix-start-step',1); navigateTo('pix');
 }
 function changePixMethod() {
+    pixElement('pix-recipient-title').textContent=pixElement('pix-method').value==='key'?'Qual é a chave Pix?':'Meus contatos';
     pixElement('pix-custom').hidden=pixElement('pix-method').value!=='key';
     pixElement('pix-registered').hidden=pixElement('pix-method').value==='key';
     updatePixRecipient();
@@ -150,13 +151,13 @@ function startPixPause() {
         if(pixJourney.stage==='verification') pixJourney.move('evaluation');
         pixJourney.move('pause');pixJourney.pause(pixConfig.reflectionMs);pixDraft.stage='pause';
         pixElement('pix-confirm').hidden=true;pixElement('pix-guard').hidden=true;pixElement('pix-triage').hidden=true;pixElement('pix-extra-label').hidden=true;pixElement('pix-start-pause').hidden=true;pixElement('pix-pause').hidden=false;
-        pixElement('pix-continue').disabled=true;pixElement('pix-reconsider-options').hidden=true;
-        pixElement('pix-pause-summary').textContent=`${pixDraft.recipient.name} · ${formatMoney(pixDraft.amount)}`;
+        pixElement('pix-continue').disabled=true;pixElement('pix-continue').textContent='Aguarde a pausa educativa';pixElement('pix-reconsider-options').hidden=true;
+        renderPixPauseRecipient();
         pixElement('pix-tip').textContent=selectPixTip(pixDraft.evidence).text;
         const duration=pixConfig.reflectionMs;const tick=()=>{
             if(pixJourney.stage!=='pause') return stopPixTimer();
             const remaining=pixJourney.remaining();pixElement('pix-reflection').value=duration?100*(1-remaining/duration):100;
-            if(remaining===0){stopPixTimer();pixElement('pix-continue').disabled=false;pixElement('pix-pause-status').textContent='Pausa concluída. Você decide se deseja continuar para o código demonstrativo.';}
+            if(remaining===0){stopPixTimer();pixElement('pix-continue').disabled=false;pixElement('pix-continue').textContent='Continuar para senha →';pixElement('pix-pause-status').textContent='Pausa concluída. Você decide se deseja continuar para o código demonstrativo.';}
         };
         pixElement('pix-pause-status').textContent='Reflita e confira os dados. Nenhum processamento bancário está em andamento.';
         stopPixTimer();pixTimer=setInterval(tick,100);tick();focusPixPanel('pix-pause');
@@ -185,7 +186,7 @@ function interruptPix(draft,risk,restrict=true) {
     recordInterruptedPix(draft,{...risk,reasons:[...risk.reasons,...(draft.policy?.justification?[draft.policy.justification]:[])]},restrict);
     for(const id of ['pix-auth','pix-pause','pix-confirm']) pixElement(id).hidden=true;
     pixElement('pix-result').hidden=false;pixElement('pix-result-text').textContent=`Operação fictícia interrompida, sem desconto do saldo. ${draft.policy?.justification||risk.reasons.join('; ')} ${restrict?'Restrição interna simulada, sem bloqueio no DICT.':'Indícios contextuais não criam restrição permanente de destinatário.'}`;
-    pixElement('pix-review').hidden=!restrict;pixElement('pix-receipt').hidden=true;pixElement('pix-guard').hidden=true;pixElement('pix-share').hidden=true;pixElement('pix-result-icon').textContent='!';pixElement('pix-result-icon').dataset.outcome='interrupted';renderPixSummary('pix-result-details',draft);
+    pixElement('pix-review').hidden=!restrict;pixElement('pix-receipt').hidden=true;pixElement('pix-guard').hidden=true;pixElement('pix-share').hidden=true;pixElement('pix-result-icon').textContent='!';pixElement('pix-result-title').textContent='Pix interrompido';pixElement('pix-result-icon').dataset.outcome='interrupted';renderPixSummary('pix-result-details',draft);
     pixMessage('Tentativa registrada somente no histórico de interrupções.');focusPixPanel('pix-result');
 }
 function completePix() {
@@ -202,8 +203,8 @@ function completePix() {
     } catch(error){pixElement('pix-result').hidden=true;pixElement('pix-receipt').hidden=true;return pixMessage(error.message);}
     draft.stage=pixJourney.stage;pixElement('pix-submit').disabled=true;pixElement('pix-guard').hidden=true;pixElement('pix-auth').hidden=true;
     renderBalance();renderStatementBalance();pixElement('pix-result').hidden=false;
-    pixElement('pix-result-text').textContent=`Pix fictício de ${formatMoney(draft.amount)} registrado. SIMULAÇÃO — SEM VALOR FINANCEIRO.`;
-    pixElement('pix-receipt').hidden=false;pixElement('pix-review').hidden=true;pixElement('pix-share').hidden=false;pixElement('pix-result-icon').textContent='✓';pixElement('pix-result-icon').dataset.outcome='completed';renderPixSummary('pix-result-details',draft,true);
+    pixElement('pix-result-text').textContent='Sua transferência foi concluída no ambiente demonstrativo do JUSTEC Bank.';
+    pixElement('pix-receipt').hidden=false;pixElement('pix-review').hidden=true;pixElement('pix-share').hidden=false;pixElement('pix-result-icon').textContent='✓';pixElement('pix-result-title').textContent='Pix realizado com sucesso!';pixElement('pix-result-icon').dataset.outcome='completed';renderPixSummary('pix-result-details',draft,true);
     pixMessage('Simulação concluída. Saldo e extrato atualizados uma única vez.');focusPixPanel('pix-result');
 }
 function openPixReceipt(){if(!pixDraft||pixJourney.stage!=='completed')return;navigateTo('statement');showTransactionDetails(pixDraft.id);}
@@ -290,8 +291,8 @@ for(const key of ['identity','urgency','advance','ignore']) pixElement('pix-'+ke
 
 function setPixStep(number) {
     const names=['Iniciar Pix','Destinatário','Valor','Conferência','Pausa Preventiva','Autorização','Resultado'];
-    document.querySelectorAll('[data-pix-step]').forEach(el=>{if(Number(el.dataset.pixStep)===number)el.setAttribute('aria-current','step');else el.removeAttribute('aria-current');});
-    pixElement('pix-step-label').textContent=`Etapa ${number} de 7 · ${names[number-1]}`;
+    pixElement('screen-pix').dataset.pixStep=String(number);
+    pixElement('pix-step-label').textContent=names[number-1];
 }
 function showPixEntry(id,step,focus=true) {
     for(const entry of ['pix-start-step','pix-recipient-step','pix-value'])pixElement(entry).hidden=entry!==id;
@@ -307,8 +308,9 @@ function goPixValue(){
 function renderPixSummary(id,draft,completed=false){
     const list=pixElement(id);list.replaceChildren();
     const lines=[['Destinatário',draft.recipient.name],['Instituição',draft.recipient.institution],['Chave Pix',draft.recipient.maskedKey],['Valor',formatMoney(draft.amount)]];
+    if(completed)lines.unshift(lines.pop());
     if(completed)lines.push(['Data da simulação',transactionDate(demoDate())],['ID da transação',draft.id]);
-    for(const [label,value]of lines){const row=document.createElement('div');const term=document.createElement('dt');term.textContent=label;const description=document.createElement('dd');description.textContent=value;row.append(term,description);list.append(row);}
+    for(const [label,value]of lines){const row=document.createElement('div');if(label==='Valor')row.className='pix-summary-value';const term=document.createElement('dt');term.textContent=label;const description=document.createElement('dd');description.textContent=value;row.append(term,description);list.append(row);}
 }
 function pixPad(target,key){
     const input=pixElement(target==='amount'?'pix-amount':'pix-demo-code');
@@ -327,4 +329,15 @@ async function sharePixReceipt(){
     const draft=pixDraft;if(!draft||pixJourney.stage!=='completed')return;
     const text=`JUSTEC Bank — SIMULAÇÃO — SEM VALOR FINANCEIRO\n${draft.recipient.name}\n${draft.recipient.institution}\nChave ${draft.recipient.maskedKey}\n${formatMoney(draft.amount)}\n${transactionDate(demoDate())}\n${draft.id}`;
     try{if(navigator.share)await navigator.share({title:'Comprovante fictício JUSTEC',text});else await navigator.clipboard.writeText(text);pixMessage('Comprovante fictício compartilhado ou copiado.');}catch{pixMessage('Não foi possível compartilhar ou copiar. Abra o comprovante demonstrativo para consultar os dados.');}
+}
+
+function syncPixAuthButton(){
+    pixElement('pix-submit').disabled=pixElement('pix-demo-code').value.length!==4 || !pixElement('pix-demo-confirm').checked;
+}
+pixElement('pix-demo-code').addEventListener('input',syncPixAuthButton);
+pixElement('pix-demo-confirm').addEventListener('change',syncPixAuthButton);
+function renderPixPauseRecipient(){
+    const box=pixElement('pix-pause-summary');box.replaceChildren();const who=document.createElement('div');
+    for(const text of ['Para',pixDraft.recipient.name,pixDraft.recipient.institution]){const line=document.createElement('span');line.textContent=text;who.append(line);}
+    const amount=document.createElement('strong');amount.textContent=formatMoney(pixDraft.amount);box.append(who,amount);
 }

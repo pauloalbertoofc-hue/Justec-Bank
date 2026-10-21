@@ -5,7 +5,9 @@ const {chromium}=require('playwright');const assert=require('node:assert/strict'
   const page=await browser.newPage();await require('./resources.cjs')(page);const errors=[];page.on('pageerror',e=>errors.push(e.message));
   await page.goto(process.env.JUSTEC_TEST_URL||'http://127.0.0.1:8000/',{waitUntil:'networkidle'});await page.evaluate(()=>pixConfig.reflectionMs=40);
   async function step(number,panel,width){
-   assert.equal(await page.locator('#pix-stepper [aria-current=step]').getAttribute('data-pix-step'),String(number));
+   assert.equal(await page.locator('#screen-pix').getAttribute('data-pix-step'),String(number));
+   assert.equal(await page.locator('#pix-stepper').count(),0);
+   assert.doesNotMatch(await page.locator('#screen-pix').innerText(),/Etapa \d de 7|[4-7] ·/);
    const panels=['pix-start-step','pix-recipient-step','pix-value','pix-confirm','pix-guard','pix-pause','pix-auth','pix-result'];
    for(const id of panels)assert.equal(await page.locator('#'+id).isVisible(),id===panel,`Etapa ${number}: ${id}`);
    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1),false);
@@ -28,9 +30,11 @@ const {chromium}=require('playwright');const assert=require('node:assert/strict'
    assert.equal(await page.locator('#pix-summary dt').count(),4);assert.match(await page.locator('#pix-summary').innerText(),/Chave Pix/);
    await page.check('#pix-data-confirm');await page.locator('[onclick="analyzePix()"]').click();await step(5,'pix-pause',width);
    await page.waitForFunction(()=>!document.getElementById('pix-continue').disabled);assert.equal(await page.locator('#pix-auth').isVisible(),false);
+   const continueBox=await page.locator('#pix-continue').boundingBox();const pauseBox=await page.locator('#pix-pause').boundingBox();assert(continueBox.width>=pauseBox.width*.9);assert.match(await page.locator('#pix-continue').innerText(),/Continuar para senha/);
    await page.locator('#pix-continue').click();await step(6,'pix-auth',width);assert.equal(await page.locator('#pix-demo-code').getAttribute('type'),'password');
+   assert(await page.locator('#pix-submit').isDisabled());
    for(let i=0;i<4;i++)await page.locator('#pix-code-pad').getByRole('button',{name:'Dígito 0',exact:true}).click();
-   await page.check('#pix-demo-confirm');const before=await page.evaluate(()=>bankState.transactions.length);await page.locator('#pix-submit').click();await step(7,'pix-result',width);
+   assert(await page.locator('#pix-submit').isDisabled());await page.check('#pix-demo-confirm');assert.equal(await page.locator('#pix-submit').isDisabled(),false);const before=await page.evaluate(()=>bankState.transactions.length);await page.locator('#pix-submit').click();await step(7,'pix-result',width);
    assert.equal(await page.evaluate(()=>bankState.transactions.length),before+1);assert.equal(await page.locator('#pix-result-details dt').count(),6);
    assert.match(await page.locator('#pix-result').innerText(),/SIMULAÇÃO — SEM VALOR FINANCEIRO/);
    await page.evaluate(()=>{Object.defineProperty(navigator,'share',{configurable:true,value:async data=>{globalThis.sharedDemo=data.text;}});});await page.locator('#pix-share').click();
@@ -38,6 +42,13 @@ const {chromium}=require('playwright');const assert=require('node:assert/strict'
    await page.locator('#pix-result [onclick="navigateTo(\'home\')"]').click();assert(await page.locator('#screen-home').isVisible());
    console.log(`PASS sequência ${width}px: 7 layouts exclusivos, catálogo, teclado monetário/código, revisão, pausa, resultado e compartilhamento simulado.`);
   }
+  // Regressão da captura desktop do usuário: janela baixa, avanço real e conclusão.
+  await page.setViewportSize({width:1366,height:630});const flow=require('./pix-helpers.cjs')(page);await flow.open('demo-low','40,00');await flow.analyze();await flow.pause();
+  const next=page.locator('#pix-continue');assert(await next.isEnabled());await next.evaluate(el=>el.scrollIntoView({block:'center'}));
+  const box=await next.boundingBox();assert(box.y>=76&&box.y+box.height<=630);assert(box.height>=48);await next.click();
+  assert(await page.locator('#pix-auth').isVisible());await page.fill('#pix-demo-code','0000');await page.check('#pix-demo-confirm');
+  const before=await page.evaluate(()=>bankState.transactions.length);await page.locator('#pix-submit').click();assert.equal(await page.evaluate(()=>bankState.transactions.length),before+1);assert(await page.locator('#pix-result').isVisible());
+  console.log('PASS desktop 1366x630: botão de senha acessível, código demonstrativo e resultado com único registro.');
   assert.deepEqual(errors,[]);
  }finally{await browser.close();}
 })().catch(e=>{console.error(e);process.exitCode=1;});

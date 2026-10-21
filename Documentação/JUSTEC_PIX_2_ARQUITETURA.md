@@ -115,3 +115,13 @@ A referência orienta sequência e identidade visual, sem adicionar moldura de s
 Nova suíte tests/pix-layout-sequence.cjs verifica sete layouts exclusivos nas sete larguras, um único layout por etapa, digitação da chave sem perder foco, teclados visuais, resumo, pausa antes do código, registro único, resultado e compartilhamento interceptado. As capturas temporárias em 390 px são /tmp/justec-pix-layout-1.png até -7.png. O teste de compartilhamento intercepta navigator.share: comprova o conteúdo e o vínculo de UI, sem envio real a outra pessoa.
 
 A autorização atual substitui a condição local de não publicação das seções anteriores, que permanecem como histórico. Testes e confirmação de deploy são registrados no Relatório-Mestre principal e na entrega desta etapa.
+
+## Refinamento dos layouts internos — 21/10/2026
+
+A pedido do usuário, o indicador numerado superior foi removido do HTML e os prefixos numéricos dos títulos foram eliminados. O anúncio de mudança de tela permanece apenas para leitores de tela, sem numeração visual. A ordem é acompanhada internamente por data-pix-step, sem criar nova navegação ou alterar a máquina de estados.
+
+O conteúdo se aproxima das telas dentro dos celulares da referência: coluna de leitura de até 460 px, sem cartão/moldura envolvendo toda a tela; títulos brancos e subtítulos curtos; conferência em ficha; pausa com escudo central, dica em cartão azul, barra, destinatário/valor e duas ações largas; autorização com círculos, teclado e código demonstrativo explícito; resultado com ícone, ficha compacta e compartilhamento. Os avisos detalhados do protótipo e do intervalo experimental estão em expansões acessíveis; a identificação de simulação e os alertas contra senha real continuam visíveis.
+
+A captura do usuário mostrava a ação de continuar em tamanho pequeno abaixo do botão principal. O código já possuía showDemoAuthentication; não se atribuiu uma causa funcional inexistente. A ação foi tornada inequívoca: “Continuar para senha →”, em botão azul de largura total após a pausa, sem avanço automático. A habilitação e o clique até o resultado são exercitados com navegador, inclusive em desktop 1366x630. “Confirmar” permanece desabilitado até quatro caracteres e confirmação explícita, mas a validação real do código 0000 e de toda a operação continua no controlador/domínio.
+
+Alterados index.html, css/style.css, js/pix.js, tests/pix.cjs e tests/pix-layout-sequence.cjs; documentação atualizada sem apagar registros anteriores. As regras financeiras, o motor vigente e os módulos experimentais não foram alterados.

@@ -235,13 +235,6 @@ body:has(#app-modal:not(.hidden)), body:has(dialog[open]) { overflow: hidden; }
 @media (prefers-reduced-motion: reduce) { #screen-pix * { transition: none !important; animation: none !important; } }
 
 /* Sete layouts sequenciais da referência, sem moldura de smartphone. */
-.pix-stepper { display: grid; grid-template-columns: repeat(7,minmax(0,1fr)); gap: 3px; margin: 18px 0 8px; list-style: none; }
-.pix-stepper li { display: flex; flex-direction: column; align-items: center; gap: 5px; min-width: 0; color: #94a3b8; text-align: center; }
-.pix-stepper li > span { display: grid; place-items: center; width: 26px; height: 26px; border: 1px solid #475569; border-radius: 50%; font-size: 12px; font-weight: 800; }
-.pix-stepper small { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
-.pix-stepper [aria-current=step] { color: #ffcc00; }
-.pix-stepper [aria-current=step] > span { color: #080d1a; background: #ffcc00; border-color: #ffcc00; }
-.pix-step-label { color: #ffcc00; font-size: 12px; font-weight: 700; margin-bottom: 12px; }
 #screen-pix .pix-primary { display: block; width: 100%; margin: 14px 0 6px; background: #ffcc00; border-color: #ffcc00; color: #080d1a; font-weight: 800; padding: 12px; }
 #screen-pix .pix-primary:hover { background: #ffda47; }
 .pix-methods { display: grid; gap: 10px; margin: 16px 0; }
@@ -257,7 +250,7 @@ body:has(#app-modal:not(.hidden)), body:has(dialog[open]) { overflow: hidden; }
 .pix-summary > div:last-child { border: 0; }
 .pix-summary dt { color: #94a3b8; font-size: 11px; margin-bottom: 5px; }
 .pix-summary dd { color: #f1f5f9; font-size: 14px; font-weight: 600; overflow-wrap: anywhere; }
-.pix-summary > div:nth-child(4) dd { color: #ffcc00; font-size: 22px; }
+.pix-summary > .pix-summary-value dd { color: #ffcc00; font-size: 22px; }
 #screen-pix .pix-amount-box { display: flex; align-items: center; gap: 8px; padding: 12px; background: #0a1425; border: 1px solid #334155; border-radius: 12px; margin-top: 8px; font-size: 26px; color: white; }
 #screen-pix .pix-amount-box input { min-width: 0; margin: 0; padding: 0; border: 0; font-size: 26px; background: transparent; }
 .pix-keypad { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 8px; margin: 18px auto; max-width: 360px; }
@@ -266,4 +259,39 @@ body:has(#app-modal:not(.hidden)), body:has(dialog[open]) { overflow: hidden; }
 .pix-result-icon { display: grid; place-items: center; width: 56px; height: 56px; border-radius: 50%; margin: 8px auto 18px; background: #14b88a; color: #05231d; font-size: 32px; font-weight: 800; }
 .pix-result-icon[data-outcome=interrupted] { background: #a9254c; color: #fff; }
 #pix-result > h3, #pix-result > #pix-result-text { text-align: center; }
-@media (min-width:768px) { .pix-stepper small { position: static; width: auto; height: auto; clip-path: none; font-size: 10px; } .pix-entry, #pix-confirm, #pix-pause, #pix-auth, #pix-result, #pix-guard { max-width: 600px; margin-inline: auto; } }
+/* Layouts internos inspirados na referência: uma tela ativa, sem indicador numerado. */
+#screen-pix { max-width: 460px; margin-inline: auto; }
+#screen-pix .demo-panel { border: 0; border-radius: 0; background: transparent; padding: 8px 0; margin: 0; box-shadow: none; }
+#screen-pix .pix-journey-header { gap: 10px; margin-bottom: 20px; align-items: center; }
+#screen-pix .pix-journey-header h2 { font-size: 12px; font-weight: 500; color: #aebed1; }
+.pix-journey-header > span { margin-left: auto; color: #ffcc00; font-size: 9px; letter-spacing: .05em; }
+#screen-pix h3 { color: #f8fafc; font-size: 20px; line-height: 1.35; font-weight: 800; }
+#screen-pix .pix-subtitle { color: #b7c8df; font-size: 13px; line-height: 1.6; margin: 10px 0 18px; }
+#screen-pix .pix-secondary { display: block; width: 100%; margin: 10px 0; min-height: 48px; padding: 12px; border-radius: 10px; background: #122b50; border: 1px solid #466695; color: #fff; font-size: 14px; font-weight: 700; }
+#screen-pix button:disabled { cursor: not-allowed; opacity: .5; }
+#screen-pix .pix-primary:disabled { background: #334155; border-color: #475569; color: #cbd5e1; }
+#screen-pix .pix-pause { padding-top: 18px; }
+.pix-guard-brand { display: flex; flex-direction: column; align-items: center; margin: 0 auto 12px; gap: 10px; }
+.pix-guard-brand i { font-size: 34px; }
+#pix-pause-title, .pix-pause-subtitle { text-align: center; max-width: 320px; margin-inline: auto !important; }
+.pix-tip-card { background: #0c203a; border: 1px solid #35557b; border-radius: 12px; padding: 14px; margin: 18px 0 16px; }
+.pix-tip-card > strong { display: flex; gap: 8px; color: #ffcc00; font-size: 11px; }
+#screen-pix .pix-tip { padding: 0; background: transparent; border: 0; margin: 12px 0 0; color: #e2e8f0; font-size: 14px; line-height: 1.65; }
+#pix-pause-status { color: #b7c8df; font-size: 12px; min-height: 38px; }
+.pix-pause-recipient { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 14px; margin: 16px 0; border: 1px solid #334d70; background: #0a172b; border-radius: 10px; }
+.pix-pause-recipient > div { min-width: 0; }
+.pix-pause-recipient span { display: block; font-size: 12px; overflow-wrap: anywhere; }
+.pix-pause-recipient span:first-child { color: #94a3b8; margin-bottom: 4px; }
+.pix-pause-recipient span:last-child { color: #94a3b8; font-size: 10px; margin-top: 4px; }
+.pix-pause-recipient strong { flex-shrink: 0; color: #fff; font-size: 18px; }
+#screen-pix .pix-pause-footnote { text-align: center; color: #94a3b8; font-size: 11px; }
+#screen-pix .pix-explanation { font-size: 11px; color: #94a3b8; margin-top: 18px; }
+#screen-pix .pix-explanation summary { font-weight: 500; }
+#screen-pix .pix-explanation p { line-height: 1.6; }
+#pix-result-details > div { display: grid; grid-template-columns: minmax(68px,.8fr) minmax(0,1.2fr); gap: 10px; align-items: baseline; padding: 9px 0; }
+#pix-result-details dt { margin: 0; font-size: 11px; }
+#pix-result-details dd { font-size: 12px; text-align: right; }
+#pix-result-details .pix-summary-value dd { font-size: 16px; }
+#screen-pix .pix-amount-box input { text-align: center; font-weight: 800; }
+#pix-auth .pix-code-input { padding: 18px 10px; margin-top: 20px; }
+.pix-screen-reader { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }

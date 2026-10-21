@@ -10,7 +10,7 @@ const {chromium}=require('playwright');const assert=require('node:assert/strict'
   assert.deepEqual(await page.evaluate(()=>['000.000.000-00','00.000.000/0000-00','+5511900000000','escola@example.invalid','00000000-0000-0000-0000-000000000000'].map(isDemoKey)),[true,true,true,true,true]);
   await flow.open();await page.locator('[onclick="analyzePix()"]').click();assert.match(await page.locator('#pix-feedback').innerText(),/Confirme explicitamente/);
   await flow.analyze();assert.match(await page.locator('#pix-risk').innerText(),/Baixo risco/);await flow.pause();await page.locator('#pix-continue').click();
-  await page.locator('#pix-submit').click();assert.match(await page.locator('#pix-feedback').innerText(),/Confirme a operação/);
+  assert.equal(await page.locator('#pix-submit').isDisabled(),true);await page.evaluate(()=>completePix());assert.match(await page.locator('#pix-feedback').innerText(),/Confirme a operação/);
   await page.fill('#pix-demo-code','0000');await page.check('#pix-demo-confirm');await page.locator('#pix-submit').click();
   assert.deepEqual(await snapshot(),{balance:2430.5,transactions:13,attempts:0});
   await page.evaluate(()=>{completePix();completePix();});assert.equal((await snapshot()).transactions,13);

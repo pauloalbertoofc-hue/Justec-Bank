@@ -790,3 +790,28 @@ Testes executados nesta preparação com servidor local porta 8800, Chromium e a
 Inspecionada visualmente a conferência em 390 px. Compartilhamento foi interceptado no teste, sem envio real; suporte nativo/clipboard pode depender do navegador e tem mensagem de erro/alternativa pelo comprovante. Auditoria com aparelhos físicos/leitores de tela e verificação dos portais oficiais permanecem pendentes, como já documentado. git diff --check aprovado e remoto main alinhado ao HEAD anterior antes do commit.
 
 Fechamento dos testes desta publicação: tests/shortcuts.cjs aprovado com 49 verificações; tests/consumer-guidance.cjs aprovado nas sete larguras, com 35 aberturas externas interceptadas, sem apresentar disponibilidade remota como verificada. Publicação autorizada inclui o Pix 2.0 completo e a adequação aos sete layouts, com o histórico documental preservado.
+
+## 21/10/2026 — Pix sem indicador numerado e layouts internos da referência
+
+O usuário pediu remover os números no topo e reproduzir a organização interna dos celulares da imagem, destacando a passagem da pausa à senha. Inspecionados os arquivos reais e a captura: a ação “Continuar para senha” já existia no código e aparecia pequena abaixo de “Reconsiderar”. A correção priorizou clareza visual e validação efetiva do fluxo; não foi inventada uma falha na função existente.
+
+Removidos #pix-stepper e seu CSS, os textos “Etapa N de 7” visuais e os prefixos numéricos dos títulos. Preservado um status exclusivo para leitores de tela e o estado interno das sete telas. Retirado o cabeçalho repetitivo de informações técnicas; os detalhes da simulação passaram para expansão acessível, mantendo indicação de SIMULAÇÃO e avisos contra uso de dados/senha reais.
+
+Layouts internos agora usam coluna de até 460 px, títulos brancos, subtítulos curtos, fundo integrado à página (sem moldura de smartphone ou cartão externo), conferência em ficha, pausa com escudo/dica/barra/favorecido/valor e duas ações de largura total, autorização com círculos/teclado e resultado compacto com ícone/compartilhamento. A dica continua vinculada às evidências, sem copiar afirmações de fraude sem fundamento. Dados do catálogo permanecem fictícios e mascarados; não foram substituídos por pessoas reais da imagem.
+
+O botão azul “Continuar para senha →” fica visível e habilitado ao fim da pausa, ocupando toda a largura. Não houve avanço automático. “Confirmar” só é habilitado com quatro caracteres e confirmação explícita; o domínio/controlador ainda rejeita código incorreto e revalida valor, destinatário, saldo e restrições. A credencial demonstrativa 0000 permanece clara. Nenhuma regra de risco/financeira foi alterada.
+
+Arquivos alterados: index.html, css/style.css, js/pix.js, tests/pix.cjs, tests/pix-layout-sequence.cjs, Documentação/JUSTEC_PIX_2_ARQUITETURA.md e este relatório. O teste financeiro passou a verificar o botão Confirmar desabilitado, mantendo a chamada direta de completePix para garantir que o controle de UI não substitui a validação. A suíte da sequência verifica ausência do indicador, telas exclusivas, botão de avanço com pelo menos 90% da largura, senha e resultado.
+
+Testes executados no Chromium, servidor local porta 8810 e adaptador HTTPS das CDNs:
+
+- 107 testes unitários (estado, Guard experimental e jornada/política): aprovados, zero falhas/ignorados.
+- tests/pix.cjs: aprovado, invariantes financeiras, validações, código, cenários e revisões/falso positivo.
+- tests/pix-2.cjs: aprovado, pausa real de cinco segundos, ausência de avanço automático, reconsideração, senha/código incorreto, falha de registro, duplo envio, revalidação, abandono e recarga; sete larguras.
+- tests/pix-layout-sequence.cjs: execução inicial aprovada nas sete larguras 320/375/390/768/1024/1366/1920; fluxo de clicar no botão da pausa, digitar 0000, confirmar e obter resultado exercitado em todas elas. Verificações adicionais de janela desktop baixa registradas no fechamento abaixo.
+- tests/layout.cjs: aprovado em sete larguras, dez telas e dois modais por largura, sem transbordamento horizontal ou rolagem interna concorrente.
+- tests/balance.cjs e tests/statement.cjs: aprovados, sem erros JavaScript.
+
+Inspecionadas capturas da pausa e autorização em 390 px; a ação de continuar está larga e legível, com senha e resultado funcionais. Não se declarou equivalência pixel a pixel com uma ilustração; os elementos e a ordem internos foram aproximados, preservando responsividade, acessibilidade e funções adicionais entre as etapas. Auditoria com aparelho físico/leitor de tela e disponibilidade dos portais externos continuam fora desta verificação. Publicação segue a autorização vigente do usuário para esta evolução e suas correções; relatório histórico preservado.
+
+Fechamento: tests/pix-layout-sequence.cjs reexecutado e aprovado nas sete larguras e em 1366x630, com avanço real da pausa à senha, autorização com 0000 e único lançamento. tests/guard-content.cjs aprovado em 390/1366 e tests/shortcuts.cjs aprovado com 49 verificações. git diff --check final aprovado. Nenhuma mudança em js/state.js, js/risk.js, js/transactions.js ou js/guard/ nesta correção.
