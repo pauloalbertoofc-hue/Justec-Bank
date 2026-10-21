@@ -1,132 +1,220 @@
 let pixDraft = null;
-let pixPreparation = 0;
-function pixMessage(message) { document.getElementById('pix-feedback').textContent = message; }
+let pixJourney = createPixJourney();
+let pixTimer = null;
+let pixResolved = null;
+let pixAnswers = {};
+let pixAnswered = false;
+let pixContextRequired = false;
+let pixPriorSignature = null;
+let pixEditCount = 0;
+const pixElement = id => document.getElementById(id);
+function pixMessage(message) { pixElement('pix-feedback').textContent = message; }
+function stopPixTimer() { if (pixTimer !== null) clearInterval(pixTimer); pixTimer=null; }
+function clearPixCredential() { pixElement('pix-demo-code').value=''; pixElement('pix-demo-confirm').checked=false; }
+function hidePixPanels() {
+    for (const id of ['pix-confirm','pix-guard','pix-pause','pix-auth','pix-result']) pixElement(id).hidden=true;
+    for(const id of ['pix-triage','pix-extra-label','pix-start-pause']) pixElement(id).hidden=true;
+    clearPixCredential(); stopPixTimer();
+    for (const id of ['pix-data-confirm','pix-extra']) pixElement(id).checked=false;
+    pixElement('pix-continue').disabled=true;
+    pixElement('pix-submit').disabled=false;
+    pixElement('pix-reconsider-options').hidden=true;pixElement('pix-share').hidden=true;
+}
 function resetPixSteps() {
-    pixPreparation++;
-    pixDraft = null;
-    for (const id of ['pix-confirm', 'pix-guard', 'pix-auth', 'pix-result']) document.getElementById(id).hidden = true;
-    for (const id of ['pix-data-confirm', 'pix-extra', 'pix-demo-confirm']) document.getElementById(id).checked = false;
-    document.getElementById('pix-submit').disabled = false;
+    hidePixPanels(); pixElement('pix-form').hidden=false; pixDraft=null; pixJourney=createPixJourney(); pixAnswers={}; pixAnswered=false;
+    for (const id of ['identity','urgency','advance','ignore']) pixElement('pix-'+id).value='unknown';
     pixMessage('');
 }
 function openPixFlow(type) {
-    resetPixSteps();
-    document.getElementById('pix-form').reset();
-    document.getElementById('pix-recipient').value = type === 'suspicious' ? 'demo-high' : 'demo-low';
-    updatePixRecipient();
-    navigateTo('pix');
+    resetPixSteps(); pixResolved=null; pixPriorSignature=null;pixEditCount=0;pixElement('pix-form').reset();
+    pixElement('pix-recipient').value=type==='suspicious'?'demo-high':'demo-low';
+    pixElement('pix-value').hidden=true; pixElement('pix-recipient-info').textContent='';
+    changePixMethod(); showPixEntry('pix-start-step',1); navigateTo('pix');
 }
-function updatePixRecipient() {
-    document.getElementById('pix-custom').hidden = document.getElementById('pix-recipient').value !== 'custom';
-    resetPixSteps();
+function changePixMethod() {
+    pixElement('pix-custom').hidden=pixElement('pix-method').value!=='key';
+    pixElement('pix-registered').hidden=pixElement('pix-method').value==='key';
+    updatePixRecipient();
+}
+function updatePixRecipient(focus = true) {
+    resetPixSteps(); pixResolved=null; pixElement('pix-value').hidden=true; pixElement('pix-recipient-info').textContent='';pixElement('pix-recipient-next').hidden=true;showPixEntry('pix-recipient-step',2,focus);
+}
+function resolvePixRecipient() {
+    resetPixSteps(); pixResolved=null;
+    const recipient=pixElement('pix-method').value==='key' ? lookupPixRecipient({key:pixElement('pix-key').value}) : lookupPixRecipient({id:pixElement('pix-recipient').value});
+    if (!recipient) {pixElement('pix-value').hidden=true; return pixMessage('Destinatário inexistente na base demonstrativa. Use somente uma chave do catálogo.');}
+    pixResolved=recipient; pixJourney.move('recipient');pixElement('pix-recipient-next').hidden=false;
+    const restricted=bankState.restrictions.some(r=>r.recipientId===recipient.id && r.status!=='Restrição retirada');
+    pixElement('pix-recipient-info').textContent=`${recipient.name} · ${recipient.institution} · Chave ${recipient.maskedKey}${restricted?' · Restrição interna demonstrativa ativa; esta tentativa será interrompida.':''}`;
+    pixElement('pix-available').textContent=formatMoney(bankState.balance);
+    pixMessage('Destinatário localizado somente no catálogo interno. Nenhuma titularidade real consultada.');
 }
 function parsePixAmount(value) {
-    // Aceita 1234,56 ou 1.234,56; rejeita negativos, exponentes e casas extras.
     if (!/^(?:\d+|\d{1,3}(?:\.\d{3})+)(?:,\d{1,2})?$/.test(value.trim())) return NaN;
     return Math.round(Number(value.trim().replaceAll('.', '').replace(',', '.')) * 100) / 100;
 }
 function formatPixAmount() {
-    const input = document.getElementById('pix-amount');
-    const amount = parsePixAmount(input.value);
-    if (Number.isFinite(amount)) input.value = amount.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const input=pixElement('pix-amount'); const amount=parsePixAmount(input.value);
+    if (Number.isFinite(amount)) input.value=amount.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
 }
 function isDemoKey(key) {
     return /^(?:\d{11}|\d{3}\.\d{3}\.\d{3}-\d{2}|\d{14}|\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}|\+\d{10,15}|[^\s@]+@[^\s@]+\.[^\s@]+|[a-f\d]{8}-(?:[a-f\d]{4}-){3}[a-f\d]{12})$/i.test(key);
 }
-async function preparePix(event) {
+function currentPixRecipient() {
+    return pixElement('pix-method').value==='key' ? lookupPixRecipient({key:pixElement('pix-key').value}) : lookupPixRecipient({id:pixElement('pix-recipient').value});
+}
+function validatePixOperation(draft) {
+    const cents=pixAmountInCents(draft.amount);
+    if(cents>200000) throw new Error('Limite demonstrativo: R$ 2.000,00 por operação.');
+    if(cents>pixAmountInCents(bankState.balance,true)) throw new Error('Saldo fictício insuficiente.');
+    const recipient=currentPixRecipient();
+    if(!recipient || recipient.id!==draft.recipient.id || recipient.name!==draft.recipient.name || recipient.maskedKey!==draft.recipient.maskedKey || recipient.institution!==draft.recipient.institution) throw new Error('Destinatário alterado ou inexistente. Refaça a conferência.');
+    if(parsePixAmount(pixElement('pix-amount').value)!==draft.amount) throw new Error('O valor mudou. Refaça a conferência.');
+    return recipient;
+}
+function preparePix(event) {
     event.preventDefault();
-    resetPixSteps();
-    const preparation = pixPreparation;
-    const amount = parsePixAmount(document.getElementById('pix-amount').value);
-    if (!Number.isFinite(amount) || amount <= 0) return pixMessage('Informe um valor positivo no formato 50,00.');
-    if (amount > 2000) return pixMessage('Limite demonstrativo: R$ 2.000,00 por operação.');
-    if (amount > bankState.balance) return pixMessage('Saldo fictício insuficiente.');
-    let recipient = demoRecipients.find(r => r.id === document.getElementById('pix-recipient').value);
-    if (!recipient) {
-        const key = document.getElementById('pix-key').value.trim();
-        if (!isDemoKey(key)) return pixMessage('Formato de chave ilustrativa inválido. Use apenas dados fictícios.');
-        const scenario = document.getElementById('pix-scenario').value;
-        // Impressão local de dados fictícios: a chave completa não é retida.
-        if (!globalThis.crypto?.subtle) return pixMessage('Para digitar uma chave fictícia, abra em HTTPS ou localhost. Você também pode selecionar um destinatário de demonstração.');
-        const normalized = key.includes('@') ? key.toLowerCase() : /^[\d.+/\-]+$/.test(key) ? key.replace(/\D/g, '') : key.toLowerCase();
-        let fingerprint;
-        try {
-            const bytes = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(normalized));
-            fingerprint = Array.from(new Uint8Array(bytes), byte => byte.toString(16).padStart(2, '0')).join('');
-        } catch { return pixMessage('Não foi possível identificar a chave fictícia localmente. Selecione um destinatário da lista.'); }
-        if (preparation !== pixPreparation) return;
-        const flags = scenario === 'low' ? {} : scenario === 'moderate' ? { newKey: true, unfamiliar: true } : { newKey: true, internalAlert: true, behaviorChange: true };
-        recipient = demoRecipients.find(item => item.keyFingerprint === fingerprint);
-        if (recipient) recipient.flags = flags;
-        else {
-            recipient = { id: demoId('CUSTOM'), name: 'Destinatário informado (fictício)', maskedKey: `${key.slice(0, 2)}***${key.slice(-2)}`, keyFingerprint: fingerprint, flags };
-            demoRecipients.push(recipient);
-        }
-    }
-    pixDraft = { id: demoId('PIX'), recipient, amount, stage: 'confirmation' };
-    document.getElementById('pix-summary').textContent = `${recipient.name} · Instituição fictícia JUSTEC · Chave ${recipient.maskedKey} · ${formatMoney(amount)}`;
-    document.getElementById('pix-confirm').hidden = false;
-    pixMessage('Confira o destinatário e o valor. Nenhum dado bancário foi consultado.');
+    if(!pixResolved) return pixMessage('Confira primeiro um destinatário da base demonstrativa.');
+    const recipient=currentPixRecipient();
+    if(!recipient || recipient.id!==pixResolved.id) return pixMessage('Confira novamente o destinatário.');
+    const amount=parsePixAmount(pixElement('pix-amount').value);
+    if(!Number.isFinite(amount)||amount<=0) return pixMessage('Informe um valor positivo no formato 50,00.');
+    const candidate={id:pixDraft?.id || demoId('PIX'),recipient,amount};
+    try {validatePixOperation(candidate);} catch(error){return pixMessage(error.message);}
+    const signature=JSON.stringify([recipient.id,amount]);
+    if(pixPriorSignature!==null && pixPriorSignature!==signature) pixEditCount++;
+    pixPriorSignature=signature;
+    hidePixPanels(); pixJourney.revise(); pixAnswers={};pixAnswered=false;
+    pixDraft={...candidate,editCount:pixEditCount,stage:'value'}; pixContextRequired=pixElement('pix-context-request').checked;
+    pixJourney.move('confirmation'); pixDraft.stage=pixJourney.stage;
+    renderPixSummary('pix-summary',pixDraft);
+    pixElement('pix-form').hidden=true;pixElement('pix-confirm').hidden=false; focusPixPanel('pix-confirm');
+    pixMessage('Confira todos os dados. Nenhum débito foi realizado.');
 }
-async function analyzePix() {
-    const draft = pixDraft;
-    if (!draft || draft.stage !== 'confirmation') return;
-    if (!document.getElementById('pix-data-confirm').checked) return pixMessage('Confirme explicitamente os dados fictícios.');
-    draft.stage = 'loading';
-    pixMessage('Analisando regras demonstrativas…');
-    document.getElementById('pix-confirm').setAttribute('aria-busy', 'true');
-    await new Promise(resolve => setTimeout(resolve, 180));
-    document.getElementById('pix-confirm').removeAttribute('aria-busy');
-    if (pixDraft !== draft) return;
-    const risk = evaluateRisk(draft.recipient, draft.amount);
-    draft.risk = risk;
-    document.getElementById('pix-guard').hidden = false;
-    document.getElementById('pix-risk').textContent = `${{low:'Baixo risco', moderate:'Risco moderado', elevated:'Risco elevado'}[risk.level]} · ${risk.score} pontos. ${risk.reasons.join('; ') || 'Sem indicadores no cenário.'} Nenhum indicador prova fraude; nenhuma consulta externa foi feita.`;
-    document.getElementById('pix-extra-label').hidden = risk.level !== 'moderate';
-    document.getElementById('pix-continue').hidden = risk.level === 'elevated';
-    if (risk.level === 'elevated') return interruptPix(draft, risk);
-    draft.stage = 'analyzed';
-    pixMessage(risk.level === 'moderate' ? 'Alerta preventivo. É necessária uma confirmação adicional.' : 'Análise demonstrativa concluída.');
+function focusPixPanel(id) { const step={'pix-confirm':4,'pix-guard':4,'pix-pause':5,'pix-auth':6,'pix-result':7}[id];if(step)setPixStep(step); const title=pixElement(id).querySelector('[tabindex="-1"]'); title?.focus(); }
+function editPixDetails() {
+    if(!pixDraft || ['completed','interrupted'].includes(pixJourney.stage)) return;
+    hidePixPanels();pixElement('pix-form').hidden=false;pixJourney.revise();pixDraft=null;pixAnswered=false;pixAnswers={};showPixEntry('pix-value',3);pixElement('pix-amount').focus();
+    pixMessage('Corrija os dados e faça uma nova conferência.');
 }
-function interruptPix(draft, risk) {
-    draft.stage = 'interrupted';
-    recordInterruptedPix(draft, risk);
-    document.getElementById('pix-auth').hidden = true;
-    document.getElementById('pix-result').hidden = false;
-    document.getElementById('pix-result-text').textContent = `Operação fictícia interrompida, sem desconto do saldo. Motivos: ${risk.reasons.join('; ')}. Restrição interna simulada, sem bloqueio no DICT.`;
-    document.getElementById('pix-review').hidden = false;
-    document.getElementById('pix-receipt').hidden = true;
-    pixMessage('Tentativa registrada somente no histórico de interrupções.');
+function evaluationFor(draft) {
+    const canonical=validatePixOperation(draft);
+    const legacy=evaluateRisk(canonical,draft.amount);
+    const evidence=collectPixEvidence(draft,bankState,pixAnswers,new Date().toISOString());
+    const evaluation=evaluatePixEvidence(evidence,legacy);
+    const uncertain=pixAnswered && ['identity','urgency','advance','ignore'].some(key=>pixAnswers[key]==='unknown');
+    const policy=decidePixPolicy(evaluation,{triageRequired:pixContextRequired,answered:pixAnswered,uncertain});
+    return {legacy,evidence,evaluation,policy};
+}
+function displayPixEvaluation(result) {
+    Object.assign(pixDraft,{risk:result.legacy,evidence:result.evidence,evaluation:result.evaluation,policy:result.policy});
+    pixElement('pix-guard').hidden=false;
+    pixElement('pix-risk').textContent=`${{low:'Baixo risco',moderate:'Risco moderado',elevated:'Risco elevado'}[result.legacy.level]} · ${result.legacy.score} pontos heurísticos. ${result.policy.action}: ${result.policy.justification} ${result.evaluation.explanations.join('; ')} Nenhum indicador prova fraude. Sem consulta externa.`;
+    const container=pixElement('pix-evidence');container.replaceChildren();
+    result.evidence.indicators.forEach(item=>{const p=document.createElement('p');p.textContent=`${item.code}: ${item.available?String(item.value):'indisponível'} · Origem: ${item.source} · Coleta: ${item.collectedAt}`;container.append(p);});
+}
+function analyzePix() {
+    if(!pixDraft || pixJourney.stage!=='confirmation') return;
+    if(!pixElement('pix-data-confirm').checked) return pixMessage('Confirme explicitamente os dados fictícios.');
+    try {
+        validatePixOperation(pixDraft);pixAnswered=false;pixAnswers={};pixElement('pix-extra').checked=false;pixJourney.review(pixDraft);pixJourney.move('evaluation');pixDraft.stage='evaluation';
+        const result=evaluationFor(pixDraft);displayPixEvaluation(result);
+        if(result.policy.action==='BLOCKED') return interruptPix(pixDraft,result.legacy,result.policy.legacyBlock);
+        if(result.policy.action==='NEEDS_VERIFICATION') {
+            pixJourney.move('verification');pixDraft.stage='verification';pixElement('pix-triage').hidden=false;
+            pixElement('pix-start-pause').hidden=true;pixMessage('Responda às perguntas contextuais; você pode escolher Não sei.');focusPixPanel('pix-guard');
+        } else {pixElement('pix-triage').hidden=true;startPixPause();}
+    } catch(error){pixMessage(error.message);}
+}
+function submitPixContext() {
+    if(!pixDraft || pixJourney.stage!=='verification') return;
+    pixAnswers=Object.fromEntries(['identity','urgency','advance','ignore'].map(key=>[key,pixElement('pix-'+key).value]));pixAnswered=true;
+    pixElement('pix-extra').checked=false;
+    try {
+        pixJourney.move('evaluation');pixDraft.stage='evaluation';const result=evaluationFor(pixDraft);displayPixEvaluation(result);
+        if(result.policy.action==='BLOCKED') return interruptPix(pixDraft,result.legacy,result.policy.legacyBlock);
+        if(result.policy.action==='INCONCLUSIVE'){pixJourney.move('verification');pixDraft.stage='verification';pixElement('pix-start-pause').hidden=true;return pixMessage(result.policy.justification);}
+        pixJourney.move('verification');pixDraft.stage='verification';
+        pixElement('pix-extra-label').hidden=!(result.policy.action==='NEEDS_VERIFICATION'||result.legacy.level==='moderate');
+        pixElement('pix-start-pause').hidden=false;
+        pixMessage(result.policy.justification);
+    } catch(error){pixMessage(error.message);}
+}
+function startPixPause() {
+    if(!pixDraft || !['evaluation','verification'].includes(pixJourney.stage)) return;
+    try {
+        const result=evaluationFor(pixDraft);displayPixEvaluation(result);
+        if(result.policy.action==='BLOCKED') return interruptPix(pixDraft,result.legacy,result.policy.legacyBlock);
+        if(result.policy.action==='INCONCLUSIVE' || (result.policy.action==='NEEDS_VERIFICATION'&&!pixAnswered)) return pixMessage('Conclua a verificação contextual antes da pausa.');
+        if((result.policy.action==='NEEDS_VERIFICATION'||result.legacy.level==='moderate')&&!pixElement('pix-extra').checked) return pixMessage('Confirme que entendeu o alerta para prosseguir.');
+        if(pixJourney.stage==='verification') pixJourney.move('evaluation');
+        pixJourney.move('pause');pixJourney.pause(pixConfig.reflectionMs);pixDraft.stage='pause';
+        pixElement('pix-confirm').hidden=true;pixElement('pix-guard').hidden=true;pixElement('pix-triage').hidden=true;pixElement('pix-extra-label').hidden=true;pixElement('pix-start-pause').hidden=true;pixElement('pix-pause').hidden=false;
+        pixElement('pix-continue').disabled=true;pixElement('pix-reconsider-options').hidden=true;
+        pixElement('pix-pause-summary').textContent=`${pixDraft.recipient.name} · ${formatMoney(pixDraft.amount)}`;
+        pixElement('pix-tip').textContent=selectPixTip(pixDraft.evidence).text;
+        const duration=pixConfig.reflectionMs;const tick=()=>{
+            if(pixJourney.stage!=='pause') return stopPixTimer();
+            const remaining=pixJourney.remaining();pixElement('pix-reflection').value=duration?100*(1-remaining/duration):100;
+            if(remaining===0){stopPixTimer();pixElement('pix-continue').disabled=false;pixElement('pix-pause-status').textContent='Pausa concluída. Você decide se deseja continuar para o código demonstrativo.';}
+        };
+        pixElement('pix-pause-status').textContent='Reflita e confira os dados. Nenhum processamento bancário está em andamento.';
+        stopPixTimer();pixTimer=setInterval(tick,100);tick();focusPixPanel('pix-pause');
+        pixMessage('Nada será enviado automaticamente.');
+    } catch(error){pixMessage(error.message);}
+}
+function reconsiderPix(destination) {
+    if(!pixDraft || !['pause','authentication','verification','confirmation'].includes(pixJourney.stage)) return;
+    stopPixTimer();clearPixCredential();pixJourney.reconsider();pixDraft.stage=pixJourney.stage;
+    pixElement('pix-continue').disabled=true;
+    if(!destination){pixElement('pix-reconsider-options').hidden=false;return pixMessage('Escolha voltar à revisão ou abrir a triagem. O rascunho foi preservado, sem débito.');}
+    hidePixPanels();pixElement('pix-confirm').hidden=false;pixElement('pix-data-confirm').checked=false;
+    if(destination==='triage'){navigateTo('screening');}else{focusPixPanel('pix-confirm');}
+    pixMessage('Rascunho preservado. Uma nova conferência e pausa serão necessárias.');
 }
 function showDemoAuthentication() {
-    if (!pixDraft || pixDraft.stage !== 'analyzed') return;
-    if (pixDraft.risk.level === 'moderate' && !document.getElementById('pix-extra').checked) return pixMessage('Confirme que entendeu o alerta para prosseguir.');
-    pixDraft.stage = 'authentication';
-    document.getElementById('pix-auth').hidden = false;
-    pixMessage('Confirme apenas a simulação. Não há coleta de senha ou biometria.');
+    if(!pixDraft) return;
+    try{validatePixOperation(pixDraft);pixJourney.authenticate(pixDraft);pixDraft.stage=pixJourney.stage;
+        pixElement('pix-pause').hidden=true;pixElement('pix-auth').hidden=false;clearPixCredential();focusPixPanel('pix-auth');
+        pixMessage('Use somente 0000. Nunca informe senha bancária real.');
+    }catch(error){pixMessage(error.message);}
+}
+function interruptPix(draft,risk,restrict=true) {
+    if(!['evaluation','authentication'].includes(pixJourney.stage)) return;
+    pixJourney.move('interrupted');draft.stage=pixJourney.stage;stopPixTimer();clearPixCredential();
+    recordInterruptedPix(draft,{...risk,reasons:[...risk.reasons,...(draft.policy?.justification?[draft.policy.justification]:[])]},restrict);
+    for(const id of ['pix-auth','pix-pause','pix-confirm']) pixElement(id).hidden=true;
+    pixElement('pix-result').hidden=false;pixElement('pix-result-text').textContent=`Operação fictícia interrompida, sem desconto do saldo. ${draft.policy?.justification||risk.reasons.join('; ')} ${restrict?'Restrição interna simulada, sem bloqueio no DICT.':'Indícios contextuais não criam restrição permanente de destinatário.'}`;
+    pixElement('pix-review').hidden=!restrict;pixElement('pix-receipt').hidden=true;pixElement('pix-guard').hidden=true;pixElement('pix-share').hidden=true;pixElement('pix-result-icon').textContent='!';pixElement('pix-result-icon').dataset.outcome='interrupted';renderPixSummary('pix-result-details',draft);
+    pixMessage('Tentativa registrada somente no histórico de interrupções.');focusPixPanel('pix-result');
 }
 function completePix() {
-    const draft = pixDraft;
-    if (!draft || draft.stage !== 'authentication') return;
-    if (!document.getElementById('pix-demo-confirm').checked) return pixMessage('Confirme a operação fictícia para continuar.');
-    const risk = evaluateRisk(draft.recipient, draft.amount);
-    if (risk.level === 'elevated') return interruptPix(draft, risk);
-    if (risk.level === 'moderate' && !document.getElementById('pix-extra').checked) return pixMessage('Confirmação adicional necessária.');
-    try { recordApprovedPix(draft); } catch (error) { return pixMessage(error.message); }
-    draft.stage = 'completed';
-    document.getElementById('pix-submit').disabled = true;
-    renderBalance(); renderStatementBalance();
-    document.getElementById('pix-result').hidden = false;
-    document.getElementById('pix-result-text').textContent = `Pix fictício de ${formatMoney(draft.amount)} registrado. Nenhum dinheiro real foi movimentado.`;
-    document.getElementById('pix-receipt').hidden = false;
-    document.getElementById('pix-review').hidden = true;
-    pixMessage('Simulação concluída. Saldo e extrato atualizados uma única vez.');
+    const draft=pixDraft;
+    if(!draft || pixJourney.stage!=='authentication') return;
+    if(!pixElement('pix-demo-confirm').checked) return pixMessage('Confirme a operação fictícia para continuar.');
+    const credential=pixElement('pix-demo-code').value;clearPixCredential();
+    try {
+        pixJourney.assertReviewed(draft);validatePixOperation(draft);const result=evaluationFor(draft);displayPixEvaluation(result);
+        if(result.policy.action==='BLOCKED') return interruptPix(draft,result.legacy,result.policy.legacyBlock);
+        if(result.policy.action==='INCONCLUSIVE'||(result.policy.action==='NEEDS_VERIFICATION'&&!pixAnswered)) throw new Error('Verificação adicional necessária. Refaça a conferência.');
+        if((result.policy.action==='NEEDS_VERIFICATION'||result.legacy.level==='moderate')&&!pixElement('pix-extra').checked) throw new Error('Confirmação adicional necessária.');
+        pixJourney.authorize(draft,credential,recordApprovedPix);
+    } catch(error){pixElement('pix-result').hidden=true;pixElement('pix-receipt').hidden=true;return pixMessage(error.message);}
+    draft.stage=pixJourney.stage;pixElement('pix-submit').disabled=true;pixElement('pix-guard').hidden=true;pixElement('pix-auth').hidden=true;
+    renderBalance();renderStatementBalance();pixElement('pix-result').hidden=false;
+    pixElement('pix-result-text').textContent=`Pix fictício de ${formatMoney(draft.amount)} registrado. SIMULAÇÃO — SEM VALOR FINANCEIRO.`;
+    pixElement('pix-receipt').hidden=false;pixElement('pix-review').hidden=true;pixElement('pix-share').hidden=false;pixElement('pix-result-icon').textContent='✓';pixElement('pix-result-icon').dataset.outcome='completed';renderPixSummary('pix-result-details',draft,true);
+    pixMessage('Simulação concluída. Saldo e extrato atualizados uma única vez.');focusPixPanel('pix-result');
 }
-function openPixReceipt() {
-    if (!pixDraft || pixDraft.stage !== 'completed') return;
-    navigateTo('statement');
-    showTransactionDetails(pixDraft.id);
+function openPixReceipt(){if(!pixDraft||pixJourney.stage!=='completed')return;navigateTo('statement');showTransactionDetails(pixDraft.id);}
+function onPixNavigation(screenId) {
+    if(screenId!=='pix' && pixDraft && !['completed','interrupted'].includes(pixJourney.stage)) {
+        stopPixTimer();clearPixCredential();pixJourney.leave();pixDraft.stage=pixJourney.stage;
+        hidePixPanels();pixElement('pix-confirm').hidden=false;pixElement('pix-resume').hidden=false;
+    }
+    if(screenId==='pix'){pixJourney.resume();pixElement('pix-resume').hidden=true;}
 }
+function resumePix(){navigateTo('pix');focusPixPanel('pix-confirm');pixMessage('Confira novamente os dados para retomar. Nenhuma autorização anterior foi mantida.');}
 function demoElement(tag, text, parent, className = '') {
     const el = document.createElement(tag); el.textContent = text; el.className = className; parent.append(el); return el;
 }
@@ -189,4 +277,54 @@ function advanceReview(id) {
     document.getElementById('review-feedback').textContent = `${restriction.status} — resultado educativo, sem efeito no sistema Pix real.`;
     renderProtection();
 }
-document.getElementById('pix-form').addEventListener('input', resetPixSteps);
+
+document.getElementById('pix-form').addEventListener('input', event => {
+    if(event.target.id==='pix-key') return updatePixRecipient(false);
+    if(['pix-amount','pix-context-request'].includes(event.target.id) && pixDraft){
+        hidePixPanels();pixElement('pix-form').hidden=false;pixJourney.revise();pixDraft=null;pixAnswered=false;pixAnswers={};pixMessage('Dados alterados. Refaça a conferência.');
+    }
+});
+for(const key of ['identity','urgency','advance','ignore']) pixElement('pix-'+key).addEventListener('change',()=>{
+    if(pixJourney.stage==='verification'){pixAnswered=false;pixElement('pix-start-pause').hidden=true;pixElement('pix-extra').checked=false;}
+});
+
+function setPixStep(number) {
+    const names=['Iniciar Pix','Destinatário','Valor','Conferência','Pausa Preventiva','Autorização','Resultado'];
+    document.querySelectorAll('[data-pix-step]').forEach(el=>{if(Number(el.dataset.pixStep)===number)el.setAttribute('aria-current','step');else el.removeAttribute('aria-current');});
+    pixElement('pix-step-label').textContent=`Etapa ${number} de 7 · ${names[number-1]}`;
+}
+function showPixEntry(id,step,focus=true) {
+    for(const entry of ['pix-start-step','pix-recipient-step','pix-value'])pixElement(entry).hidden=entry!==id;
+    setPixStep(step);if(focus)pixElement(id).querySelector('h3')?.focus();
+}
+function choosePixMethod(method) {pixElement('pix-method').value=method;changePixMethod();}
+function backPixStart(){resetPixSteps();pixResolved=null;showPixEntry('pix-start-step',1);}
+function goPixValue(){
+    if(!pixResolved || pixJourney.stage!=='recipient')return pixMessage('Confira primeiro o destinatário.');
+    const current=currentPixRecipient();if(!current||current.id!==pixResolved.id)return pixMessage('Destinatário alterado. Confira novamente.');
+    pixJourney.move('value');showPixEntry('pix-value',3);pixElement('pix-amount').focus();
+}
+function renderPixSummary(id,draft,completed=false){
+    const list=pixElement(id);list.replaceChildren();
+    const lines=[['Destinatário',draft.recipient.name],['Instituição',draft.recipient.institution],['Chave Pix',draft.recipient.maskedKey],['Valor',formatMoney(draft.amount)]];
+    if(completed)lines.push(['Data da simulação',transactionDate(demoDate())],['ID da transação',draft.id]);
+    for(const [label,value]of lines){const row=document.createElement('div');const term=document.createElement('dt');term.textContent=label;const description=document.createElement('dd');description.textContent=value;row.append(term,description);list.append(row);}
+}
+function pixPad(target,key){
+    const input=pixElement(target==='amount'?'pix-amount':'pix-demo-code');
+    if(target==='amount' && (!pixElement('pix-value').checkVisibility() || pixJourney.stage!=='value'))return;
+    if(target==='code' && pixJourney.stage!=='authentication')return;
+    if(key==='erase')input.value=input.value.slice(0,-1);
+    else if(target==='amount'){if(key===','&&input.value.includes(','))return;input.value+=key;}
+    else if(input.value.length<4 && /^\d$/.test(key))input.value+=key;
+    input.dispatchEvent(new Event('input',{bubbles:true}));
+}
+for(const [id,target]of [['pix-amount-pad','amount'],['pix-code-pad','code']]){
+    const keys=['1','2','3','4','5','6','7','8','9',target==='amount'?',':null,'0','erase'];
+    for(const key of keys){if(key===null){pixElement(id).append(document.createElement('span'));continue;}const button=document.createElement('button');button.type='button';button.textContent=key==='erase'?'⌫':key;button.setAttribute('aria-label',key==='erase'?'Apagar último dígito':key===','?'Vírgula decimal':`Dígito ${key}`);button.addEventListener('click',()=>pixPad(target,key));pixElement(id).append(button);}
+}
+async function sharePixReceipt(){
+    const draft=pixDraft;if(!draft||pixJourney.stage!=='completed')return;
+    const text=`JUSTEC Bank — SIMULAÇÃO — SEM VALOR FINANCEIRO\n${draft.recipient.name}\n${draft.recipient.institution}\nChave ${draft.recipient.maskedKey}\n${formatMoney(draft.amount)}\n${transactionDate(demoDate())}\n${draft.id}`;
+    try{if(navigator.share)await navigator.share({title:'Comprovante fictício JUSTEC',text});else await navigator.clipboard.writeText(text);pixMessage('Comprovante fictício compartilhado ou copiado.');}catch{pixMessage('Não foi possível compartilhar ou copiar. Abra o comprovante demonstrativo para consultar os dados.');}
+}

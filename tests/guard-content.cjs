@@ -40,7 +40,7 @@ const assert=require('node:assert/strict');
   }
   // A explicação precisa corresponder ao comportamento efetivo da interrupção.
   const before=await p.evaluate(()=>({balance:bankState.balance,count:bankState.transactions.length,attempts:bankState.attempts.length}));
-  await p.evaluate(()=>openPixFlow('suspicious'));await p.fill('#pix-amount','50,00');await p.locator('#pix-form button[type=submit]').click();
+  await p.evaluate(()=>openPixFlow('suspicious'));await p.locator('[data-pix-method="recipient"]').click();await p.locator('#pix-lookup').click();await p.locator('#pix-recipient-next').click();await p.fill('#pix-amount','50,00');await p.locator('#pix-form button[type=submit]').click();
   await p.check('#pix-data-confirm');await p.locator('[onclick="analyzePix()"]').click();
   await p.waitForFunction(()=>pixDraft?.stage==='interrupted');
   assert.equal(await p.locator('#pix-receipt').isVisible(),false);

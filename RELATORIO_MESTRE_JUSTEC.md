@@ -703,3 +703,90 @@ Resultado da ampliação final de tests/consumer-guidance.cjs: aprovado nas sete
 Após a revisão local, o usuário autorizou explicitamente atualizar o GitHub e publicar o site, substituindo a restrição de publicação da solicitação anterior. A entrega inclui a reformulação de #screen-action-post, estilos locais, preservação do guia técnico e MED, os testes de conteúdo e a nova suíte tests/consumer-guidance.cjs, além deste relatório. Os resultados dos testes executados estão registrados na seção anterior. Conferidos git diff --check e alinhamento do HEAD com main remoto antes do envio. O HTML alternativo legado permanece preservado fora da entrega.
 
 A publicação mantém o aviso de validação pendente dos portais oficiais: o bloqueio HTTP 403 impediu verificar disponibilidade e conteúdo remoto, e os testes de abertura usaram interceptação. A autorização de publicação não transforma esses testes em verificação real dos serviços. Nenhuma lógica de negócio foi modificada nesta reformulação.
+
+## 21/10/2026 — Pix 2.0, Pausa Preventiva e avaliação contextual
+
+### Auditoria e objetivo
+
+Inspecionados index.html, css/style.css, js/app.js, js/state.js, js/transactions.js, js/pix.js, js/risk.js, js/guard/risk-engine.js, policy-engine.js e README, além das suítes existentes e dos registros relevantes deste relatório. O projeto tinha formulário Pix, conferência, motor vigente da Etapa 5, confirmação por checkbox, idempotência monetária e revisão de restrições. Não tinha pausa de reflexão nem código demonstrativo. O motor ESM da Etapa 6 estava isolado e continua assim. Não havia persistência: nenhum localStorage, sessionStorage ou backend; a recarga reiniciava integralmente o cenário.
+
+A implementação entrega a jornada solicitada sem substituir motores ou alterar regras monetárias. A consulta antiga por formato criava destinatário e cenário selecionável; isso foi substituído por consulta apenas ao catálogo interno, conforme o novo requisito. A instituição não é inferida a partir de uma chave externa. Não há integração financeira real ou novas dependências.
+
+### Fluxos e invariantes implementados
+
+- Modalidade destinatário cadastrado ou chave fictícia. QR Code, Copia e Cola e agendamento explicitamente indisponíveis.
+- Consulta local de quatro chaves .invalid, mesmas identidades em qualquer modalidade, erro para chave inexistente e aviso para restrição interna ativa. Exibição de nome, instituição fictícia e chave mascarada.
+- Valor brasileiro, saldo disponível, teto vigente de R$ 2.000,00, conferência e correção. Corrigir invalida revisão/autorização; o formulário deixa de competir visualmente com a etapa corrente.
+- Avaliação explicável e triagem proporcional. Cenário baixo sem sinais adicionais não recebe quatro perguntas repetitivas. Cenário moderado, evidência contextual/histórico suficiente ou pedido voluntário recebem perguntas sobre identidade, pressão, pagamento antecipado e instrução para ignorar alertas. Há “Não sei”; ausência de informação não vira garantia de segurança.
+- Pausa antes da autorização: marca Guard, título/subtítulo solicitados, dica contextual, destinatário, valor, barra e aviso de caráter educativo. Duração inicial configurável de 5000 ms, sem alegação de validação científica. Fim da barra SOMENTE habilita o botão, sem avançar ou registrar automaticamente.
+- Reconsideração imediata oferece revisão ou triagem com rascunho preservado. Retomada pela triagem exige nova conferência/pausa. Sair da jornada revoga a autorização e limpa o código; editar dados também.
+- Código demonstrativo público 0000 e confirmação explícita. Nenhuma senha bancária é solicitada. Código limpo após tentativa/saída/reconsideração; não incluído em estado, logs ou comprovantes.
+- Na autorização, revalidados assinatura da conferência, valor/centavos, limite, saldo, destinatário canônico, risco e restrições. Registro síncrono existente precede o sucesso; falha não produz comprovante/sucesso. Duplo clique não debita duas vezes. Uma mudança apenas no campo pixDraft.stage não ignora a máquina independente.
+- Comprovante exibido e copiado com “SIMULAÇÃO — SEM VALOR FINANCEIRO”. Saldo/extrato permanecem compartilhados. Restrição/revisão dos cenários e falso positivo continuam funcionais.
+
+### Arquitetura e regras
+
+Criados js/pix-directory.js (catálogo/lookup), js/pix-messages.js (biblioteca justec-education/1.0.0), js/pix-evidence.js (coleta, avaliação e política) e js/pix-journey.js (máquina de estados com relógio injetável e pixConfig). js/pix.js passa a orquestrar a jornada e mantém as funções existentes de proteção/revisão. js/app.js recebe apenas o hook no navigateTo e a marca no texto copiado. index.html e css/style.css contêm as etapas e estilos responsivos com escopo Pix.
+
+Em js/state.js, APENAS recordInterruptedPix recebe parâmetro opcional createRestriction, padrão true. Relatos contextuais combinados podem interromper uma tentativa sem criar restrição permanente para o destinatário; o comportamento legado continua sendo o padrão. recordApprovedPix, validateApprovedPix, pixAmountInCents, cálculo de saldo e idempotência NÃO foram modificados. js/transactions.js, js/risk.js e todos os arquivos de js/guard/ permaneceram inalterados.
+
+Evidence Collector usa origem, timestamp explícito, disponibilidade e códigos: NEW_RECIPIENT, ATYPICAL_AMOUNT, REPEATED_ATTEMPTS, OPERATION_CHANGED, ACTIVE_RESTRICTION, URGENCY, ADVANCE_PAYMENT, IDENTITY_DOUBT, IGNORE_WARNINGS e SESSION_SIGNAL. Não há telemetria confiável de sessão: esse indicador fica indisponível. Valor atípico requer pelo menos três Pix enviados concluídos e compara com três vezes a média; do contrário, indisponível. Duas alterações reais entre conferências ou duas interrupções anteriores podem justificar verificação. Critérios são heurísticos e provisórios. O motor vigente continua usando seus pesos e sua referência fixa ilustrativa de R$ 1.000,00, sem apresentá-la como histórico observado.
+
+O adaptador retorna classificação/pontuação legadas, códigos, justificativas, indisponibilidades e versão justec-pix-policy/1.0.0. A política independente retorna ALLOWED, NEEDS_VERIFICATION, BLOCKED ou INCONCLUSIVE. Restrição/risco elevado do motor vigente bloqueiam. Relatos combinados de adiantamento com pressão/identidade não confirmada/instrução para ignorar alertas, ou identidade não confirmada junto de instrução para ignorar alertas, interrompem apenas a tentativa contextual. Sinais isolados não comprovam fraude; respostas negativas não garantem segurança; “Não sei” na triagem impede autorizar até conferir/reconsiderar.
+
+A biblioteca contém sete categorias. Seleção automática atual usa apenas evidência implementada (adiantamento, identidade, urgência, destinatário novo ou geral). Falsa central e falsa venda constam da coleção, mas não são disparadas sem coleta correspondente. Evidências/política atuais permanecem no rascunho; não se implementou auditoria durável ou integração com audit.js experimental.
+
+### Arquivos e documentação
+
+Alterados: index.html, css/style.css, js/app.js, js/state.js, js/pix.js, tests/pix.cjs, tests/layout.cjs e tests/guard-content.cjs. Criados os quatro módulos acima, tests/pix-helpers.cjs, tests/pix-journey.cjs, tests/pix-2.cjs e Documentação/JUSTEC_PIX_2_ARQUITETURA.md. Este relatório foi atualizado por acréscimo; o relatório histórico em Documentação foi preservado.
+
+Os testes Pix financeiros foram adaptados à consulta do catálogo, triagem, pausa e código, preservando verificações de saldo, extrato, idempotência, limite, interrupção, repetição e revisão/falso positivo. Os testes da antiga criação assíncrona de chaves não se aplicam ao catálogo síncrono; foram substituídos por chave inexistente, mesmo ID com chave em maiúsculas, restrição preservada e cancelamento/abandono da nova jornada. As suítes de layout/conteúdo passaram a confirmar o destinatário antes de digitar o valor, respeitando a nova sequência.
+
+### Testes executados e resultados
+
+Servidor local Python na porta 8790, Chromium com Playwright e JUSTEC_RESOURCE_BRIDGE=1 para as CDNs já utilizadas. Não foram instalados frameworks. Resultado unitário: node --test tests/state-invariants.cjs tests/guard.test.mjs tests/pix-journey.cjs, 107 testes aprovados (58 de domínio financeiro, 39 do motor experimental e 10 novos da máquina/política), zero falhas/ignorados. Artefato temporário /tmp/justec-pix-unit.tap.
+
+Suítes de navegador executadas com sucesso:
+
+- tests/balance.cjs: saldo inicial, ocultar/revelar, ícones, navegação, triagem/modais e reinício.
+- tests/statement.cjs: totais, filtros, IDs, detalhes, cópia/falha de cópia, contestação educativa e estado vazio; reexecutado após alterar a marca do comprovante.
+- tests/pix.cjs: baixo/moderado/elevado, confirmações, código, valores inválidos/limite/saldo, lançamento único e totais do extrato, interrupções repetidas, revisões mantida/retirada, falso positivo, catálogo e reinício; reexecutado após os ajustes finais da jornada.
+- tests/pix-2.cjs: espera REAL de 5000 ms padrão, tentativa prematura por handler, término sem avanço, reconsideração/triagem/retomada, código incorreto, edição sem evento DOM detectada na autorização, falha de registro injetada antes da escrita, duplo envio, contexto de urgência/identidade, inconclusivo, bloqueio contextual sem restrição permanente, etapa visual adulterada sem ignorar a máquina, mudança de destinatário/saldo/restrição na autorização, abandono e recarga durante a pausa.
+- A mesma suíte Pix 2.0 verifica as perguntas, pausa e autorização nas sete larguras 320/375/390/768/1024/1366/1920, foco do título, controles de pelo menos 44 px, campos sem sobreposição, ausência de rolagem horizontal e preferência por movimento reduzido. Casos repetidos usam parâmetro de 40 ms; NÃO foram apresentados como sete esperas reais de 5 s. Testes puros usam relógio injetável. Reexecutada após ampliar as verificações finais.
+- tests/layout.cjs: sete larguras, dez telas e dois modais por largura, sem rolagem horizontal/concorrente, preservando navegação e ordem da Home. Reexecutado na versão final.
+- tests/guard-content.cjs: guia técnico/MED, atalhos e interrupção sem débito/extrato/comprovante; reexecutado na versão final.
+- tests/shortcuts.cjs: 49 verificações de atalhos mobile/desktop.
+- tests/consumer-guidance.cjs: cartões, teclado, âncoras, 35 aberturas externas interceptadas e sete larguras. Um primeiro ensaio concorrente falhou no carregamento por bankState indefinido; uma nova execução isolada da mesma suíte completou sem alterações no teste/aplicação e sem erros JavaScript. Não se atribuiu uma causa definitiva ao carregamento transitório. A disponibilidade real dos portais externos continua NÃO verificada.
+
+Nenhum erro JavaScript observado nas execuções finais aprovadas. Inspecionada visualmente captura da pausa em 390 px. git diff --check sem erros; comparação confirmou ausência de mudanças em js/risk.js, js/transactions.js e js/guard/. O aviso do Git referente ao CRLF nas duas linhas editadas de js/app.js foi corrigido sem reformatar o arquivo inteiro.
+
+### Limitações, refinamentos e entrega
+
+Não há persistência: recarga reinicia saldo, transações, restrições e rascunho juntos, conforme o contrato existente. Não se implementou recuperação após falha de disco/backend; o teste de registro cobre exceção antes da escrita em memória. A máquina cliente e o código público não são autenticação bancária nem proteção contra alguém que controla o JavaScript. Regras/contexto/duração devem ser refinados com estudos de compreensão e falsos positivos; não possuem validação estatística ou científica. Falta auditoria com leitores de tela/aparelhos físicos/Safari/Firefox e futura decisão de persistência/integração com motor experimental. Sem reputação ou dados externos inventados.
+
+Para validar no VS Code: abrir index.html pelo Live Server, entrar em Pix, conferir Escola A, informar 50,00, revisar, analisar, aguardar a pausa e escolher continuar; autorizar somente com 0000. Escola B demonstra perguntas e confirmação adicional; Escola C, restrição; Escola D permite revisão do falso positivo na central já existente. Testar reconsideração e retorno à triagem sem débito. Instruções completas e contratos em Documentação/JUSTEC_PIX_2_ARQUITETURA.md.
+
+Implementação local concluída e pronta para revisão com as limitações acima. Não houve commit, push ou deploy nesta etapa. O arquivo HTML legado não rastreado permanece preservado fora da aplicação principal.
+
+Fechamento da revisão: os controles de triagem/confirmação adicional são ocultados ao iniciar nova jornada e ao entrar na pausa, evitando reaparecimento de perguntas antigas após interrupção ou erro de código. tests/pix.cjs recebeu uma asserção dessa ausência no cenário restrito; tests/pix.cjs e tests/pix-2.cjs foram reexecutados após esse ajuste, ambos aprovados. O HEAD permanece f5641a1, sem novo commit ou publicação. git diff --check final aprovado.
+
+## 21/10/2026 — Sete layouts do Pix e publicação autorizada
+
+O usuário autorizou atualizar GitHub e site, condicionando a publicação à sequência da imagem. A revisão encontrou uma diferença real: início, destinatário e valor estavam agrupados. index.html e js/pix.js foram ajustados para sete layouts exclusivos, com indicador de etapa: Iniciar Pix → Destinatário → Valor → Conferência → Pausa Preventiva → Autorização → Resultado. A triagem contextual e a avaliação continuam entre Conferência e Pausa; interrupções justificadas encerram antes da senha, sem débito.
+
+A etapa inicial agora oferece cartões de chave/contatos e modalidades indisponíveis desabilitadas. A etapa de destinatário mostra o catálogo e a ficha encontrada antes de habilitar o avanço ao valor. Valor e código têm teclados visuais acessíveis, além de digitação normal. Conferência e resultado exibem dados em fichas; o resultado concluído inclui data e ID, marca de simulação, compartilhamento/cópia com tratamento de falha e retorno ao início. A credencial continua sendo 0000, com campo visualmente mascarado, sem senha real. A apresentação mantém o dashboard responsivo existente, sem molduras de telefone.
+
+Preservados módulos monetários, pesos do risco e separação do motor experimental. Incluídas todas as alterações locais do Pix 2.0 descritas acima, não apenas o ajuste visual. O HTML alternativo legado continua fora da entrega. Atualizados o documento técnico e os testes financeiros/helpers/layout/conteúdo para os botões da nova sequência; acrescentado tests/pix-layout-sequence.cjs. A digitação caractere por caractere da chave é testada para garantir que invalidação de destinatário não roube foco.
+
+Testes executados nesta preparação com servidor local porta 8800, Chromium e adaptador HTTPS de recursos:
+
+- 107 testes unitários de invariantes, Guard experimental e máquina/política: aprovados.
+- tests/pix-layout-sequence.cjs: aprovado nas sete larguras 320/375/390/768/1024/1366/1920, verificando exclusividade e ordem real dos sete layouts, controles sem sobreposição/transbordamento, teclados, fichas, pausa sem avanço, débito único e compartilhamento simulado.
+- tests/pix-2.cjs: aprovado, incluindo espera real de cinco segundos, reconsideração/retomada, código incorreto, alteração de dados, falha de registro, duplo envio, evidência contextual e bloqueio/inconclusivo, revalidação final, abandono e recarga; sete larguras.
+- tests/pix.cjs: aprovado após adaptar o seletor de modalidade ao novo cartão visível (um ensaio anterior esperou o select que agora é oculto). Um ensaio concorrente também encontrou pixConfig indefinido; a execução posterior completou sem esse erro. Não se declarou o ensaio com erro como aprovado.
+- tests/layout.cjs: aprovado, sete larguras, dez telas e dois modais por largura.
+- tests/balance.cjs, tests/statement.cjs e tests/guard-content.cjs: aprovados, sem erros JavaScript.
+
+Inspecionada visualmente a conferência em 390 px. Compartilhamento foi interceptado no teste, sem envio real; suporte nativo/clipboard pode depender do navegador e tem mensagem de erro/alternativa pelo comprovante. Auditoria com aparelhos físicos/leitores de tela e verificação dos portais oficiais permanecem pendentes, como já documentado. git diff --check aprovado e remoto main alinhado ao HEAD anterior antes do commit.
+
+Fechamento dos testes desta publicação: tests/shortcuts.cjs aprovado com 49 verificações; tests/consumer-guidance.cjs aprovado nas sete larguras, com 35 aberturas externas interceptadas, sem apresentar disponibilidade remota como verificada. Publicação autorizada inclui o Pix 2.0 completo e a adequação aos sete layouts, com o histórico documental preservado.

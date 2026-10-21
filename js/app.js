@@ -1,5 +1,6 @@
 
 function navigateTo(screenId) {
+    if (typeof onPixNavigation === 'function') onPixNavigation(screenId);
     // Oculta todas as telas
     const screens = ['home', 'pix', 'screening', 'action-post', 'rights', 'edu-center', 'statement', 'protection', 'reviews', 'security'];
     screens.forEach(id => {
@@ -260,7 +261,7 @@ function showDisputeEducation() {
 async function copyReceipt() {
     const item = selectedTransaction;
     if (!item) return;
-    const text = `SIMULAÇÃO EDUCACIONAL — SEM VALIDADE BANCÁRIA\nJUSTEC Bank — Comprovante demonstrativo\n${item.id}\n${transactionDate(item.date)}\n${item.description}\nParticipante fictício: ${item.participant.name}\n${formatMoney(item.amount)}\nStatus simulado: ${transactionStatus(item.status)}\nNenhuma operação bancária real foi realizada.`;
+    const text = `SIMULAÇÃO — SEM VALOR FINANCEIRO\nSIMULAÇÃO EDUCACIONAL — SEM VALIDADE BANCÁRIA\nJUSTEC Bank — Comprovante demonstrativo\n${item.id}\n${transactionDate(item.date)}\n${item.description}\nParticipante fictício: ${item.participant.name}\n${formatMoney(item.amount)}\nStatus simulado: ${transactionStatus(item.status)}\nNenhuma operação bancária real foi realizada.`;
     try {
         await navigator.clipboard.writeText(text);
         document.getElementById('receipt-feedback').textContent = 'Comprovante simulado copiado. Sem validade bancária.';

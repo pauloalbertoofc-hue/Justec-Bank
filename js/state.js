@@ -64,7 +64,7 @@ function recordApprovedPix(draft) {
     bankState.transactions.unshift(transaction);
     return id;
 }
-function recordInterruptedPix(draft, risk) {
+function recordInterruptedPix(draft, risk, createRestriction = true) {
     if (!bankState.attempts.some(item => item.id === draft.id)) bankState.attempts.unshift({ id: draft.id, recipientId: draft.recipient.id, date: demoDate(), amount: draft.amount, reasons: [...risk.reasons] });
-    if (!bankState.restrictions.some(item => item.recipientId === draft.recipient.id && item.status !== 'Restrição retirada')) bankState.restrictions.push({ id: demoId('REV'), recipientId: draft.recipient.id, status: 'Restrição ativa', reasons: [...risk.reasons], date: demoDate(), reason: '', history: ['Restrição ativa'], falsePositive: draft.recipient.falsePositive === true });
+    if (createRestriction && !bankState.restrictions.some(item => item.recipientId === draft.recipient.id && item.status !== 'Restrição retirada')) bankState.restrictions.push({ id: demoId('REV'), recipientId: draft.recipient.id, status: 'Restrição ativa', reasons: [...risk.reasons], date: demoDate(), reason: '', history: ['Restrição ativa'], falsePositive: draft.recipient.falsePositive === true });
 }

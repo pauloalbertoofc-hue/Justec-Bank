@@ -216,3 +216,54 @@ body:has(#app-modal:not(.hidden)), body:has(dialog[open]) { overflow: hidden; }
     .guidance-grid { grid-template-columns: repeat(2, minmax(0,1fr)); gap: 16px; }
     .guidance-card { padding: 20px; }
 }
+
+/* Pix 2.0: pausa educativa sem animação de consulta bancária. */
+.pix-pause { border-color: #ffcc0060; background: linear-gradient(145deg,#13233e,#101827); }
+.pix-guard-brand { display: inline-flex; gap: 8px; align-items: center; color: #ffcc00; font-size: 11px; font-weight: 800; letter-spacing: .08em; margin-bottom: 12px; }
+.pix-pause h3 { font-size: 20px; line-height: 1.4; color: #fff; }
+.pix-pause p { margin: 10px 0; }
+.pix-tip { padding: 14px; background: #ffcc000b; border-left: 3px solid #ffcc00; border-radius: 6px; color: #f1f5f9; }
+#pix-reflection { display: block; width: 100%; height: 8px; margin: 12px 0; accent-color: #ffcc00; border: 0; border-radius: 8px; overflow: hidden; }
+#pix-reflection::-webkit-progress-bar { background: #334155; }
+#pix-reflection::-webkit-progress-value { background: #ffcc00; }
+#screen-pix :is(button,summary):focus-visible, #pix-resume:focus-visible { outline: 2px solid #ffcc00; outline-offset: 3px; }
+#screen-pix summary { min-height: 44px; padding: 10px 0; cursor: pointer; }
+#pix-evidence { overflow-wrap: anywhere; color: #aebed1; font-size: 11px; }
+#pix-evidence p { margin-block: 8px; }
+#screen-pix [tabindex="-1"] { scroll-margin-top: 96px; }
+#pix-resume { border: 1px solid #ffcc0060; border-radius: 10px; padding: 10px; color: #ffcc00; }
+@media (prefers-reduced-motion: reduce) { #screen-pix * { transition: none !important; animation: none !important; } }
+
+/* Sete layouts sequenciais da referência, sem moldura de smartphone. */
+.pix-stepper { display: grid; grid-template-columns: repeat(7,minmax(0,1fr)); gap: 3px; margin: 18px 0 8px; list-style: none; }
+.pix-stepper li { display: flex; flex-direction: column; align-items: center; gap: 5px; min-width: 0; color: #94a3b8; text-align: center; }
+.pix-stepper li > span { display: grid; place-items: center; width: 26px; height: 26px; border: 1px solid #475569; border-radius: 50%; font-size: 12px; font-weight: 800; }
+.pix-stepper small { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+.pix-stepper [aria-current=step] { color: #ffcc00; }
+.pix-stepper [aria-current=step] > span { color: #080d1a; background: #ffcc00; border-color: #ffcc00; }
+.pix-step-label { color: #ffcc00; font-size: 12px; font-weight: 700; margin-bottom: 12px; }
+#screen-pix .pix-primary { display: block; width: 100%; margin: 14px 0 6px; background: #ffcc00; border-color: #ffcc00; color: #080d1a; font-weight: 800; padding: 12px; }
+#screen-pix .pix-primary:hover { background: #ffda47; }
+.pix-methods { display: grid; gap: 10px; margin: 16px 0; }
+#screen-pix .pix-methods button { display: flex; align-items: center; gap: 14px; text-align: left; margin: 0; padding: 18px 14px; background: #102139; border-color: #2e435e; color: #e2e8f0; }
+.pix-methods i { color: #ffcc00; font-size: 20px; }
+.pix-methods button > span { flex: 1; }
+.pix-methods strong, .pix-methods small { display: block; }
+.pix-methods small { color: #aebed1; font-size: 11px; margin-top: 5px; }
+.pix-methods button:disabled { opacity: .45; }
+.pix-recipient-card:empty { display: none; }
+.pix-recipient-card, .pix-summary { padding: 14px; border: 1px solid #334155; border-radius: 12px; background: #0a1425; margin: 14px 0; }
+.pix-summary > div { padding: 10px 0; border-bottom: 1px solid #26384e; }
+.pix-summary > div:last-child { border: 0; }
+.pix-summary dt { color: #94a3b8; font-size: 11px; margin-bottom: 5px; }
+.pix-summary dd { color: #f1f5f9; font-size: 14px; font-weight: 600; overflow-wrap: anywhere; }
+.pix-summary > div:nth-child(4) dd { color: #ffcc00; font-size: 22px; }
+#screen-pix .pix-amount-box { display: flex; align-items: center; gap: 8px; padding: 12px; background: #0a1425; border: 1px solid #334155; border-radius: 12px; margin-top: 8px; font-size: 26px; color: white; }
+#screen-pix .pix-amount-box input { min-width: 0; margin: 0; padding: 0; border: 0; font-size: 26px; background: transparent; }
+.pix-keypad { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 8px; margin: 18px auto; max-width: 360px; }
+#screen-pix .pix-keypad button { margin: 0; min-height: 48px; background: #1b2a40; color: #f1f5f9; border-color: #2e435e; font-size: 19px; }
+#screen-pix .pix-code-input { letter-spacing: .5em; text-align: center; font-size: 26px; }
+.pix-result-icon { display: grid; place-items: center; width: 56px; height: 56px; border-radius: 50%; margin: 8px auto 18px; background: #14b88a; color: #05231d; font-size: 32px; font-weight: 800; }
+.pix-result-icon[data-outcome=interrupted] { background: #a9254c; color: #fff; }
+#pix-result > h3, #pix-result > #pix-result-text { text-align: center; }
+@media (min-width:768px) { .pix-stepper small { position: static; width: auto; height: auto; clip-path: none; font-size: 10px; } .pix-entry, #pix-confirm, #pix-pause, #pix-auth, #pix-result, #pix-guard { max-width: 600px; margin-inline: auto; } }

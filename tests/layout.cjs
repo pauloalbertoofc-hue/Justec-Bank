@@ -36,6 +36,7 @@ const assert = require('node:assert/strict');
                     assert.equal(columns, width < 375 ? 2 : 3);
                 }
                 if (screen === 'pix') {
+                    await page.locator('[data-pix-method="recipient"]').click();await page.locator('#pix-lookup').click();await page.locator('#pix-recipient-next').click();
                     await page.fill('#pix-amount', '0');
                     await page.locator('#pix-form button[type=submit]').click();
                     assert.match(await page.locator('#pix-feedback').innerText(), /valor positivo/);

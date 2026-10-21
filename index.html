@@ -147,24 +147,79 @@
             </section>
 
             <section id="screen-pix" class="hidden demo-screen" aria-labelledby="pix-title">
-                <header class="statement-heading"><button type="button" onclick="navigateTo('home')" aria-label="Voltar ao início">←</button><div><small>SIMULADOR JUSTEC</small><h2 id="pix-title">Fazer Pix fictício</h2></div></header>
-                <p class="demo-notice">Não informe dados reais. Nenhuma chave é consultada. Limite demonstrativo por operação: R$ 2.000,00.</p>
-                <form id="pix-form" class="demo-panel" onsubmit="preparePix(event)">
-                    <h3>A · Destinatário</h3>
-                    <label>Destinatário fictício<select id="pix-recipient" onchange="updatePixRecipient()"><option value="demo-low">Escola A · baixo risco</option><option value="demo-medium">Escola B · risco moderado</option><option value="demo-high">Escola C · risco elevado</option><option value="demo-false">Escola D · falso positivo</option><option value="custom">Informar chave de demonstração</option></select></label>
-                    <div id="pix-custom" hidden><label>Chave ilustrativa<input id="pix-key" maxlength="100" autocomplete="off" placeholder="Ex.: escola@example.invalid"></label><label>Cenário da chave informada<select id="pix-scenario"><option value="low">Baixo</option><option value="moderate">Moderado</option><option value="elevated">Elevado</option></select></label><p>Formatos: CPF, CNPJ, telefone, e-mail ou UUID. Validação apenas de formato, sem verificar titularidade.</p></div>
-                    <h3>B · Valor</h3><label>Valor em reais<input id="pix-amount" inputmode="decimal" autocomplete="off" placeholder="50,00" onblur="formatPixAmount()" required></label>
-                    <button type="submit">Conferir dados</button>
+                <header class="statement-heading"><button type="button" onclick="navigateTo('home')" aria-label="Voltar ao início">←</button><div><small>SIMULADOR JUSTEC · PIX 2.0</small><h2 id="pix-title">Fazer Pix fictício</h2></div></header>
+                <p class="demo-notice">Use somente os dados do catálogo abaixo. Não informe dados reais. Limite por operação: R$ 2.000,00. Ao recarregar, toda a demonstração reinicia.</p>
+                <ol id="pix-stepper" class="pix-stepper" aria-label="Etapas do Pix">
+                    <li data-pix-step="1" aria-current="step"><span>1</span><small>Início</small></li><li data-pix-step="2"><span>2</span><small>Destinatário</small></li><li data-pix-step="3"><span>3</span><small>Valor</small></li><li data-pix-step="4"><span>4</span><small>Conferência</small></li><li data-pix-step="5"><span>5</span><small>Pausa</small></li><li data-pix-step="6"><span>6</span><small>Autorização</small></li><li data-pix-step="7"><span>7</span><small>Resultado</small></li>
+                </ol>
+                <p id="pix-step-label" class="pix-step-label" role="status">Etapa 1 de 7 · Iniciar Pix</p>
+                <form id="pix-form" class="demo-panel pix-entry" onsubmit="preparePix(event)" novalidate>
+                    <section id="pix-start-step">
+                        <h3 tabindex="-1">Fazer Pix</h3><p>Escolha como deseja transferir.</p>
+                        <select id="pix-method" onchange="changePixMethod()" hidden aria-label="Modalidade"><option value="recipient">Destinatário cadastrado</option><option value="key">Chave fictícia do catálogo</option></select>
+                        <div class="pix-methods">
+                            <button type="button" data-pix-method="key" onclick="choosePixMethod('key')"><i class="fa-solid fa-key" aria-hidden="true"></i><span><strong>Transferir por chave Pix</strong><small>Use uma chave fictícia do catálogo</small></span><i class="fa-solid fa-chevron-right" aria-hidden="true"></i></button>
+                            <button type="button" data-pix-method="recipient" onclick="choosePixMethod('recipient')"><i class="fa-solid fa-user" aria-hidden="true"></i><span><strong>Meus contatos</strong><small>Selecione um destinatário cadastrado</small></span><i class="fa-solid fa-chevron-right" aria-hidden="true"></i></button>
+                            <button type="button" disabled><i class="fa-solid fa-qrcode" aria-hidden="true"></i><span><strong>Ler QR Code</strong><small>Indisponível nesta versão</small></span></button>
+                            <button type="button" disabled><i class="fa-solid fa-copy" aria-hidden="true"></i><span><strong>Pix Copia e Cola</strong><small>Indisponível nesta versão</small></span></button>
+                        </div>
+                        <p class="statement-caption">Agendamento também indisponível nesta versão.</p>
+                    </section>
+                    <section id="pix-recipient-step" hidden>
+                        <h3 tabindex="-1">Quem vai receber?</h3>
+                        <div id="pix-registered"><label>Destinatário fictício<select id="pix-recipient" onchange="updatePixRecipient()"><option value="demo-low">Escola A · cenário baixo</option><option value="demo-medium">Escola B · cenário moderado</option><option value="demo-high">Escola C · restrição interna</option><option value="demo-false">Escola D · falso positivo</option></select></label></div>
+                        <div id="pix-custom" hidden><label>Qual é a chave Pix?<input id="pix-key" maxlength="100" autocomplete="off" placeholder="escola-a@example.invalid"></label><details><summary>Ver catálogo de chaves fictícias</summary><p>escola-a@example.invalid<br>escola-b@example.invalid<br>loja-c@example.invalid<br>escola-d@example.invalid</p></details><p>Consulta local. Não informe uma chave real.</p></div>
+                        <button id="pix-lookup" type="button" class="pix-primary" onclick="resolvePixRecipient()">Conferir destinatário</button>
+                        <p id="pix-recipient-info" class="pix-recipient-card" role="status"></p>
+                        <button id="pix-recipient-next" type="button" class="pix-primary" onclick="goPixValue()" hidden>Continuar para valor</button>
+                        <button type="button" onclick="backPixStart()">Voltar ao início do Pix</button>
+                    </section>
+                    <section id="pix-value" hidden>
+                        <h3 tabindex="-1">Qual é o valor?</h3>
+                        <label class="pix-amount-label">Valor em reais<span class="pix-amount-box"><span aria-hidden="true">R$</span><input id="pix-amount" inputmode="decimal" autocomplete="off" placeholder="0,00"></span></label>
+                        <div id="pix-amount-pad" class="pix-keypad" aria-label="Teclado de valor"></div>
+                        <p>Saldo fictício disponível: <strong id="pix-available"></strong></p>
+                        <label><input type="checkbox" id="pix-context-request"> Quero verificar uma suspeita ou pressão para transferir</label>
+                        <button type="submit" class="pix-primary">Continuar para conferência</button>
+                        <button type="button" onclick="updatePixRecipient()">Alterar destinatário</button>
+                    </section>
                 </form>
-                <section id="pix-confirm" class="demo-panel" hidden><h3>C · Conferência</h3><p id="pix-summary"></p><label><input type="checkbox" id="pix-data-confirm"> Conferi os dados fictícios</label><button type="button" onclick="analyzePix()">Analisar com JUSTEC Guard</button></section>
-                <section id="pix-guard" class="demo-panel" hidden><h3>D · JUSTEC Guard demonstrativo</h3><p id="pix-risk"></p><label id="pix-extra-label" hidden><input type="checkbox" id="pix-extra"> Entendi o alerta e quero continuar a simulação</label><button type="button" id="pix-continue" onclick="showDemoAuthentication()">Continuar</button></section>
-                <section id="pix-auth" class="demo-panel" hidden><h3>E · Confirmação demonstrativa</h3><p>Sem senha, digital ou autenticação bancária real.</p><label><input type="checkbox" id="pix-demo-confirm"> Confirmo apenas esta operação fictícia</label><button type="button" id="pix-submit" onclick="completePix()">Simular envio</button></section>
-                <section id="pix-result" class="demo-panel" hidden><h3>F · Resultado da simulação</h3><p id="pix-result-text"></p><button type="button" id="pix-receipt" onclick="openPixReceipt()" hidden>Ver comprovante demonstrativo</button><button type="button" id="pix-review" onclick="navigateTo('reviews')" hidden>Ir à central de revisão</button><button type="button" onclick="openPixFlow()">Nova simulação</button></section>
+                <section id="pix-confirm" class="demo-panel" hidden><h3 tabindex="-1">4 · Conferência</h3><dl id="pix-summary" class="pix-summary"></dl><label><input type="checkbox" id="pix-data-confirm"> Conferi os dados fictícios</label><button type="button" onclick="analyzePix()" class="pix-primary">Continuar com JUSTEC Guard</button><button type="button" onclick="editPixDetails()">Corrigir dados</button></section>
+                <section id="pix-guard" class="demo-panel" hidden>
+                    <h3 tabindex="-1">Avaliação preventiva demonstrativa</h3><p id="pix-risk"></p>
+                    <details><summary>Indicadores e disponibilidade</summary><div id="pix-evidence"></div></details>
+                    <div id="pix-triage" hidden>
+                        <p>Confira o contexto. Respostas negativas não garantem segurança.</p>
+                        <label>Você confirmou a identidade do destinatário?<select id="pix-identity"><option value="unknown">Não sei</option><option value="yes">Sim</option><option value="no">Não</option></select></label>
+                        <label>Alguém está pressionando você a transferir imediatamente?<select id="pix-urgency"><option value="unknown">Não sei</option><option value="yes">Sim</option><option value="no">Não</option></select></label>
+                        <label>Pediram o Pix para liberar prêmio, empréstimo ou recuperar dinheiro?<select id="pix-advance"><option value="unknown">Não sei</option><option value="yes">Sim</option><option value="no">Não</option></select></label>
+                        <label>Você recebeu instruções para ignorar alertas do banco?<select id="pix-ignore"><option value="unknown">Não sei</option><option value="yes">Sim</option><option value="no">Não</option></select></label>
+                        <button type="button" id="pix-check-context" onclick="submitPixContext()">Avaliar minhas respostas</button>
+                    </div>
+                    <label id="pix-extra-label" hidden><input type="checkbox" id="pix-extra"> Entendi o alerta e conferi por um canal independente</label>
+                    <button type="button" id="pix-start-pause" onclick="startPixPause()" hidden>Ir para pausa preventiva</button>
+                    <button type="button" onclick="reconsiderPix('review')">Voltar à conferência</button>
+                </section>
+                <section id="pix-pause" class="demo-panel pix-pause" hidden aria-labelledby="pix-pause-title">
+                    <span class="pix-guard-brand"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i> JUSTEC GUARD</span>
+                    <h3 id="pix-pause-title" tabindex="-1">5 · Antes de autorizar seu Pix...</h3>
+                    <p>Este é um momento para conferir e reconsiderar.</p><p id="pix-pause-summary"></p>
+                    <p id="pix-tip" class="pix-tip"></p>
+                    <label for="pix-reflection">Tempo de reflexão educativa</label><progress id="pix-reflection" max="100" value="0"></progress>
+                    <p id="pix-pause-status" role="status" aria-live="polite"></p>
+                    <p class="statement-caption">Pausa educativa, sem processamento bancário. O intervalo inicial de cinco segundos é experimental, sem validação científica. Nada é enviado ao concluir a barra.</p>
+                    <button type="button" class="pix-primary" onclick="reconsiderPix()">Reconsiderar ou verificar</button>
+                    <div id="pix-reconsider-options" hidden><button type="button" onclick="reconsiderPix('review')">Voltar à revisão</button><button type="button" onclick="reconsiderPix('triage')">Abrir triagem, mantendo rascunho</button></div>
+                    <button type="button" id="pix-continue" onclick="showDemoAuthentication()" disabled>Continuar para senha</button>
+                </section>
+                <section id="pix-auth" class="demo-panel" hidden><h3 tabindex="-1">6 · Autorização demonstrativa</h3><p>Use somente o código de demonstração <strong>0000</strong>. Não digite senha bancária real. Este campo não autentica uma conta.</p><label>Código demonstrativo (0000)<input id="pix-demo-code" class="pix-code-input" type="password" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="0000"></label><div id="pix-code-pad" class="pix-keypad" aria-label="Teclado do código demonstrativo"></div><label><input type="checkbox" id="pix-demo-confirm"> Confirmo apenas esta operação fictícia</label><button type="button" id="pix-submit" class="pix-primary" onclick="completePix()">Autorizar Pix fictício</button><button type="button" onclick="reconsiderPix('review')">Voltar à revisão</button></section>
+                <section id="pix-result" class="demo-panel" hidden><div id="pix-result-icon" class="pix-result-icon" aria-hidden="true"></div><h3 tabindex="-1">7 · Resultado da simulação</h3><p id="pix-result-text"></p><dl id="pix-result-details" class="pix-summary"></dl><p class="statement-notice">SIMULAÇÃO — SEM VALOR FINANCEIRO</p><button type="button" id="pix-share" class="pix-primary" onclick="sharePixReceipt()" hidden>Compartilhar ou copiar comprovante</button><button type="button" id="pix-receipt" onclick="openPixReceipt()" hidden>Ver comprovante demonstrativo</button><button type="button" id="pix-review" onclick="navigateTo('reviews')" hidden>Ir à central de revisão</button><button type="button" onclick="openPixFlow()">Nova simulação</button><button type="button" onclick="navigateTo('home')">Voltar para o início</button></section>
                 <p id="pix-feedback" role="status" aria-live="polite"></p>
             </section>
 <section id="screen-protection" class="hidden demo-screen"><header class="statement-heading"><button type="button" onclick="navigateTo('home')" aria-label="Voltar ao início">←</button><h2>Proteção de Chaves Pix</h2></header><div class="demo-panel"><p>Alerta é uma orientação; interrupção impede uma tentativa; restrição interna simulada impede novos envios neste protótipo. Não há bloqueio real de chave no DICT ou de conta bancária.</p><div id="protection-list"></div></div></section><section id="screen-reviews" class="hidden demo-screen"><header class="statement-heading"><button type="button" onclick="navigateTo('home')" aria-label="Voltar ao início">←</button><h2>Central de revisão e contestações</h2></header><div class="demo-panel"><p>Revisões exclusivamente educativas. Não informe dados reais. A decisão segue o cenário acadêmico escolhido, sem comunicação com bancos.</p><p id="review-feedback" role="status" aria-live="polite"></p><div id="review-list"></div></div></section><section id="screen-security" class="hidden demo-screen"><header class="statement-heading"><button type="button" onclick="navigateTo('home')" aria-label="Voltar ao início">←</button><h2>Central de segurança</h2></header><div class="demo-panel"><p>Conheça as regras do JUSTEC Guard e o histórico separado de tentativas. Nenhum indicador isolado prova fraude.</p><button type="button" onclick="navigateTo('protection')">Proteção de chaves</button><button type="button" onclick="navigateTo('reviews')">Revisões simuladas</button><button type="button" onclick="navigateTo('edu-center')">Centro educativo</button><button type="button" onclick="navigateTo('screening')">Triagem preventiva</button><button type="button" onclick="navigateTo('action-post')">Orientação pós-golpe</button><h3>Tentativas interrompidas · fora do extrato</h3><div id="attempt-list"></div><p>Para reiniciar toda a demonstração, recarregue a página. Nenhum dado é persistido.</p></div></section>
             <!-- ================= TELA 3A: TRIAGEM PREVENTIVA ("Estou desconfiado") ================= -->
             <div id="screen-screening" class="hidden space-y-3.5">
+                <button type="button" id="pix-resume" class="guidance-action" onclick="resumePix()" hidden>Retomar meu Pix fictício</button>
                 <div class="flex items-center space-x-2 border-b border-slate-800 pb-2">
                     <button onclick="navigateTo('home')" class="p-1.5 rounded-lg bg-slate-800 text-slate-300 hover:text-white">
                         <i class="fa-solid fa-arrow-left text-xs"></i>
@@ -511,6 +566,7 @@
             <button type="button" class="receipt-close" onclick="closeTransactionDetails()" aria-label="Fechar comprovante">×</button>
             <p class="statement-notice">SIMULAÇÃO EDUCACIONAL · SEM VALIDADE BANCÁRIA</p>
             <h2 id="receipt-title">Comprovante demonstrativo</h2>
+            <p class="statement-notice">SIMULAÇÃO — SEM VALOR FINANCEIRO</p>
             <div id="receipt-details"></div>
             <button type="button" id="receipt-copy" onclick="copyReceipt()">Copiar comprovante simulado</button>
             <p id="receipt-feedback" role="status"></p>
@@ -531,6 +587,10 @@
     <script src="./js/state.js"></script>
     <script src="./js/risk.js"></script>
     <script src="./js/app.js"></script>
+    <script src="./js/pix-directory.js"></script>
+    <script src="./js/pix-messages.js"></script>
+    <script src="./js/pix-evidence.js"></script>
+    <script src="./js/pix-journey.js"></script>
     <script src="./js/pix.js"></script>
 </body>
 </html>
