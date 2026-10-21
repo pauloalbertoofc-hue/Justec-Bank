@@ -70,46 +70,27 @@
             <div id="screen-home" class="home-dashboard">
                 
                 <!-- Destaque Central de Segurança Educacional -->
-                <div id="home-security" class="bg-gradient-to-r from-amber-950/90 via-slate-900 to-bb-blueDark/80 border border-amber-500/40 p-3 rounded-2xl shadow-xl space-y-2">
-                    <div class="flex items-center justify-between">
-                        <h2 class="text-base font-bold text-white flex items-center gap-2">
-                            <i class="fa-solid fa-shield-cat text-sm" aria-hidden="true"></i> Antes de transferir, confira.
-                        </h2>
+                <section id="home-security" class="security-prompt" aria-labelledby="security-prompt-title">
+                    <div class="security-prompt-heading">
+                        <span class="security-prompt-icon" aria-hidden="true"><i class="fa-solid fa-shield-halved"></i></span>
+                        <div>
+                            <h2 id="security-prompt-title">Antes de transferir, confira.</h2>
+                            <p>Um minuto de atenção pode fazer diferença.</p>
+                        </div>
                     </div>
-
-                    <!-- Os Dois Botões Centrais Exigidos na Proposta -->
-                    <div class="grid grid-cols-1 gap-2">
-                        
-                        <!-- Botão 2 (Amarelo): Estoy desconfiado -->
-                        <button onclick="navigateTo('screening')" class="w-full text-left bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 px-3 py-2.5 rounded-xl shadow-md transition-all font-bold flex items-center justify-between group border border-yellow-300/50">
-                            <div class="flex items-center space-x-2.5">
-                                <div class="w-7 h-7 rounded-lg bg-slate-950/20 text-slate-950 flex items-center justify-center text-sm font-black">
-                                    <i class="fa-solid fa-magnifying-glass-chart"></i>
-                                </div>
-                                <div>
-                                    <span class="text-[9px] font-black uppercase tracking-wider block text-slate-900/80">Pilares de Prevenção</span>
-                                    <h4 class="text-xs font-black text-slate-950">🟡 Acho que é golpe / Tenho dúvida</h4>
-                                </div>
-                            </div>
-                            <i class="fa-solid fa-chevron-right text-xs group-hover:translate-x-1 transition-transform text-slate-950"></i>
+                    <div class="security-prompt-actions">
+                        <button onclick="navigateTo('screening')" class="security-mini security-mini-prevention" aria-label="Acho que é golpe / Tenho dúvida">
+                            <i class="fa-solid fa-magnifying-glass-chart" aria-hidden="true"></i>
+                            <span>Tenho dúvida</span>
+                            <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
                         </button>
-
-                        <!-- Botão 1 (Vermelho): Sofri um golpe -->
-                        <button onclick="navigateTo('action-post')" class="w-full text-left bg-gradient-to-r from-rose-950 via-slate-900 to-rose-900 border border-rose-500/60 hover:border-rose-400 px-3 py-2.5 rounded-xl shadow-md transition-all font-bold flex items-center justify-between group">
-                            <div class="flex items-center space-x-2.5">
-                                <div class="w-7 h-7 rounded-lg bg-rose-600 text-white flex items-center justify-center text-sm font-black">
-                                    <i class="fa-solid fa-triangle-exclamation"></i>
-                                </div>
-                                <div>
-                                    <span class="text-[9px] font-black uppercase tracking-wider block text-rose-400">Ação Rápida Pós-Golpe</span>
-                                    <h4 class="text-xs font-extrabold text-white">🔴 Sofri um golpe agora! O que fazer?</h4>
-                                </div>
-                            </div>
-                            <i class="fa-solid fa-chevron-right text-xs group-hover:translate-x-1 transition-transform text-rose-400"></i>
+                        <button onclick="navigateTo('action-post')" class="security-mini security-mini-emergency" aria-label="Sofri um golpe agora! O que fazer?">
+                            <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+                            <span>Sofri um golpe</span>
+                            <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
                         </button>
-
                     </div>
-                </div>
+                </section>
 
                 <!-- Card de Saldo e Conta -->
                 <div id="home-balance" class="glass-card p-4 rounded-2xl relative overflow-hidden border-l-4 border-l-bb-yellow shadow-lg">

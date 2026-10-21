@@ -166,3 +166,23 @@ body:has(#app-modal:not(.hidden)), body:has(dialog[open]) { overflow: hidden; }
 @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { scroll-behavior: auto !important; animation: none !important; transition: none !important; }
 }
+
+/* Convite compacto à prevenção, com duas ações independentes. */
+.security-prompt { padding: 14px; border: 1px solid #475b74; border-radius: 18px; background: #111e35; box-shadow: inset 0 0 0 1px #ffffff06; }
+.security-prompt-heading { display: flex; align-items: center; gap: 10px; }
+.security-prompt-icon { display: grid; place-items: center; flex: 0 0 38px; height: 38px; border-radius: 12px; background: #263b53; color: #ffcc00; font-size: 20px; }
+.home-dashboard .security-prompt h2 { margin: 0; color: #fff; font-size: 15px; font-weight: 700; line-height: 1.35; }
+#home-security.security-prompt p { margin: 4px 0 0; color: #b8c5d6; font-size: 11px; line-height: 1.45; }
+.security-prompt-actions { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 8px; margin-top: 12px; }
+.security-mini { display: flex; align-items: center; justify-content: center; gap: 7px; min-width: 0; min-height: 44px; padding: 8px; border: 1px solid transparent; border-radius: 10px; font-size: 11px; font-weight: 700; line-height: 1.3; transition: filter .15s, transform .15s; }
+.security-mini-prevention { background: #f5ae12; border-color: #ffd45b; color: #172033; }
+.security-mini-emergency { background: #571b32; border-color: #ae375a; color: #fff; }
+.security-mini > .fa-chevron-right { font-size: 9px; margin-left: auto; }
+.security-mini:hover { filter: brightness(1.12); }
+.security-mini:active { transform: translateY(1px); }
+.security-mini:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+@media (min-width: 768px) {
+    .security-prompt { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 16px 20px; }
+    .security-prompt-actions { margin-top: 0; flex: 0 1 360px; }
+    .home-dashboard .security-prompt h2 { font-size: 16px; }
+}

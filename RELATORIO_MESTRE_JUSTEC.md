@@ -624,3 +624,9 @@ Executado tests/layout.cjs com JUSTEC_RESOURCE_BRIDGE=1 e servidor local na port
 Substituído “ROTA DA SEGURANÇA JUSTEC” por “Antes de transferir, confira.” em index.html. O texto agora é um título semântico h2, branco, de 16 px e em negrito, preservando o ícone, o cartão e as ações dos pilares. Nenhuma regra de negócio foi modificada. Ponto de referência anterior ao experimento: commit a3a824a; é possível restaurar apenas o título sem desfazer alterações posteriores.
 
 Executado tests/layout.cjs com JUSTEC_RESOURCE_BRIDGE=1 e servidor local na porta 8770: aprovado nas sete larguras 320/375/390/768/1024/1366/1920, dez telas e dois modais por largura, sem erros JavaScript. Publicação para avaliação visual segue a autorização vigente do usuário.
+
+## 21/10/2026 — Cartão de segurança inspirado na referência visual
+
+Reorganizado apenas o cartão home-security em index.html e css/style.css: fundo azul discreto, borda suave, título branco, ícone amarelo e subtítulo da referência “Um minuto de atenção pode fazer diferença.”. Os dois pilares foram apresentados como botões compactos lado a lado (“Tenho dúvida” e “Sofri um golpe”), com os nomes completos preservados em aria-label e as ações navigateTo originais. No tablet/desktop, cabeçalho e ações ficam na mesma linha; no mobile, ações abaixo do cabeçalho. Botões mantêm altura mínima de 44 px e foco visível. Saldo, serviços e lógica financeira não foram alterados.
+
+Executados tests/layout.cjs (sete larguras, dez telas e dois modais por largura) e tests/shortcuts.cjs (49 verificações), todos aprovados, sem erros JavaScript, com JUSTEC_RESOURCE_BRIDGE=1 e servidor local na porta 8770. Inspecionada também captura da Home em 390 px. Publicação segue a autorização vigente. O experimento anterior está no commit c644d3e; o visual anterior à troca do título está em a3a824a. Ambos permanecem disponíveis para reversão seletiva.
