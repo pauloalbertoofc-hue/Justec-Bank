@@ -186,3 +186,33 @@ body:has(#app-modal:not(.hidden)), body:has(dialog[open]) { overflow: hidden; }
     .security-prompt-actions { margin-top: 0; flex: 0 1 360px; }
     .home-dashboard .security-prompt h2 { font-size: 16px; }
 }
+
+/* Central de orientação: escopo restrito à tela já existente action-post. */
+.consumer-guidance { display: grid; gap: 22px; }
+.consumer-guidance .statement-heading { margin-bottom: 0; align-items: flex-start; }
+.consumer-guidance .statement-heading h2 { line-height: 1.35; }
+.guidance-intro { color: #cbd5e1; line-height: 1.65; }
+.guidance-section-title { color: #ffcc00; font-size: 15px; font-weight: 800; margin-bottom: 12px; }
+.guidance-grid { display: grid; gap: 12px; align-items: start; }
+.guidance-card, .guidance-about { min-width: 0; background: #121929; border: 1px solid #334155; border-radius: 16px; padding: 16px; }
+.guidance-card h4 { color: #ffcc00; font-size: 14px; font-weight: 800; line-height: 1.5; }
+.guidance-card h4 i { margin-right: 5px; }
+.consumer-guidance p { font-size: 13px; line-height: 1.65; overflow-wrap: anywhere; }
+.guidance-card p { color: #cbd5e1; margin-top: 10px; }
+.guidance-card strong { color: #f1f5f9; }
+.guidance-urgent { border-color: #a73756; }
+.guidance-urgent h4 { color: #fda4af; }
+.consumer-guidance .guidance-action { display: inline-flex; align-items: center; min-height: 44px; margin-top: 12px; padding: 9px 12px; color: #ffcc00; background: #ffcc000b; border: 1px solid #ffcc0040; border-radius: 10px; text-align: left; font-size: 12px; font-weight: 700; line-height: 1.5; overflow-wrap: anywhere; max-width: 100%; }
+.consumer-guidance a:hover { text-decoration: underline; }
+.consumer-guidance details { margin-top: 12px; }
+.consumer-guidance summary { cursor: pointer; min-height: 44px; padding: 10px 0; color: #e2e8f0; font-size: 13px; font-weight: 700; }
+.consumer-guidance :is(a, button, summary):focus-visible { outline: 2px solid #ffcc00; outline-offset: 3px; }
+.consumer-guidance .guidance-source-note { color: #aebed1; font-size: 12px; line-height: 1.65; }
+.guidance-follow-up { display: grid; gap: 12px; }
+.guidance-about > summary { color: #cbd5e1; }
+.guidance-about #guard-operation-guide { margin-top: 12px; }
+.consumer-guidance [id] { scroll-margin-top: 100px; }
+@media (min-width: 768px) {
+    .guidance-grid { grid-template-columns: repeat(2, minmax(0,1fr)); gap: 16px; }
+    .guidance-card { padding: 20px; }
+}

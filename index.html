@@ -236,18 +236,111 @@
                 </div>
             </div>
 
-            <!-- ================= TELA 3B: AÇÃO RÁPIDA PÓS-GOLPE ("Sofri um golpe agora!") ================= -->
-            <div id="screen-action-post" class="hidden space-y-3.5">
-                <div class="flex items-center space-x-2 border-b border-slate-800 pb-2">
-                    <button onclick="navigateTo('home')" class="p-1.5 rounded-lg bg-slate-800 text-slate-300 hover:text-white">
-                        <i class="fa-solid fa-arrow-left text-xs"></i>
-                    </button>
-                    <div>
-                        <h3 class="text-xs font-bold text-rose-400 uppercase tracking-wider">Pilar 2 • Pós-Golpe</h3>
-                        <h2 class="text-sm font-extrabold text-white">Como funciona a proteção do Pix</h2>
+            <!-- Orientação prática; informações do simulador preservadas em seção secundária. -->
+            <section id="screen-action-post" class="hidden consumer-guidance" aria-labelledby="consumer-guidance-title">
+                <header class="statement-heading">
+                    <button type="button" onclick="navigateTo('home')" aria-label="Voltar ao início">←</button>
+                    <div><small>ORIENTAÇÃO E APOIO</small><h2 id="consumer-guidance-title">Orientação e Defesa do Consumidor</h2></div>
+                </header>
+                <p class="guidance-intro">Saiba como agir diante de suspeitas de golpes, fraudes bancárias e problemas com instituições financeiras.</p>
+                <section aria-labelledby="situations-title">
+                    <h3 id="situations-title" class="guidance-section-title">O que fazer em cada situação?</h3>
+                    <div class="guidance-grid">
+                        <article class="guidance-card" aria-labelledby="suspect-title">
+                            <h4 id="suspect-title"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i> Suspeito de um golpe</h4>
+                            <p>Interrompa a operação. Não clique em links suspeitos nem forneça senhas ou códigos de autenticação. Confira a informação pelo aplicativo ou site oficial, sem usar o contato enviado na mensagem.</p>
+                            <button type="button" class="guidance-action" onclick="navigateTo('screening')">Abrir triagem preventiva</button>
+                        </article>
+                        <article class="guidance-card guidance-urgent" aria-labelledby="pix-fraud-title">
+                            <h4 id="pix-fraud-title"><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i> Fiz um Pix e descobri que era golpe</h4>
+                            <p>Comunique imediatamente seu banco pelo canal oficial. Solicite análise pelo Mecanismo Especial de Devolução (MED), quando aplicável, e guarde o protocolo. <strong>O MED não garante a recuperação do dinheiro.</strong></p>
+                            <a class="guidance-action" href="#med-emergency-guide">Ver orientação pós-golpe e roteiro para o banco</a>
+                        </article>
+                        <article class="guidance-card" aria-labelledby="evidence-title">
+                            <h4 id="evidence-title"><i class="fa-solid fa-file-shield" aria-hidden="true"></i> Preciso registrar a ocorrência</h4>
+                            <p>Em caso de possível fraude ou estelionato, procure a Polícia Civil. Use a delegacia eletrônica oficial do seu estado quando disponível para essa ocorrência, ou uma unidade presencial.</p>
+                            <details><summary>Quais provas devo guardar?</summary><p>Preserve comprovantes, registros de transferências, conversas, números de telefone, links e protocolos de atendimento. Mantenha os arquivos originais; apresente-os apenas nos canais oficiais. O boletim de ocorrência não garante devolução.</p></details>
+                            <a class="guidance-action" href="#channel-police">Consultar orientação para a Polícia Civil</a>
+                        </article>
+                        <article class="guidance-card" aria-labelledby="unresolved-title">
+                            <h4 id="unresolved-title"><i class="fa-solid fa-comments" aria-hidden="true"></i> O banco não resolveu meu problema</h4>
+                            <p>Registre no SAC e, se não houver solução, procure a ouvidoria com o protocolo. Considere Procon, Consumidor.gov.br (se a empresa participar) ou reclamação ao Banco Central, conforme a competência de cada canal.</p>
+                            <p>Para avaliar medidas judiciais, procure assistência jurídica. Reclamações não garantem restituição, condenação ou solução automática. Não espere esses canais para avisar o banco sobre um golpe.</p>
+                            <a class="guidance-action" href="#consumer-channels">Conhecer instituições e canais</a>
+                        </article>
                     </div>
-                </div>
+                </section>
+                <section aria-labelledby="med-emergency-title" class="guidance-follow-up">
+                <aside id="med-emergency-guide" class="glass-card p-3 rounded-xl border-slate-800 space-y-2" aria-labelledby="med-emergency-title">
+                    <h3 id="med-emergency-title" class="text-xs font-bold text-bb-yellow">Orientação separada: se ocorreu um golpe real</h3>
+                    <p class="text-[11px] text-slate-300">Procure imediatamente seu banco pelo aplicativo ou telefone oficial, informe a movimentação e solicite avaliação do MED quando cabível. Preserve comprovantes, conversas e protocolos e registre ocorrência. O atendimento e eventuais medidas são realizados pelo banco, fora deste protótipo; a devolução não é garantida.</p>
+                    <p class="text-[11px] text-slate-300">O MED não é a revisão de uma restrição interna do JUSTEC nem um bloqueio universal de chaves Pix. O roteiro abaixo é apenas um exemplo de comunicação; não abre pedido, não movimenta valores e não bloqueia contas.</p>
+                </aside>
 
+                <button onclick="openMedWizard()" class="w-full bg-gradient-to-r from-blue-700 to-indigo-700 hover:from-blue-600 hover:to-indigo-600 text-white font-bold py-3 px-4 rounded-xl shadow-lg text-xs transition flex items-center justify-center gap-2 border border-blue-400/30">
+                    <i class="fa-solid fa-file-signature text-bb-yellow"></i>
+                    <span>Gerar Roteiro de Texto para o Chat do Banco</span>
+                </button>
+
+                </section>
+                <section id="consumer-channels" aria-labelledby="channels-title">
+                    <h3 id="channels-title" class="guidance-section-title">Instituições e canais de atendimento</h3>
+                    <p id="channel-verification-note" class="guidance-source-note">Validação pendente: o acesso aos portais oficiais foi bloqueado neste ambiente. Confirme os canais e a disponibilidade local diretamente nos portais antes de usá-los. Os links abaixo são externos; os exemplos de São Paulo não substituem os canais do seu estado.</p>
+                    <div class="guidance-grid">
+                        <article id="channel-bank" class="guidance-card" aria-labelledby="bank-title">
+                            <h4 id="bank-title">Instituição financeira — aplicativo, SAC e ouvidoria</h4>
+                            <p><strong>Função:</strong> receber a comunicação, avaliar a contestação e orientar sobre medidas bancárias, incluindo o MED quando cabível.</p>
+                            <p><strong>Quando procurar:</strong> imediatamente ao perceber um golpe; para problemas sem solução no SAC, busque a ouvidoria.</p>
+                            <p><strong>Contato:</strong> aplicativo oficial ou SAC/ouvidoria informados no site oficial do próprio banco. Não utilize números enviados pelo suposto atendente.</p>
+                            <details><summary>O que preparar e acompanhar</summary><p>Tenha comprovante, identificação da transação, data e descrição dos fatos. Solicite o protocolo, acompanhe a resposta e guarde os registros. Não compartilhe senhas ou códigos.</p></details>
+                            <a class="guidance-action" href="#med-emergency-guide">Preparar o contato com seu banco</a>
+                        </article>
+                        <article id="channel-procon" class="guidance-card" aria-labelledby="procon-title">
+                            <h4 id="procon-title">PROCON — Proteção e Defesa do Consumidor</h4>
+                            <p><strong>Função:</strong> órgão público que orienta cidadãos, recebe reclamações, fiscaliza fornecedores e pode aplicar sanções administrativas conforme sua competência, com fundamento no Código de Defesa do Consumidor (Lei nº 8.078/1990).</p>
+                            <p><strong>Quando procurar:</strong> para orientação e reclamações sobre falhas no atendimento ou no serviço bancário.</p>
+                            <p><strong>Contato:</strong> localize o Procon no portal oficial do governo do seu estado ou município. O telefone 151 existe em algumas localidades; a disponibilidade precisa ser confirmada no Procon local.</p>
+                            <details><summary>Documentos geralmente úteis</summary><p>Documento de identificação, comprovantes, contratos pertinentes, descrição dos fatos e protocolos do banco. Confirme os requisitos com a unidade responsável.</p></details>
+                            <a class="guidance-action" href="https://www.procon.sp.gov.br/" target="_blank" rel="noopener noreferrer">Procon de São Paulo — portal oficial (externo, nova aba)</a>
+                        </article>
+                        <article id="channel-bcb" class="guidance-card" aria-labelledby="bcb-title">
+                            <h4 id="bcb-title">Banco Central do Brasil</h4>
+                            <p><strong>Função:</strong> regular e supervisionar o sistema financeiro dentro de suas atribuições.</p>
+                            <p><strong>Quando procurar:</strong> para registrar reclamação sobre instituições supervisionadas, conforme os canais oficiais, especialmente após buscar atendimento no banco.</p>
+                            <p><strong>Contato:</strong> portal do Banco Central, na área de reclamações. O BC não atua como instância judicial para determinar indenizações individuais.</p>
+                            <details><summary>O que reunir</summary><p>Instituição envolvida, descrição objetiva, datas e protocolos. A reclamação subsidia a supervisão; não substitui contestação ao banco, atendimento do Procon ou ação judicial.</p></details>
+                            <a class="guidance-action" href="https://www.bcb.gov.br/" target="_blank" rel="noopener noreferrer">Banco Central — portal oficial (externo, nova aba)</a>
+                        </article>
+                        <article id="channel-consumidor" class="guidance-card" aria-labelledby="consumidor-title">
+                            <h4 id="consumidor-title">Consumidor.gov.br</h4>
+                            <p><strong>Função:</strong> plataforma pública de solução de conflitos de consumo pela internet, com empresas aderentes.</p>
+                            <p><strong>Quando procurar:</strong> para tentar resolver uma reclamação diretamente com uma empresa participante. Não é atendimento de emergência nem processo judicial.</p>
+                            <p><strong>Contato:</strong> acesse o portal, verifique se a empresa participa e siga as instruções oficiais para registrar e acompanhar a reclamação.</p>
+                            <details><summary>Como preparar a reclamação</summary><p>Descreva fatos e pedido, reúna comprovantes e protocolos. Evite expor dados pessoais no relato público; utilize apenas os campos e canais apropriados da plataforma.</p></details>
+                            <a class="guidance-action" href="https://www.consumidor.gov.br/" target="_blank" rel="noopener noreferrer">Consumidor.gov.br — portal oficial (externo, nova aba)</a>
+                        </article>
+                        <article id="channel-police" class="guidance-card" aria-labelledby="police-title">
+                            <h4 id="police-title">Polícia Civil</h4>
+                            <p><strong>Função:</strong> registrar ocorrências e investigar possíveis crimes, como fraude e estelionato.</p>
+                            <p><strong>Quando procurar:</strong> quando houver indícios de crime. Comunique também o banco imediatamente; registrar ocorrência não abre automaticamente uma contestação bancária.</p>
+                            <p><strong>Contato:</strong> delegacia presencial ou eletrônica oficial do estado. Não há aqui indicação de um telefone nacional para registrar ocorrências.</p>
+                            <details><summary>Registro eletrônico e evidências</summary><p>No portal oficial da Polícia Civil do seu estado, procure “Delegacia Eletrônica” e confira quais ocorrências são aceitas. Preserve comprovantes, conversas, telefones, links, registros de transferências e protocolos.</p></details>
+                            <a class="guidance-action" href="https://www.delegaciaeletronica.policiacivil.sp.gov.br/ssp-de-cidadao/home" target="_blank" rel="noopener noreferrer">Delegacia Eletrônica de SP (externo, nova aba)</a>
+                        </article>
+                        <article id="channel-defensoria" class="guidance-card" aria-labelledby="defensoria-title">
+                            <h4 id="defensoria-title">Defensoria Pública</h4>
+                            <p><strong>Função:</strong> prestar assistência jurídica integral e gratuita a pessoas que atendem aos requisitos legais.</p>
+                            <p><strong>Quando procurar:</strong> se precisar avaliar direitos, medidas judiciais ou orientação jurídica individual, inclusive quando o conflito persistir.</p>
+                            <p><strong>Contato:</strong> consulte a Defensoria competente na sua região e seus critérios de atendimento. O portal abaixo é a referência institucional de São Paulo.</p>
+                            <details><summary>O que preparar</summary><p>Documentos pessoais, documentos exigidos para avaliação de atendimento, comprovantes do ocorrido e protocolos. Confirme agendamento e requisitos no portal oficial. O atendimento não garante resultado favorável.</p></details>
+                            <a class="guidance-action" href="https://www.defensoria.sp.def.br/" target="_blank" rel="noopener noreferrer">Defensoria Pública de SP (externo, nova aba)</a>
+                        </article>
+                    </div>
+                </section>
+                <p class="guidance-source-note">Conteúdo educativo geral, sem consultoria jurídica individualizada. Esta página não solicita dados pessoais ou bancários, não envia reclamações e não executa medidas em contas reais.</p>
+                <details id="guard-about" class="guidance-about">
+                    <summary>Sobre o JUSTEC Guard</summary>
+                    <h3 class="guidance-section-title">Como funciona a proteção do Pix no simulador</h3>
                 <p class="demo-notice">JUSTEC Guard · Política interna simulada. Nenhuma conta ou chave real é bloqueada.</p>
                 <section id="guard-operation-guide" class="space-y-2">
                     <article class="glass-card p-3 rounded-xl border-slate-800">
@@ -270,17 +363,9 @@
                         <button type="button" class="statement-link" onclick="navigateTo('reviews')">Abrir central de revisão demonstrativa</button>
                     </article>
                 </section>
-                <aside id="med-emergency-guide" class="glass-card p-3 rounded-xl border-slate-800 space-y-2" aria-labelledby="med-emergency-title">
-                    <h3 id="med-emergency-title" class="text-xs font-bold text-bb-yellow">Orientação separada: se ocorreu um golpe real</h3>
-                    <p class="text-[11px] text-slate-300">Procure imediatamente seu banco pelo aplicativo ou telefone oficial, informe a movimentação e solicite avaliação do MED quando cabível. Preserve comprovantes, conversas e protocolos e registre ocorrência. O atendimento e eventuais medidas são realizados pelo banco, fora deste protótipo; a devolução não é garantida.</p>
-                    <p class="text-[11px] text-slate-300">O MED não é a revisão de uma restrição interna do JUSTEC nem um bloqueio universal de chaves Pix. O roteiro abaixo é apenas um exemplo de comunicação; não abre pedido, não movimenta valores e não bloqueia contas.</p>
-                </aside>
 
-                <button onclick="openMedWizard()" class="w-full bg-gradient-to-r from-blue-700 to-indigo-700 hover:from-blue-600 hover:to-indigo-600 text-white font-bold py-3 px-4 rounded-xl shadow-lg text-xs transition flex items-center justify-center gap-2 border border-blue-400/30">
-                    <i class="fa-solid fa-file-signature text-bb-yellow"></i>
-                    <span>Gerar Roteiro de Texto para o Chat do Banco</span>
-                </button>
-            </div>
+                </details>
+            </section>
 
             <!-- ================= TELA 4: TELA DE DIREITOS BÁSICOS E EDUCATIVO ================= -->
             <div id="screen-rights" class="hidden space-y-3.5">

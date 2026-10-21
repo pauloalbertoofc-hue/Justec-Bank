@@ -7,6 +7,7 @@ const assert=require('node:assert/strict');
   await p.goto(process.env.JUSTEC_TEST_URL||'http://127.0.0.1:8000/',{waitUntil:'networkidle'});
   for(const width of [390,1366]){
    await p.setViewportSize({width,height:900});await p.evaluate(()=>navigateTo('action-post'));
+   if (!await p.locator('#guard-about').evaluate(el=>el.open)) await p.locator('#guard-about > summary').click();
    const guide=p.locator('#guard-operation-guide');const text=await guide.innerText();
    assert.equal(await guide.locator('article').count(),4);
    assert.match(text,/risco moderado exige confirmação adicional/);

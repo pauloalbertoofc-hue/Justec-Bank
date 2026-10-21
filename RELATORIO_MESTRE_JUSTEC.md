@@ -630,3 +630,76 @@ Executado tests/layout.cjs com JUSTEC_RESOURCE_BRIDGE=1 e servidor local na port
 Reorganizado apenas o cartão home-security em index.html e css/style.css: fundo azul discreto, borda suave, título branco, ícone amarelo e subtítulo da referência “Um minuto de atenção pode fazer diferença.”. Os dois pilares foram apresentados como botões compactos lado a lado (“Tenho dúvida” e “Sofri um golpe”), com os nomes completos preservados em aria-label e as ações navigateTo originais. No tablet/desktop, cabeçalho e ações ficam na mesma linha; no mobile, ações abaixo do cabeçalho. Botões mantêm altura mínima de 44 px e foco visível. Saldo, serviços e lógica financeira não foram alterados.
 
 Executados tests/layout.cjs (sete larguras, dez telas e dois modais por largura) e tests/shortcuts.cjs (49 verificações), todos aprovados, sem erros JavaScript, com JUSTEC_RESOURCE_BRIDGE=1 e servidor local na porta 8770. Inspecionada também captura da Home em 390 px. Publicação segue a autorização vigente. O experimento anterior está no commit c644d3e; o visual anterior à troca do título está em a3a824a. Ambos permanecem disponíveis para reversão seletiva.
+
+## 20/10/2026 — Reformulação local: Orientação e Defesa do Consumidor
+
+### Diagnóstico, escopo e preservação
+
+Inspecionados index.html, css/style.css, js/app.js e os testes existentes antes da edição. A antiga tela “Como funciona a proteção do Pix”, #screen-action-post, priorizava quatro explicações técnicas do simulador e possuía orientação MED e roteiro para falar com o banco. O documento enviado pelo usuário pede uma central prática, preservando o simulador. Seu comando final, “Não fazer commit, push ou deploy automaticamente”, prevalece sobre a autorização de publicação das etapas anteriores: esta entrega permanece local para revisão.
+
+Os dois relatórios foram comparados por conteúdo e histórico: o da raiz registra implementação, correções, testes e publicações; Documentação/RELATORIO_MESTRE_JUSTEC.md conserva registros iniciais de desenvolvimento e arquitetura. Este registro foi acrescentado somente ao principal na raiz, sem apagar ou reescrever o histórico de nenhum deles.
+
+### Conteúdo e decisões de implementação
+
+Mantido o ID #screen-action-post e todos os vínculos de navegação existentes. O novo título é “Orientação e Defesa do Consumidor”, com o subtítulo solicitado. Quatro cartões abordam suspeita de golpe, Pix já enviado, ocorrência/provas e problema não resolvido pelo banco. A triagem existente é aberta pelo mesmo navigateTo('screening'). A orientação pós-golpe existente é acessada por âncora para #med-emergency-guide, com o roteiro original openMedWizard(), sem recursão de navegação ou novo fluxo bancário.
+
+Seis cartões distinguem instituição financeira (aplicativo/SAC/ouvidoria), Procon, Banco Central, Consumidor.gov.br, Polícia Civil e Defensoria Pública. Cada um apresenta função, momento de procurar, contato, ação útil e informações complementares em details/summary. O cartão do próprio banco abre a orientação de preparação do contato, sem inventar uma URL de banco do usuário. Não há formulários nem coleta de dados pessoais. Não são prometidos ressarcimento, condenação ou resultado; MED, boletim de ocorrência, reclamação administrativa e assistência jurídica são diferenciados. O 151 é mencionado apenas como possibilidade local a confirmar; não foi criado nenhum link tel:, pois a verificação atual não foi possível.
+
+As quatro explicações técnicas foram realocadas integralmente para o details #guard-about, “Sobre o JUSTEC Guard”, fechado inicialmente. Preservados #guard-operation-guide, seus quatro artigos e ações para proteção, histórico e revisão; também preservados o conteúdo de #med-emergency-guide e seu botão de roteiro. Uma comparação programática com git show HEAD:index.html confirmou que os dois trechos originais continuam literalmente presentes. Não foram alterados arquivos JavaScript de saldo, estado, extrato, Pix, bloqueios/revisões ou risco; nenhum motor experimental foi integrado.
+
+Estilos da nova central estão restritos a suas classes em css/style.css: azul-escuro, amarelo nas ações, rosa/vermelho apenas na situação urgente, cartões com uma coluna no mobile e duas a partir de 768 px, largura de leitura e navegação responsiva preexistentes. Ações com pelo menos 44 px, títulos associados aos artigos por aria-labelledby, foco visível e expansões nativas operáveis por teclado. Links externos identificam nova aba e usam noopener noreferrer. Nenhuma dependência adicionada.
+
+### Fontes oficiais e limitação de verificação
+
+Foram tentadas consultas HTTPS aos seguintes endereços; TODOS retornaram “Tunnel connection failed: 403 Forbidden”. Nenhum conteúdo dessas páginas foi obtido e nenhuma informação nova foi tratada como revalidada nesta sessão:
+
+- https://www.bcb.gov.br/meubc/registrar_reclamacao
+- https://www.bcb.gov.br/estabilidadefinanceira/pix
+- https://www.consumidor.gov.br/pages/conteudo/publico/1
+- https://www.procon.sp.gov.br/
+- https://www.defensoria.sp.def.br/
+- https://www.delegaciaeletronica.policiacivil.sp.gov.br/ssp-de-cidadao/home
+- https://www.gov.br/mj/pt-br/assuntos/seus-direitos/consumidor/defesadoconsumidor
+- https://www.planalto.gov.br/ccivil_03/leis/l8078compilado.htm
+
+A interface informa expressamente “Validação pendente”. Os portais BCB, Consumidor.gov.br e Defensoria/SP indicados na solicitação são mantidos; Procon/SP e Delegacia Eletrônica/SP são referências estaduais propostas, sujeitas a confirmação. Exemplos de São Paulo são identificados e não apresentados como atendimento nacional. Antes de publicar, conferir disponibilidade de cada URL, conteúdo oficial atual, competências, requisitos e atendimento local/151 em rede com acesso. A página evita prazos, telefones bancários e outros detalhes não confirmados.
+
+### Arquivos modificados
+
+- index.html: central prática, cartões institucionais e realocação do guia técnico.
+- css/style.css: estilos locais da central e grade responsiva.
+- tests/guard-content.cjs: abre a seção técnica quando fechada antes das mesmas verificações de regressão.
+- tests/consumer-guidance.cjs (novo): navegação, cartões, expansões por teclado, âncoras, links externos, estado e coordenadas dos controles.
+- RELATORIO_MESTRE_JUSTEC.md: registro incremental desta entrega.
+
+### Testes executados e resultados
+
+Servidor anterior na porta 8770 não respondeu (ERR_EMPTY_RESPONSE). Iniciado servidor Python na porta 8780. O primeiro ensaio da suíte nova usou um ID de menu inexistente e encerrou por timeout; corrigido o seletor para o data-nav-screen já existente, sem mudar a aplicação para atender ao teste.
+
+Executados em Chromium com JUSTEC_RESOURCE_BRIDGE=1 e JUSTEC_TEST_URL=http://127.0.0.1:8780/:
+
+- tests/balance.cjs: aprovado, saldo/visibilidade, navegação, diagnósticos, modais e reinicialização.
+- tests/statement.cjs: aprovado, totais/filtros, detalhes, cópia e falha, contestação educativa e estado vazio.
+- tests/pix.cjs: aprovado, cenários baixo/moderado/elevado, validações, débito único, interrupção, restrições e revisões, falso positivo, mascaramento, cancelamento e reinício.
+- tests/shortcuts.cjs: aprovado, 49 verificações de atalhos mobile/desktop.
+- tests/guard-content.cjs: aprovado em 390/1366, preservando as verificações técnicas, MED e uma interrupção real do simulador sem débito/lançamento/comprovante.
+- tests/layout.cjs: aprovado nas sete larguras 320/375/390/768/1024/1366/1920, dez telas e dois modais por largura, sem rolagem horizontal ou concorrente e sem erros JavaScript.
+- tests/consumer-guidance.cjs: aprovado na execução inicial completa nas sete larguras; verifica seis instituições, títulos acessíveis, navegação, ausência de coleta de dados, detalhes pelo teclado, âncoras e 35 aberturas externas com destinos interceptados por teste. Verificação ampliada das coordenadas de cada controle registrada abaixo após sua execução.
+
+Executado node --test tests/state-invariants.cjs tests/guard.test.mjs: 97 testes aprovados, zero falhas ou testes ignorados. Inspecionada captura integral da nova página em 390 px. git diff --check sem erros. Não houve alteração da lógica transacional para conseguir aprovação.
+
+Abertura de links externos foi testada com interceptação local, NÃO acesso real aos serviços. Não equivale a verificar disponibilidade remota, autenticação ou envio de reclamação. Acessibilidade verificada por semântica, foco, teclado e coordenadas; não houve auditoria completa com leitor de tela nem teste em aparelhos físicos/Safari/Firefox. Não houve publicação nem teste em produção.
+
+### Validação local e pendências
+
+No VS Code, abrir index.html pelo Live Server e acessar “Pós-Golpe” no mobile ou “Pós-golpe e MED” no desktop. Conferir quatro situações, links para triagem e roteiro, seis instituições, expansões com Enter e o guia técnico ao final. Confirmar navegação de retorno e ausência de sobreposição com cabeçalho/rodapé. Para executar as suítes automatizadas, iniciar python -m http.server 8780 e configurar JUSTEC_TEST_URL=http://127.0.0.1:8780/; o adaptador de recursos só é necessário quando o navegador não alcança as CDNs. A suíte unitária de estado/Guard dispensa servidor.
+
+Pendências antes de publicação: validar oficialmente fontes e URLs, confirmar adequação regional dos canais e revisar o texto jurídico-informativo. Implementação pronta para revisão local, com essas limitações explícitas; nenhum commit, push ou deploy realizado nesta etapa. O HTML legado não rastreado permanece intacto e fora da aplicação principal.
+
+Resultado da ampliação final de tests/consumer-guidance.cjs: aprovado nas sete larguras. Cada botão, link e summary visível foi rolado à área útil e verificado por coordenadas e elementFromPoint, sem cobertura pelo cabeçalho/navegação e sem transbordamento horizontal. Mantidos os 35 testes de abertura externa interceptada e a comparação de bankState antes/depois, sem alterações. A segunda execução completa não introduziu falhas.
+
+## 20/10/2026 — Publicação autorizada da Central de Orientação
+
+Após a revisão local, o usuário autorizou explicitamente atualizar o GitHub e publicar o site, substituindo a restrição de publicação da solicitação anterior. A entrega inclui a reformulação de #screen-action-post, estilos locais, preservação do guia técnico e MED, os testes de conteúdo e a nova suíte tests/consumer-guidance.cjs, além deste relatório. Os resultados dos testes executados estão registrados na seção anterior. Conferidos git diff --check e alinhamento do HEAD com main remoto antes do envio. O HTML alternativo legado permanece preservado fora da entrega.
+
+A publicação mantém o aviso de validação pendente dos portais oficiais: o bloqueio HTTP 403 impediu verificar disponibilidade e conteúdo remoto, e os testes de abertura usaram interceptação. A autorização de publicação não transforma esses testes em verificação real dos serviços. Nenhuma lógica de negócio foi modificada nesta reformulação.
