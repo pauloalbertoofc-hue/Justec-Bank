@@ -1,0 +1,69 @@
+name: Verify public JUSTEC laboratory
+on:
+  push:
+    branches: [laboratorio-multiusuario]
+  workflow_dispatch:
+permissions: {}
+concurrency:
+  group: verify-public-justec
+  cancel-in-progress: true
+jobs:
+  public-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check public deployment without credentials or data changes
+        env:
+          JUSTEC_PUBLIC_URL: https://justec-laboratorio.onrender.com
+        run: |
+          node <<'JS'
+          const assert = require('node:assert/strict');
+          const base = process.env.JUSTEC_PUBLIC_URL;
+          const get = (path) => fetch(base + path, {signal: AbortSignal.timeout(25000)});
+          (async () => {
+            let health, lastError;
+            for (let attempt = 0; attempt < 6; attempt++) {
+              try {
+                const response = await get('/api/health');
+                assert.equal(response.status, 200, 'Health HTTP 200');
+                health = await response.json();
+                assert.equal(health.simulation, true);
+                assert.equal(health.storage, 'postgres');
+                assert.equal(health.version, 'justec-lab/1.1.0');
+                assert.match(response.headers.get('cache-control') || '', /no-store/);
+                break;
+              } catch (error) {
+                lastError = error;
+                if (attempt < 5) await new Promise(resolve => setTimeout(resolve, 5000));
+              }
+            }
+            if (!health || health.storage !== 'postgres') throw lastError || new Error('No PostgreSQL health');
+            console.log('PASS health: simulation, PostgreSQL and version 1.1.0');
+            const response = await get('/laboratorio/');
+            assert.equal(response.status, 200);
+            const html = await response.text();
+            for (const id of ['login-form', 'register-form', 'lab-education-title']) assert(html.includes('id="' + id + '"'), id);
+            assert.match(response.headers.get('content-security-policy') || '', /script-src 'self'/);
+            assert.equal(response.headers.get('x-frame-options'), 'DENY');
+            console.log('PASS laboratory HTML: forms, education, CSP and frame protection');
+            const assets = [...html.matchAll(/<(?:script|link)\b[^>]*(?:src|href)="([^"]+)"/g)].map(match => match[1]);
+            assert(assets.length >= 4);
+            for (const asset of assets) {
+              assert(asset.startsWith('/') && !asset.startsWith('//'), 'Only own assets');
+              const result = await get(asset);
+              assert.equal(result.status, 200, 'Asset ' + asset);
+              console.log('PASS asset ' + asset);
+            }
+            for (const route of ['/api/auth/me', '/api/sessions']) {
+              const result = await get(route);
+              assert.equal(result.status, 401, 'Unauthenticated ' + route);
+              console.log('PASS unauthenticated access denied: ' + route);
+            }
+            const home = await get('/');
+            assert.equal(home.status, 200);
+            const text = await home.text();
+            for (const id of ['home-security', 'screen-screening', 'screen-action-post']) assert(text.includes('id="' + id + '"'), id);
+            console.log('PASS original home and educational screens present');
+            console.log('Read-only public smoke passed. No authenticated transactions, live browser rendering or efficacy study performed.');
+          })().catch(error => { console.error(error.message); process.exitCode = 1; });
+          JS
