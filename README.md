@@ -1,5 +1,7 @@
 # JUSTEC Bank — laboratório acadêmico multiusuário
 
+Laboratório publicado: **https://justec-laboratorio.onrender.com/laboratorio/**. Saúde PostgreSQL, arquivos públicos e recusa de acesso sem login foram verificados externamente pelo GitHub Actions em 22/10/2026. [Evidência e limites da verificação](Documentação/VERIFICACAO_PUBLICACAO_RENDER_2026-10-22.md). Operações autenticadas em produção ainda dependem do roteiro de aceitação do titular.
+
 O projeto oferece duas áreas claramente separadas:
 
 - `/`: demonstração original, com saldo e operações ilustrativos reiniciados ao recarregar.
@@ -102,7 +104,7 @@ A cópia usa o backup consistente do SQLite, pode ser feita com o servidor ativo
 
 O `render.yaml` da raiz agora seleciona **Render Free**, sem disco e sem banco pago Render. O laboratório usa PostgreSQL externo quando `DATABASE_URL` está configurada, com TLS e validação de certificado. A origem HTTPS é obtida de `RENDER_EXTERNAL_URL`.
 
-O suporte foi implementado e testado com PostgreSQL 17 real, além de preservar SQLite local. **A publicação externa ainda depende de criar o projeto gratuito Neon/Supabase e cadastrar seus segredos no Render.** Não há URL de produção confirmada. Não foram criadas contas de provedor nem habilitados planos pagos.
+O suporte foi implementado e testado com PostgreSQL 17 real, além de preservar SQLite local. **O titular publicou o serviço e a verificação pública confirmou PostgreSQL acessível.** As contas dos provedores foram configuradas pelo titular; este trabalho não contratou planos pagos. A aceitação autenticada em produção permanece pendente.
 
 Siga o [guia de ativação gratuito](deploy/README.md). O administrador inicial pode ser criado no primeiro início usando segredo privado, pois o Render gratuito não oferece Shell. Depois remova o segredo de bootstrap no painel; reiniciar não redefine uma senha existente. Cotas, hibernação e continuidade dos planos gratuitos devem ser conferidas nos provedores.
 
@@ -123,7 +125,7 @@ A demonstração anterior é preservada em `main` e `versao-estatica-vercel`, co
 - [Configuração Render, custos a conferir e roteiro de ativação](deploy/README.md)
 - [Dois documentos acadêmicos e empresariais em Word, PDF e Markdown](Documentação/Apresentacao/README.md)
 
-O blueprint `render.yaml` usa Render Free com PostgreSQL externo e nenhum volume. A criação do banco e a associação do serviço precisam ser concluídas pelo titular. Não existe URL de laboratório externo confirmada nesta entrega.
+O blueprint `render.yaml` usa Render Free com PostgreSQL externo e nenhum volume. A criação do banco e a associação do serviço precisam ser concluídas pelo titular. A URL pública do laboratório e a evidência da verificação estão no início deste README.
 
 ## Testes PostgreSQL
 

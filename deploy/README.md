@@ -2,7 +2,7 @@
 
 A branch `laboratorio-multiusuario` agora suporta PostgreSQL real. O blueprint raiz usa `plan: free`, sem disco e sem recurso de banco pago no Render. A versão anterior continua em `main`/`versao-estatica-vercel` para a Vercel; não fazer merge automático.
 
-**Estado:** código pronto e ensaiado localmente com PostgreSQL 17. O titular informou ter criado a conta PostgreSQL; o provedor/projeto e sua conexão ainda precisam ser identificados e associados ao Render. Não há credencial de controle Render disponível nesta sessão. Nenhum serviço externo novo, URL pública ou gratuidade permanente foi confirmado. Os provedores podem mudar cotas, hibernar ou suspender recursos; conferir o plano exibido antes de criar. Não habilitar serviços pagos para seguir este guia.
+**Estado atualizado:** o titular publicou https://justec-laboratorio.onrender.com/laboratorio/ e informou usar Neon. O teste público confirmou saúde PostgreSQL, recursos e recusa sem autenticação. A aceitação de operações autenticadas ainda é pendente. [Evidência](../Documentação/VERIFICACAO_PUBLICACAO_RENDER_2026-10-22.md). Não há credencial de controle Render nesta sessão nem certificação do plano comercial ou de gratuidade permanente. Os provedores podem mudar cotas, hibernar ou suspender recursos; conferir o plano exibido antes de criar. Não habilitar serviços pagos para seguir este guia.
 
 ## 1. Criar o banco gratuito no Neon
 
@@ -50,7 +50,7 @@ Não usar Shell como etapa obrigatória: o plano gratuito pode não disponibiliz
 - Recarregar e reiniciar o serviço no Render; os dados devem continuar no banco externo.
 - Testar uma interrupção, revisão autorizada e exportação. Acesso privado de outro titular deve ser recusado.
 
-Somente após executar esse roteiro registrar a implantação como aprovada. Enviar apenas a **URL pública do serviço** para conferência, nunca segredos de banco ou de login. Não existe URL nova confirmada na entrega de código.
+Somente após executar esse roteiro registrar a implantação como aprovada. Enviar apenas a **URL pública do serviço** para conferência, nunca segredos de banco ou de login. A URL informada posteriormente pelo titular foi conferida quanto aos critérios públicos descritos na evidência; o roteiro autenticado continua necessário.
 
 O serviço gratuito pode hibernar; uma abertura após inatividade pode demorar. Não prometer disponibilidade contínua ou carga ilimitada. As cotas do banco também precisam ser acompanhadas. Não foram usados pings artificiais para impedir suspensão.
 
