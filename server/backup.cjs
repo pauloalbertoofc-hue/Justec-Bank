@@ -27,7 +27,12 @@ async function backupDatabase(source, destination) {
     fs.rmSync(temporary, { force: true });
   }
 }
-if (require.main === module) {
+if (require.main === module && process.env.DATABASE_URL) {
+  process.stderr.write(
+    "PostgreSQL: use pg_dump/restauração do provedor; backup SQLite não foi executado.\n",
+  );
+  process.exitCode = 1;
+} else if (require.main === module) {
   const destination =
     process.env.JUSTEC_BACKUP_PATH || `${dbPath()}.backup-${Date.now()}`;
   backupDatabase(dbPath(), destination)

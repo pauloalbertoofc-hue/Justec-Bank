@@ -1,47 +1,75 @@
-# Publicação separada: Vercel e Render
+# Ativar JUSTEC: Render gratuito + PostgreSQL gratuito
 
-## Versões no GitHub
+A branch `laboratorio-multiusuario` agora suporta PostgreSQL real. O blueprint raiz usa `plan: free`, sem disco e sem recurso de banco pago no Render. A versão anterior continua em `main`/`versao-estatica-vercel` para a Vercel; não fazer merge automático.
 
-- `main`: versão estática anterior, preservada no commit `837cb414ad27a149c9e0c57004f75af340ba9aec`. Continua sendo a origem pretendida da produção Vercel; não houve alteração de suas configurações no painel.
-- `versao-estatica-vercel`: cópia identificada desse mesmo commit, para consulta/recuperação.
-- tag `prototipo-estatico-2026-10-22`: marco imutável convencional da versão anterior (não mover a tag).
-- `laboratorio-multiusuario`: laboratório persistente, testes, documentação e blueprint Render. **Não mesclar automaticamente na main nem selecionar essa branch como produção Vercel.**
+**Estado:** código pronto e ensaiado localmente com PostgreSQL 17. O titular informou ter criado a conta PostgreSQL; o provedor/projeto e sua conexão ainda precisam ser identificados e associados ao Render. Não há credencial de controle Render disponível nesta sessão. Nenhum serviço externo novo, URL pública ou gratuidade permanente foi confirmado. Os provedores podem mudar cotas, hibernar ou suspender recursos; conferir o plano exibido antes de criar. Não habilitar serviços pagos para seguir este guia.
 
-O `vercel.json` da nova branch desabilita deployments Git de `laboratorio-multiusuario` na Vercel, evitando tratá-la como preview estático. Não altera o arquivo da `main` nem configurações do projeto por API.
+## 1. Criar o banco gratuito no Neon
 
-A configuração real da Production Branch no painel Vercel ainda precisa ser conferida pelo titular: deve apontar para `main`. A API GitHub não mostrou deployments do projeto; isso não comprova a configuração do painel Vercel. A consulta pública ao domínio foi recusada pela rede deste ambiente, portanto a disponibilidade remota não foi certificada nesta entrega.
+1. Abrir https://console.neon.tech e entrar/criar conta, podendo usar GitHub.
+2. Criar projeto no plano **Free**, com nome de sua escolha, por exemplo `justec-laboratorio`.
+3. Escolher região próxima da região do serviço Render; usar PostgreSQL 17 se disponível.
+4. Em **Connect**, selecionar conexão **direta** (pooling desativado). O próprio aplicativo mantém pool limitado a quatro conexões; a conexão direta evita incompatibilidade de parâmetros de inicialização em poolers.
+5. Copiar a connection string PostgreSQL para o campo secreto `DATABASE_URL` do Render. Essa string contém senha: não colar no chat, GitHub, documentos ou captura de tela.
 
-## Por que não hospedar o laboratório atual na Vercel?
+O Supabase pode ser usado como alternativa PostgreSQL, desde que a conexão permita acesso TCP do Render com certificado TLS válido. Conexões diretas IPv6/poolers possuem particularidades a conferir no provedor. O teste executado aqui foi PostgreSQL 17 local, não uma conta Neon/Supabase real.
 
-O projeto usa um processo Node 24 e um arquivo SQLite durável com WAL. Funções Vercel não oferecem esse arquivo como armazenamento persistente compartilhado entre execuções. Servir somente o HTML produziria tela sem API; usar disco temporário perderia dados. A versão estática pode continuar na Vercel. Uma adaptação futura para Vercel exigiria banco externo e revalidação de transações, migrações e concorrência; ela não está implementada.
+Não usar o PostgreSQL temporário do Render como se fosse armazenamento gratuito permanente; conferir prazo/regras do serviço antes de escolher qualquer banco. Não criar dois bancos para este roteiro.
 
-## Publicar no Render usando a conta do titular
+## 2. Criar/atualizar o serviço gratuito no Render
 
-O arquivo `render.yaml` já descreve servidor Node, disco persistente de 1 GB e verificação de saúde. **Usa serviço Starter e volume, sujeitos à cobrança do Render.** Conferir valores e condições no painel antes de confirmar; não foi contratada infraestrutura por este trabalho. Uma única instância acessa o SQLite. Não substituir o volume por disco efêmero.
+1. Abrir https://dashboard.render.com → **New → Blueprint**.
+2. Selecionar `pauloalbertoofc-hue/Justec-Bank`, branch **`laboratorio-multiusuario`**, arquivo `render.yaml` na raiz.
+3. Conferir que está selecionado **Free**, sem disco e sem banco Render. Se já existe serviço antigo pago, não presumir que mudar o YAML elimina cobranças antigas: conferir recursos no painel e preservar dados antes de remover algo.
+4. Preencher os campos secretos solicitados:
 
-1. Entrar em https://dashboard.render.com e escolher **New → Blueprint**.
-2. Autorizar o acesso ao repositório `pauloalbertoofc-hue/Justec-Bank`, se solicitado.
-3. Selecionar explicitamente a branch **`laboratorio-multiusuario`** e o arquivo `render.yaml` na raiz. A `main` não contém esse arquivo, por preservação da versão anterior.
-4. Conferir plano, região, volume e estimativa de custo; só então aplicar o blueprint.
-5. Aguardar build e health check. O comando usa `RENDER_EXTERNAL_URL` como origem HTTPS. Para domínio próprio, definir `PUBLIC_ORIGIN=https://dominio-escolhido`, sem barra ou caminho, configurar o domínio no Render e reiniciar.
-6. Abrir **Shell** do serviço (não o pre-deploy, que não tem o volume montado) e criar o primeiro administrador uma única vez:
+| Variável | Configuração |
+|---|---|
+| DATABASE_URL | Conexão privada do PostgreSQL externo. |
+| JUSTEC_ADMIN_PASSWORD | Senha exclusiva do laboratório com 12–128 caracteres; não reutilizar senha bancária. |
+| JUSTEC_ADMIN_ALIAS | Pseudônimo do administrador inicial; padrão `pesquisador-admin`. |
 
-```sh
-export JUSTEC_ADMIN_ALIAS=pesquisador-admin
-read -r -s -p 'Senha exclusiva (12 ou mais caracteres): ' JUSTEC_ADMIN_PASSWORD
-export JUSTEC_ADMIN_PASSWORD
-npm run bootstrap
-unset JUSTEC_ADMIN_PASSWORD
-```
+Node 24, HOST e comandos já estão no blueprint. A origem pública é detectada por `RENDER_EXTERNAL_URL`. Para domínio próprio, configurar `PUBLIC_ORIGIN=https://dominio` sem barra/caminho e associar o domínio no Render.
 
-Não cadastrar essa senha no GitHub, nos documentos ou no chat. O bootstrap recusa recriar administrador existente. Não há administrador automático ou senha padrão.
+5. Aplicar o blueprint e aguardar build/deploy. Não instalar dependências de desenvolvimento; o comando `npm ci --omit=dev` instala o driver PostgreSQL fixado no lock.
+6. Se já houver serviço configurado manualmente: selecionar branch correta, plano Free, build `npm ci --omit=dev`, start `node server/index.cjs`, health `/api/health`, HOST `0.0.0.0`, Node 24 e os segredos acima. Nenhum arquivo SQLite precisa ser enviado ao Render.
 
-7. Abrir a URL exibida pelo Render, acrescida de `/laboratorio/`, e entrar com o acesso criado. O link `/api/health` deve retornar JSON com `simulation: true` e versão.
-8. Criar sessão, dois participantes e contas; enviar Pix fictício e conferir extratos bilaterais. Recarregar; reiniciar o serviço pelo painel; confirmar persistência e ausência de duplicidade. Testar rejeição de acesso alheio e fluxo de revisão.
-9. Guardar backup privado e praticar recuperação antes de apresentações ou estudos. Exemplo no Shell, usando destino novo no volume: `JUSTEC_BACKUP_PATH=/var/data/justec/backup-AAAA-MM-DD.sqlite npm run backup`. Esse backup no mesmo disco não substitui uma cópia privada externa; não publicar o arquivo como artifact GitHub.
+## 3. Primeiro administrador sem Shell
 
-Atualizações automáticas estão desativadas no blueprint. Fazer deploy manual da branch do laboratório após testar; preservar backups e aplicar migrações versionadas. Disco único não oferece escalabilidade horizontal. Planejar indisponibilidade durante atualizações e não presumir rollback de esquema por voltar um commit.
+No primeiro início, o segredo `JUSTEC_ADMIN_PASSWORD` cria o administrador somente se nenhum administrador global existir. A operação é transacional e serializada no PostgreSQL, inclusive com inícios simultâneos. Nenhuma senha ou connection string é impressa nos logs.
 
-## Estado da implantação
+Após login funcionar, **remover `JUSTEC_ADMIN_PASSWORD` do painel Render** e fazer novo deploy. O usuário continua no PostgreSQL. Deixar ou alterar essa variável posteriormente não redefine a senha de administrador existente; ela não é ferramenta de recuperação de senha. O alias de inicialização também não renomeia contas já criadas.
 
-O blueprint está preparado; a publicação externa só estará confirmada após criação do serviço e validação da URL do Render. Ter uma conta Render não autoriza tecnicamente este ambiente a controlá-la: não existe conector ou credencial Render disponível. Não foi criado serviço, volume, cobrança ou URL de laboratório em nome do usuário. Os testes locais não substituem a verificação em nuvem.
+Não usar Shell como etapa obrigatória: o plano gratuito pode não disponibilizá-lo. Como alternativa, o operador pode executar `npm run bootstrap` em seu computador, com a mesma `DATABASE_URL` em ambiente privado. O CLI continua recusando recriar administrador existente.
+
+## 4. Confirmar funcionamento na URL real
+
+- `/api/health`: retorna `simulation: true`, versão `justec-lab/1.1.0` e `storage: postgres`. O endpoint testa consulta ao banco; falha de conexão não deve ser considerada saúde aprovada.
+- `/laboratorio/`: entrar com pseudônimo/senha criados, criar sessão e convites.
+- Criar dois participantes e contas sintéticas, enviar Pix e conferir débito/crédito nos dois extratos.
+- Recarregar e reiniciar o serviço no Render; os dados devem continuar no banco externo.
+- Testar uma interrupção, revisão autorizada e exportação. Acesso privado de outro titular deve ser recusado.
+
+Somente após executar esse roteiro registrar a implantação como aprovada. Enviar apenas a **URL pública do serviço** para conferência, nunca segredos de banco ou de login. Não existe URL nova confirmada na entrega de código.
+
+O serviço gratuito pode hibernar; uma abertura após inatividade pode demorar. Não prometer disponibilidade contínua ou carga ilimitada. As cotas do banco também precisam ser acompanhadas. Não foram usados pings artificiais para impedir suspensão.
+
+## 5. Persistência, backups e limites
+
+O processo do Render pode ser substituído sem transportar banco em arquivo: usuários, contas, sessões, livro-razão e auditoria estão no PostgreSQL. Arquivos temporários do serviço não são cópia dos dados.
+
+`npm run backup` é específico do SQLite e recusa executar no modo PostgreSQL. Para PostgreSQL, usar `pg_dump` com cliente compatível com a versão do banco, credenciais em ambiente privado e destino privado; ou ferramentas do provedor. Recuperação automática e retenção oferecidas pelo plano gratuito não foram certificadas. Ensaiar restauração em banco separado antes de estudo com pessoas. Não publicar dumps no repositório.
+
+Dados SQLite anteriores não são importados automaticamente. Antes de eventual migração de dados existentes, fazer backup e planejar importação própria com conferência do livro-razão. Esta implantação começa com banco externo novo.
+
+## 6. Implementação e testes
+
+- `server/postgres.cjs`: driver `pg`, pool limitado, TLS verificado, parâmetros vinculados, transações e migrações.
+- `server/flow.cjs`: uma única implementação de domínio que mantém execução síncrona local e aguarda consultas PostgreSQL sem bloquear a rede/event loop.
+- `server/migrations-postgres/`: esquema, checks, ordem estável do livro-razão e triggers imutáveis.
+- `server/bootstrap-admin.cjs`: bootstrap único; `index.cjs` seleciona armazenamento e inicializa serviço.
+- `tests/postgres.cjs`, `storage-flow.cjs` e navegador: testes específicos e regressões.
+
+As mutações são serializadas por advisory lock transacional no PostgreSQL, adquirido na mesma conexão usada por AsyncLocalStorage. É uma escolha para laboratório pequeno, equivalente à serialização de escrita anterior; não demonstra escalabilidade bancária. Não usa trava apenas em memória de um processo.
+
+A configuração paga anterior está arquivada em `deploy/render-sqlite-paid.yaml`, com permissão explícita para SQLite em volume. Ela não é usada pelo blueprint gratuito. O guia antigo foi preservado como histórico em `deploy/README_SQLITE_HISTORICO.md`.

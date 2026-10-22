@@ -1,3 +1,4 @@
+const { flow, collect, wrapMethods } = require("./flow.cjs");
 const crypto = require("node:crypto");
 const { promisify } = require("node:util");
 const scrypt = promisify(crypto.scrypt);
@@ -64,14 +65,22 @@ async function passwordHash(password) {
       "Use senha exclusiva do laboratório, de 12 a 128 caracteres.",
     );
   const salt = crypto.randomBytes(16).toString("hex");
-  const derived = await scrypt(password, salt, 64, { N: 16384, r: 8, p: 1 });
+  const derived = await scrypt(password, salt, 64, {
+    N: 16384,
+    r: 8,
+    p: 1,
+  });
   return `scrypt:${salt}:${derived.toString("hex")}`;
 }
 async function passwordMatches(password, encoded) {
   if (typeof password !== "string" || password.length > 128) return false;
   const [scheme, salt, digest] = encoded.split(":");
   if (scheme !== "scrypt") return false;
-  const derived = await scrypt(password, salt, 64, { N: 16384, r: 8, p: 1 });
+  const derived = await scrypt(password, salt, 64, {
+    N: 16384,
+    r: 8,
+    p: 1,
+  });
   return equal(derived.toString("hex"), digest);
 }
 function safeUser(row) {
@@ -94,25 +103,20 @@ async function register(db, body, globalRole = "participant") {
   const encoded = await passwordHash(body.password);
   const uid = id();
   try {
-    db.prepare("INSERT INTO users VALUES(?,?,?,?,?,?)").run(
-      uid,
-      alias,
-      encoded,
-      globalRole,
-      "academic-v1",
-      Date.now(),
-    );
+    await db
+      .prepare("INSERT INTO users VALUES(?,?,?,?,?,?)")
+      .run(uid, alias, encoded, globalRole, "academic-v1", Date.now());
   } catch (e) {
-    if (e.code?.startsWith("ERR_SQLITE"))
+    if (e.code?.startsWith("ERR_SQLITE") || e.code === "23505")
       fail(409, "ALIAS_EXISTS", "Pseudônimo indisponível.");
     throw e;
   }
-  return safeUser(db.prepare("SELECT * FROM users WHERE id=?").get(uid));
+  return safeUser(await db.prepare("SELECT * FROM users WHERE id=?").get(uid));
 }
 async function login(db, body, now = Date.now()) {
   exact(body, ["alias", "password"]);
   const alias = text(body.alias, "Pseudônimo", 3, 32);
-  const row = db.prepare("SELECT * FROM users WHERE alias=?").get(alias);
+  const row = await db.prepare("SELECT * FROM users WHERE alias=?").get(alias);
   // Mesmo trabalho de derivação para conta inexistente.
   const encoded =
     row?.password_hash ||
@@ -122,26 +126,30 @@ async function login(db, body, now = Date.now()) {
     fail(401, "LOGIN", "Credenciais do laboratório inválidas.");
   const secret = token(),
     csrf = token();
-  db.prepare("INSERT INTO auth_sessions VALUES(?,?,?,?,?)").run(
-    hash(secret),
-    row.id,
+  await db
+    .prepare("INSERT INTO auth_sessions VALUES(?,?,?,?,?)")
+    .run(hash(secret), row.id, csrf, now + 8 * 3600000, now);
+  return {
+    secret,
     csrf,
-    now + 8 * 3600000,
-    now,
-  );
-  return { secret, csrf, user: safeUser(row) };
+    user: safeUser(row),
+  };
 }
-function authenticate(db, secret, now = Date.now()) {
+const authenticate = flow(function* authenticate(db, secret, now = Date.now()) {
   if (typeof secret !== "string" || secret.length > 100)
     fail(401, "AUTH", "Entre no laboratório.");
-  const row = db
+  const row = yield db
     .prepare(
       "SELECT u.*, a.csrf, a.token_hash FROM auth_sessions a JOIN users u ON u.id=a.user_id WHERE a.token_hash=? AND a.expires_at>?",
     )
     .get(hash(secret), now);
   if (!row) fail(401, "AUTH", "Sessão de acesso expirada. Entre novamente.");
-  return { ...safeUser(row), csrf: row.csrf, tokenHash: row.token_hash };
-}
+  return {
+    ...safeUser(row),
+    csrf: row.csrf,
+    tokenHash: row.token_hash,
+  };
+});
 module.exports = {
   LabError,
   fail,

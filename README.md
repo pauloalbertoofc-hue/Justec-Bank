@@ -9,7 +9,7 @@ Tudo é virtual, sem valor financeiro e sem comunicação com Pix, DICT, Banco C
 
 ## Iniciar no VS Code
 
-Requer **Node.js 24 ou superior**, com `node:sqlite`. Não há dependências de execução nem necessidade de `npm install` para iniciar o servidor.
+Requer **Node.js 24 ou superior**, com `node:sqlite`. O modo SQLite local usa módulos nativos. O modo PostgreSQL usa o driver `pg`, fixado no package-lock; execute `npm ci --omit=dev` antes de iniciar nesse modo.
 
 Na raiz do projeto, crie o administrador inicial **uma única vez**. No Bash/WSL/Linux/macOS:
 
@@ -98,13 +98,17 @@ npm run backup
 
 A cópia usa o backup consistente do SQLite, pode ser feita com o servidor ativo, fica fora da raiz pública e não sobrescreve um arquivo existente. Guarde-a com acesso restrito: contém dados acadêmicos e hashes de autenticação. Para restaurar, pare o servidor e use uma **cópia** do backup como novo `JUSTEC_DB_PATH`, preservando o arquivo anterior. Em recuperação de segurança, revogue as sessões de acesso antes de reabrir o serviço. Backups e atualizações devem ser supervisionados pela equipe.
 
-## Publicação: infraestrutura ainda necessária
+## Publicação gratuita preparada: Render + PostgreSQL externo
 
-O laboratório foi implementado e testado localmente. **Não foi publicado no site atual.** O processo Node e o SQLite exigem armazenamento persistente; o disco temporário de uma função Vercel não atende a esse contrato.
+O `render.yaml` da raiz agora seleciona **Render Free**, sem disco e sem banco pago Render. O laboratório usa PostgreSQL externo quando `DATABASE_URL` está configurada, com TLS e validação de certificado. A origem HTTPS é obtida de `RENDER_EXTERNAL_URL`.
 
-Para hospedar esta implementação, use um servidor/container com volume privado persistente e proxy HTTPS. Configure `JUSTEC_DB_PATH`, `PUBLIC_ORIGIN=https://seu-dominio` (sem barra/caminho), `HOST` e `PORT`. O padrão só escuta `127.0.0.1`. O proxy deve preservar o Host público e a origem; cookies recebem `Secure` quando `PUBLIC_ORIGIN` é HTTPS. Não exponha o processo HTTP diretamente à internet.
+O suporte foi implementado e testado com PostgreSQL 17 real, além de preservar SQLite local. **A publicação externa ainda depende de criar o projeto gratuito Neon/Supabase e cadastrar seus segredos no Render.** Não há URL de produção confirmada. Não foram criadas contas de provedor nem habilitados planos pagos.
 
-Outra opção futura é adaptar o armazenamento para PostgreSQL gerenciado e funções compatíveis com Vercel. Essa migração **não está implementada**. Não foram criados serviços pagos, credenciais públicas nem integração financeira real.
+Siga o [guia de ativação gratuito](deploy/README.md). O administrador inicial pode ser criado no primeiro início usando segredo privado, pois o Render gratuito não oferece Shell. Depois remova o segredo de bootstrap no painel; reiniciar não redefine uma senha existente. Cotas, hibernação e continuidade dos planos gratuitos devem ser conferidas nos provedores.
+
+Se `DATABASE_URL` estiver ausente no Render gratuito, a aplicação recusa iniciar em vez de gravar SQLite efêmero. Sem `DATABASE_URL`, o uso local continua em SQLite. Os bancos são independentes: esta etapa não importa automaticamente dados locais anteriores para o banco novo.
+
+A configuração paga antiga com SQLite e volume permanece como alternativa explícita em `deploy/render-sqlite-paid.yaml`; não é o blueprint padrão. A integração financeira real continua fora do projeto.
 
 Documentação:
 
@@ -119,4 +123,12 @@ A demonstração anterior é preservada em `main` e `versao-estatica-vercel`, co
 - [Configuração Render, custos a conferir e roteiro de ativação](deploy/README.md)
 - [Dois documentos acadêmicos e empresariais em Word, PDF e Markdown](Documentação/Apresentacao/README.md)
 
-O blueprint `render.yaml` usa uma instância com disco persistente em plano compatível, sujeito a cobrança. A criação do serviço precisa ser concluída pelo titular no Render. Não existe URL de laboratório externo confirmada nesta entrega.
+O blueprint `render.yaml` usa Render Free com PostgreSQL externo e nenhum volume. A criação do banco e a associação do serviço precisam ser concluídas pelo titular. Não existe URL de laboratório externo confirmada nesta entrega.
+
+## Testes PostgreSQL
+
+Além de `npm test`, execute `npm run test:postgres` com `JUSTEC_TEST_POSTGRES_URL` apontando para banco de testes. A suíte cria schemas aleatórios isolados e os remove; use banco destinado a testes. `npm run test:browser:postgres` executa o mesmo roteiro visual do laboratório com esse banco.
+
+Somente para PostgreSQL local sem TLS, defina `JUSTEC_TEST_PG_LOCAL=1`. Na aplicação local com `DATABASE_URL`, a exceção correspondente é `PG_ALLOW_INSECURE_LOCAL=1`, recusada para host remoto. Nunca desative a validação de certificado em produção.
+
+`npm run backup` continua sendo backup **SQLite**. Se PostgreSQL estiver configurado, recusa criar uma falsa cópia local: use `pg_dump` ou exportação/recuperação do provedor, conforme o guia.

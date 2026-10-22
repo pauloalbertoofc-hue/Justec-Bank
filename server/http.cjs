@@ -14,7 +14,13 @@ const {
 attachResearch(Lab);
 const ROOT = path.resolve(__dirname, "..");
 function createServer(db, { origin, now, rateLimit = true } = {}) {
-  const lab = new Lab(db, { ...(now ? { now } : {}) });
+  const lab = new Lab(db, {
+    ...(now
+      ? {
+          now,
+        }
+      : {}),
+  });
   const limits = new Map();
   const server = http.createServer(async (req, res) => {
     let user = null;
@@ -43,7 +49,10 @@ function createServer(db, { origin, now, rateLimit = true } = {}) {
             time = Date.now();
           let entry = limits.get(key);
           if (!entry || time - entry.at > 60000) {
-            entry = { at: time, count: 0 };
+            entry = {
+              at: time,
+              count: 0,
+            };
             limits.set(key, entry);
           }
           if (++entry.count > (action === "api" ? 600 : 30)) {
@@ -92,11 +101,17 @@ function createServer(db, { origin, now, rateLimit = true } = {}) {
           });
           res.end(JSON.stringify(value));
         };
-        if (req.method === "GET" && url.pathname === "/api/health")
-          return send({ simulation: true, version: "justec-lab/1.0.0" });
+        if (req.method === "GET" && url.pathname === "/api/health") {
+          await db.prepare("SELECT 1").get();
+          return send({
+            simulation: true,
+            version: "justec-lab/1.1.0",
+            storage: db.driver || "sqlite",
+          });
+        }
         if (req.method === "POST" && url.pathname === "/api/auth/register") {
           const created = await register(db, body);
-          lab.audit(null, created.id, "auth.registered", created.id, {
+          await lab.audit(null, created.id, "auth.registered", created.id, {
             consentVersion: created.consentVersion,
           });
           return send(created, 201);
@@ -107,15 +122,18 @@ function createServer(db, { origin, now, rateLimit = true } = {}) {
             "Set-Cookie",
             `justec_session=${result.secret}; HttpOnly; SameSite=Strict; Path=/; Max-Age=28800${expected.startsWith("https:") ? "; Secure" : ""}`,
           );
-          lab.audit(null, result.user.id, "auth.login", result.user.id);
-          return send({ user: result.user, csrf: result.csrf });
+          await lab.audit(null, result.user.id, "auth.login", result.user.id);
+          return send({
+            user: result.user,
+            csrf: result.csrf,
+          });
         }
         const secret = (req.headers.cookie || "")
           .split(";")
           .map((c) => c.trim())
           .find((c) => c.startsWith("justec_session="))
           ?.slice("justec_session=".length);
-        user = authenticate(db, secret, now ? now() : Date.now());
+        user = await authenticate(db, secret, now ? now() : Date.now());
         if (mutating && !equal(user.csrf, req.headers["x-csrf-token"]))
           fail(403, "CSRF", "Atualize o acesso e tente novamente.");
         if (req.method === "GET" && url.pathname === "/api/auth/me")
@@ -129,14 +147,16 @@ function createServer(db, { origin, now, rateLimit = true } = {}) {
             csrf: user.csrf,
           });
         if (req.method === "POST" && url.pathname === "/api/auth/logout") {
-          db.prepare("DELETE FROM auth_sessions WHERE token_hash=?").run(
-            user.tokenHash,
-          );
+          await db
+            .prepare("DELETE FROM auth_sessions WHERE token_hash=?")
+            .run(user.tokenHash);
           res.setHeader(
             "Set-Cookie",
             `justec_session=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0${expected.startsWith("https:") ? "; Secure" : ""}`,
           );
-          return send({ loggedOut: true });
+          return send({
+            loggedOut: true,
+          });
         }
         const parts = url.pathname
           .slice("/api/".length)
@@ -145,61 +165,61 @@ function createServer(db, { origin, now, rateLimit = true } = {}) {
         const [resource, rid, sub, subid] = parts;
         const method = req.method;
         if (resource === "sessions" && parts.length === 1) {
-          if (method === "GET") return send(lab.sessionList(user));
+          if (method === "GET") return send(await lab.sessionList(user));
           if (method === "POST")
-            return send(lab.createSession(user, body), 201);
+            return send(await lab.createSession(user, body), 201);
         }
         if (resource === "join" && parts.length === 1 && method === "POST")
-          return send(lab.join(user, body));
+          return send(await lab.join(user, body));
         if (resource === "sessions" && parts.length === 2) {
-          if (method === "GET") return send(lab.session(user, rid));
+          if (method === "GET") return send(await lab.session(user, rid));
           if (method === "PATCH")
-            return send(lab.updateSession(user, rid, body));
+            return send(await lab.updateSession(user, rid, body));
         }
         if (resource === "sessions" && parts.length === 3) {
           if (sub === "members" && method === "GET")
-            return send(lab.members(user, rid));
+            return send(await lab.members(user, rid));
           if (sub === "invitations" && method === "POST")
-            return send(lab.invite(user, rid, body), 201);
+            return send(await lab.invite(user, rid, body), 201);
           if (sub === "accounts") {
-            if (method === "GET") return send(lab.accounts(user, rid));
+            if (method === "GET") return send(await lab.accounts(user, rid));
             if (method === "POST")
-              return send(lab.createAccount(user, rid, body), 201);
+              return send(await lab.createAccount(user, rid, body), 201);
           }
           if (sub === "lookup" && method === "POST")
-            return send(lab.lookup(user, rid, body.key));
+            return send(await lab.lookup(user, rid, body.key));
           if (sub === "drafts") {
             if (method === "POST")
-              return send(lab.createDraft(user, rid, body), 201);
-            if (method === "GET") return send(lab.drafts(user, rid));
+              return send(await lab.createDraft(user, rid, body), 201);
+            if (method === "GET") return send(await lab.drafts(user, rid));
           }
           if (sub === "tasks" && method === "GET")
-            return send(lab.tasks(user, rid));
+            return send(await lab.tasks(user, rid));
           if (sub === "reviews" && method === "GET")
-            return send(lab.reviews(user, rid));
+            return send(await lab.reviews(user, rid));
           if (sub === "scenarios") {
-            if (method === "GET") return send(lab.scenarios(user, rid));
+            if (method === "GET") return send(await lab.scenarios(user, rid));
             if (method === "POST")
-              return send(lab.createScenario(user, rid, body), 201);
+              return send(await lab.createScenario(user, rid, body), 201);
           }
           if (sub === "runs" && method === "GET")
-            return send(lab.runs(user, rid));
+            return send(await lab.runs(user, rid));
           if (sub === "snapshots") {
-            if (method === "GET") return send(lab.snapshots(user, rid));
+            if (method === "GET") return send(await lab.snapshots(user, rid));
             if (method === "POST")
-              return send(lab.snapshot(user, rid, body), 201);
+              return send(await lab.snapshot(user, rid, body), 201);
           }
           if (sub === "observations" && method === "POST")
-            return send(lab.note(user, rid, body), 201);
+            return send(await lab.note(user, rid, body), 201);
           if (sub === "research" && method === "GET")
-            return send(lab.overview(user, rid));
+            return send(await lab.overview(user, rid));
           if (sub === "examples" && method === "GET") {
-            lab.member(user, rid, ["admin", "researcher"]);
+            await lab.member(user, rid, ["admin", "researcher"]);
             return send(examples());
           }
           if (sub === "export" && method === "GET") {
             const format = url.searchParams.get("format") || "json",
-              out = lab.exportResearch(user, rid, format);
+              out = await lab.exportResearch(user, rid, format);
             res.writeHead(200, {
               "Content-Type": out.contentType,
               "Content-Disposition": `attachment; filename="justec-research.${format === "csv" ? "csv" : "json"}"`,
@@ -213,7 +233,7 @@ function createServer(db, { origin, now, rateLimit = true } = {}) {
           parts.length === 4 &&
           method === "PATCH"
         )
-          return send(lab.setRole(user, rid, subid, body));
+          return send(await lab.setRole(user, rid, subid, body));
         if (
           resource === "sessions" &&
           sub === "scenarios" &&
@@ -221,55 +241,71 @@ function createServer(db, { origin, now, rateLimit = true } = {}) {
           parts[4] === "runs" &&
           method === "POST"
         )
-          return send(lab.startRun(user, rid, subid, body), 201);
+          return send(await lab.startRun(user, rid, subid, body), 201);
         if (resource === "accounts" && parts.length === 2) {
-          if (method === "GET") return send(lab.account(user, rid));
+          if (method === "GET") return send(await lab.account(user, rid));
           if (method === "PATCH")
-            return send(lab.configureAccount(user, rid, body));
+            return send(await lab.configureAccount(user, rid, body));
         }
         if (resource === "accounts" && parts.length === 3) {
           if (sub === "keys" && method === "POST")
-            return send(lab.addKey(user, rid), 201);
+            return send(await lab.addKey(user, rid), 201);
           if (sub === "allocation" && method === "POST")
-            return send(lab.allocate(user, rid, body), 201);
+            return send(await lab.allocate(user, rid, body), 201);
           if (sub === "statement" && method === "GET")
             return send(
-              lab.statement(user, rid, Object.fromEntries(url.searchParams)),
+              await lab.statement(
+                user,
+                rid,
+                Object.fromEntries(url.searchParams),
+              ),
             );
         }
         if (resource === "keys" && parts.length === 2) {
           if (method === "DELETE")
-            return send(lab.changeKey(user, rid, { remove: true }));
-          if (method === "PATCH") return send(lab.changeKey(user, rid));
+            return send(
+              await lab.changeKey(user, rid, {
+                remove: true,
+              }),
+            );
+          if (method === "PATCH") return send(await lab.changeKey(user, rid));
         }
         if (resource === "drafts" && parts.length === 2 && method === "GET")
-          return send(lab.draft(user, rid));
+          return send(await lab.draft(user, rid));
         if (resource === "drafts" && parts.length === 3 && method === "POST") {
           if (sub === "feedback")
-            return send(lab.feedback(user, rid, body), 201);
-          if (sub === "revise") return send(lab.reviseDraft(user, rid), 201);
+            return send(await lab.feedback(user, rid, body), 201);
+          if (sub === "revise")
+            return send(await lab.reviseDraft(user, rid), 201);
           if (sub === "evaluate")
-            return send(lab.evaluateDraft(user, rid, body));
+            return send(await lab.evaluateDraft(user, rid, body));
           if (sub === "authorize")
             return send(
-              lab.authorize(user, rid, body, req.headers["idempotency-key"]),
+              await lab.authorize(
+                user,
+                rid,
+                body,
+                req.headers["idempotency-key"],
+              ),
             );
-          if (sub === "cancel") return send(lab.cancelDraft(user, rid, body));
+          if (sub === "cancel")
+            return send(await lab.cancelDraft(user, rid, body));
           if (sub === "reviews")
-            return send(lab.requestReview(user, rid, body), 201);
+            return send(await lab.requestReview(user, rid, body), 201);
         }
         if (
           resource === "evaluations" &&
           parts.length === 2 &&
           method === "GET"
         )
-          return send(lab.evaluation(user, rid));
+          return send(await lab.evaluation(user, rid));
         if (resource === "transfers" && parts.length === 2 && method === "GET")
-          return send(lab.receipt(user, rid));
+          return send(await lab.receipt(user, rid));
         if (resource === "reviews" && parts.length === 3 && method === "POST") {
           if (sub === "resolve")
-            return send(lab.resolveReview(user, rid, body));
-          if (sub === "followup") return send(lab.followup(user, rid), 201);
+            return send(await lab.resolveReview(user, rid, body));
+          if (sub === "followup")
+            return send(await lab.followup(user, rid), 201);
         }
         if (
           resource === "tasks" &&
@@ -277,21 +313,21 @@ function createServer(db, { origin, now, rateLimit = true } = {}) {
           parts.length === 3 &&
           method === "POST"
         )
-          return send(lab.taskDraft(user, rid, body), 201);
+          return send(await lab.taskDraft(user, rid, body), 201);
         if (
           resource === "runs" &&
           sub === "repeat" &&
           parts.length === 3 &&
           method === "POST"
         )
-          return send(lab.repeatRun(user, rid), 201);
+          return send(await lab.repeatRun(user, rid), 201);
         if (
           resource === "snapshots" &&
           sub === "restore" &&
           parts.length === 3 &&
           method === "POST"
         )
-          return send(lab.restore(user, rid, body), 201);
+          return send(await lab.restore(user, rid, body), 201);
         fail(404, "ROUTE", "Rota inexistente.");
       }
       if (!["GET", "HEAD"].includes(req.method))
@@ -346,27 +382,31 @@ function createServer(db, { origin, now, rateLimit = true } = {}) {
           let sid = null;
           if (segments[2] === "sessions") sid = segments[3];
           else if (segments[2] === "drafts")
-            sid = db
-              .prepare(
-                "SELECT session_id FROM drafts WHERE id=? AND actor_id=?",
-              )
-              .get(segments[3] || "", user.id)?.session_id;
+            sid = (
+              await db
+                .prepare(
+                  "SELECT session_id FROM drafts WHERE id=? AND actor_id=?",
+                )
+                .get(segments[3] || "", user.id)
+            )?.session_id;
           else if (segments[2] === "accounts")
-            sid = db
-              .prepare(
-                "SELECT session_id FROM accounts WHERE id=? AND owner_id=?",
-              )
-              .get(segments[3] || "", user.id)?.session_id;
+            sid = (
+              await db
+                .prepare(
+                  "SELECT session_id FROM accounts WHERE id=? AND owner_id=?",
+                )
+                .get(segments[3] || "", user.id)
+            )?.session_id;
           if (
             sid &&
-            !db
+            !(await db
               .prepare(
                 "SELECT 1 FROM memberships WHERE session_id=? AND user_id=?",
               )
-              .get(sid, user.id)
+              .get(sid, user.id))
           )
             sid = null;
-          lab.audit(
+          await lab.audit(
             sid,
             user.id,
             status === 403
@@ -403,4 +443,6 @@ function createServer(db, { origin, now, rateLimit = true } = {}) {
   server.lab = lab;
   return server;
 }
-module.exports = { createServer };
+module.exports = {
+  createServer,
+};

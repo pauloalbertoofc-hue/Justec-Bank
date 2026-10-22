@@ -1,14 +1,13 @@
-# Laboratório persistente: uma instância e disco privado obrigatório.
-# A criação deste serviço pode gerar cobrança no Render. Não usa plano gratuito.
+# Render gratuito + PostgreSQL externo: sem volume, sem banco pago Render.
 services:
   - type: web
     name: justec-laboratorio
     runtime: node
     branch: laboratorio-multiusuario
-    plan: starter
+    plan: free
     numInstances: 1
     buildCommand: npm ci --omit=dev
-    startCommand: 'PUBLIC_ORIGIN="${PUBLIC_ORIGIN:-$RENDER_EXTERNAL_URL}" node server/index.cjs'
+    startCommand: node server/index.cjs
     healthCheckPath: /api/health
     autoDeploy: false
     envVars:
@@ -18,9 +17,9 @@ services:
         value: production
       - key: HOST
         value: 0.0.0.0
-      - key: JUSTEC_DB_PATH
-        value: /var/data/justec/justec.sqlite
-    disk:
-      name: justec-laboratorio-data
-      mountPath: /var/data/justec
-      sizeGB: 1
+      - key: DATABASE_URL
+        sync: false
+      - key: JUSTEC_ADMIN_ALIAS
+        value: pesquisador-admin
+      - key: JUSTEC_ADMIN_PASSWORD
+        sync: false

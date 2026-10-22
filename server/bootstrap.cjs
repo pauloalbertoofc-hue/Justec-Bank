@@ -1,40 +1,28 @@
-const { openDatabase } = require("./db.cjs");
+const { openConfiguredDatabase } = require("./db.cjs");
 const { dbPath } = require("./index.cjs");
-const { register } = require("./security.cjs");
+const { bootstrapAdmin } = require("./bootstrap-admin.cjs");
 (async () => {
   if (!process.env.JUSTEC_ADMIN_PASSWORD)
     throw new Error(
       "Defina JUSTEC_ADMIN_PASSWORD com senha exclusiva de pelo menos 12 caracteres.",
     );
-  const db = openDatabase(dbPath());
+  const db = await openConfiguredDatabase(dbPath());
   try {
-    if (db.prepare("SELECT 1 FROM users WHERE global_role='admin'").get())
-      throw new Error("Administrador inicial já existe. Não foi alterado.");
-    const user = await register(
-      db,
-      {
-        alias: process.env.JUSTEC_ADMIN_ALIAS || "pesquisador-admin",
-        password: process.env.JUSTEC_ADMIN_PASSWORD,
-        consent: true,
-      },
-      "admin",
-    );
-    db.prepare("INSERT INTO audit_events VALUES(?,?,?,?,?,?,?)").run(
-      require("node:crypto").randomUUID(),
-      null,
-      user.id,
-      "bootstrap.admin",
-      user.id,
-      "{}",
-      Date.now(),
-    );
+    await bootstrapAdmin(db, {
+      alias: process.env.JUSTEC_ADMIN_ALIAS,
+      password: process.env.JUSTEC_ADMIN_PASSWORD,
+    });
     process.stdout.write(
       "Administrador acadêmico criado. Nenhuma senha foi impressa.\n",
     );
   } finally {
-    db.close();
+    await db.close();
   }
-})().catch((e) => {
-  process.stderr.write(`${e.message}\n`);
+})().catch((error) => {
+  process.stderr.write(
+    error.code
+      ? "Falha de conexão ou gravação no banco. Verifique a configuração privada.\n"
+      : `${error.message}\n`,
+  );
   process.exitCode = 1;
 });

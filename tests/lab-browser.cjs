@@ -1,12 +1,16 @@
 const assert = require("node:assert/strict");
 const { once } = require("node:events");
 const { chromium } = require("playwright");
-const { fixture, PASSWORD } = require("./lab-fixture.cjs");
+const { fixture, PASSWORD } = require(
+  process.env.JUSTEC_TEST_POSTGRES_URL
+    ? "./postgres-fixture.cjs"
+    : "./lab-fixture.cjs",
+);
 const { createServer } = require("../server/http.cjs");
 (async () => {
   const cleanups = [];
   const f = await fixture({ after: (fn) => cleanups.push(fn) }, { file: true });
-  f.lab.updateSession(f.admin, f.sessionId, {
+  await f.lab.updateSession(f.admin, f.sessionId, {
     config: { initialCents: 100000, pauseMs: 5000 },
   });
   const server = createServer(f.db, { rateLimit: false });
@@ -47,7 +51,7 @@ const { createServer } = require("../server/http.cjs");
     await page.waitForFunction(() =>
       document.querySelector("#workspace").innerText.includes("Ana secundária"),
     );
-    assert.equal(f.lab.accounts(f.alice, f.sessionId).length, 2);
+    assert.equal((await f.lab.accounts(f.alice, f.sessionId)).length, 2);
     await page.locator("[data-view=pix]").click();
     await page
       .getByRole("button", {
@@ -78,7 +82,7 @@ const { createServer } = require("../server/http.cjs");
       Date.now() - realPauseStart >= 4500,
       "Intervalo real configurado de cinco segundos",
     );
-    assert.equal(f.lab.balance(f.a.id), 200000);
+    assert.equal(await f.lab.balance(f.a.id), 200000);
     await page.locator("#lab-pause-next").click();
     await page.locator("#workspace [name=demoCode]").fill("0000");
     await page.locator("#workspace [name=confirm]").check();
@@ -89,9 +93,9 @@ const { createServer } = require("../server/http.cjs");
         exact: true,
       })
       .waitFor();
-    assert.equal(f.lab.balance(f.a.id), 175000);
-    assert.equal(f.lab.balance(f.b.id), 125000);
-    f.lab.updateSession(f.admin, f.sessionId, {
+    assert.equal(await f.lab.balance(f.a.id), 175000);
+    assert.equal(await f.lab.balance(f.b.id), 125000);
+    await f.lab.updateSession(f.admin, f.sessionId, {
       config: { initialCents: 100000, pauseMs: 40 },
     });
     await page.reload({ waitUntil: "networkidle" });

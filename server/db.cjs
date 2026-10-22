@@ -1,6 +1,23 @@
 const { DatabaseSync } = require("node:sqlite");
 const fs = require("node:fs");
 const path = require("node:path");
+// PRAGMA journal_mode pode retornar SQLITE_BUSY sem respeitar busy_timeout.
+// Retry limitado apenas na inicialização, nunca repetição de operação financeira.
+function initializeSqlite(db) {
+  db.exec("PRAGMA busy_timeout=10000; PRAGMA foreign_keys=ON;");
+  const deadline = Date.now() + 10000;
+  const signal = new Int32Array(new SharedArrayBuffer(4));
+  for (;;) {
+    try {
+      db.exec("PRAGMA journal_mode=WAL; PRAGMA synchronous=FULL;");
+      return;
+    } catch (error) {
+      if (![5, 6].includes(error.errcode) || Date.now() >= deadline)
+        throw error;
+      Atomics.wait(signal, 0, 0, 25);
+    }
+  }
+}
 function openDatabase(filename) {
   if (filename !== ":memory:") {
     fs.mkdirSync(path.dirname(filename), { recursive: true, mode: 0o700 });
@@ -14,9 +31,7 @@ function openDatabase(filename) {
     fs.chmodSync(filename, 0o600);
   }
   const db = new DatabaseSync(filename);
-  db.exec(
-    "PRAGMA foreign_keys=ON; PRAGMA busy_timeout=10000; PRAGMA journal_mode=WAL; PRAGMA synchronous=FULL;",
-  );
+  initializeSqlite(db);
   db.exec(
     "CREATE TABLE IF NOT EXISTS schema_migrations(version TEXT PRIMARY KEY, applied_at INTEGER NOT NULL) STRICT;",
   );
@@ -70,9 +85,12 @@ function openDatabase(filename) {
   return db;
 }
 function atomic(db, fn) {
+  if (db.driver === "postgres") return db.atomic(fn);
   db.exec("BEGIN IMMEDIATE");
   try {
     const result = fn();
+    if (result && typeof result.then === "function")
+      throw new Error("Callback assíncrono em transação SQLite síncrona.");
     db.exec("COMMIT");
     return result;
   } catch (e) {
@@ -80,4 +98,23 @@ function atomic(db, fn) {
     throw e;
   }
 }
-module.exports = { openDatabase, atomic };
+async function openConfiguredDatabase(filename) {
+  if (process.env.DATABASE_URL) {
+    const { openPostgres } = require("./postgres.cjs");
+    return openPostgres(process.env.DATABASE_URL, {
+      allowInsecureLocal: process.env.PG_ALLOW_INSECURE_LOCAL === "1",
+    });
+  }
+  if (
+    process.env.RENDER === "true" &&
+    !(
+      process.env.JUSTEC_ALLOW_RENDER_SQLITE === "1" &&
+      process.env.JUSTEC_DB_PATH
+    )
+  )
+    throw new Error(
+      "Configure DATABASE_URL: SQLite efêmero não é permitido no Render.",
+    );
+  return openDatabase(filename);
+}
+module.exports = { openDatabase, openConfiguredDatabase, atomic };
