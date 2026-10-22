@@ -815,3 +815,94 @@ Testes executados no Chromium, servidor local porta 8810 e adaptador HTTPS das C
 Inspecionadas capturas da pausa e autorização em 390 px; a ação de continuar está larga e legível, com senha e resultado funcionais. Não se declarou equivalência pixel a pixel com uma ilustração; os elementos e a ordem internos foram aproximados, preservando responsividade, acessibilidade e funções adicionais entre as etapas. Auditoria com aparelho físico/leitor de tela e disponibilidade dos portais externos continuam fora desta verificação. Publicação segue a autorização vigente do usuário para esta evolução e suas correções; relatório histórico preservado.
 
 Fechamento: tests/pix-layout-sequence.cjs reexecutado e aprovado nas sete larguras e em 1366x630, com avanço real da pausa à senha, autorização com 0000 e único lançamento. tests/guard-content.cjs aprovado em 390/1366 e tests/shortcuts.cjs aprovado com 49 verificações. git diff --check final aprovado. Nenhuma mudança em js/state.js, js/risk.js, js/transactions.js ou js/guard/ nesta correção.
+
+
+## 22/10/2026 — Laboratório acadêmico persistente multiusuário e prevenção integrada
+
+### Escopo, fontes e preservação
+
+Implementação local orientada pelo PROMPT MESTRE enviado em Texto colado.txt e pelos documentos JUSTEC_Estrategia_Integrada_Prevencao_Pix.docx e Proposta_JUSTEC_Bank_Laboratorio_Multiusuario.docx. O texto de proposta não foi confundido com autorização autônoma: a autorização de implementação está no pedido direto do usuário. Não houve integração financeira, comunicação com DICT, Banco Central ou bancos, movimentação real nem criação de serviços pagos.
+
+Antes das alterações, inspecionados estrutura, módulos, jornadas e testes. A raiz já continha o protótipo estático e o Relatório-Mestre principal; o documento homônimo em Documentação é arquivo histórico anterior e foi preservado sem alterações. Este registro é aditivo. O HTML alternativo legado não foi alterado nem incluído na entrega. Diagnóstico e planejamento completos em Documentação/LABORATORIO_DIAGNOSTICO_2026-10-22.md; arquitetura e limitações em Documentação/LABORATORIO_TECNICO_2026-10-22.md.
+
+A demonstração original permanece na raiz, com seu estado ilustrativo. O laboratório foi acrescentado em /laboratorio/, com servidor próprio, sem converter estado local em suposta persistência. js/state.js, js/transactions.js, js/risk.js, js/pix.js e js/guard/ foram preservados nesta etapa. Não houve alteração dos pesos originais do motor. O laboratório importa a coleta de evidências com parâmetro opcional de regras, mantendo o padrão anterior para o protótipo.
+
+### Etapa 1 — Diagnóstico e contrato arquitetural
+
+Confirmado que Live Server não oferece autenticação, isolamento nem persistência transacional. Escolhidos Node.js 24 e SQLite nativo, sem dependências de execução. Dados são armazenados fora da raiz pública; nenhum saldo ou papel é confiado ao navegador. Nova interface usa API autenticada. Educação inicial e conteúdos existentes continuam acessíveis antes de iniciar Pix.
+
+Arquivos: diagnóstico, README.md, package.json, package-lock.json e .gitignore. Playwright é dependência apenas de desenvolvimento. O formatador utilizado pontualmente não foi adicionado ao projeto.
+
+### Etapa 2 — Persistência e invariantes
+
+Criados server/db.cjs e três migrações em server/migrations/. Entidades incluem usuários, autenticações, sessões acadêmicas, membros, convites, contas, chaves, rascunhos, avaliações, transferências, livro-razão, cenários, gabaritos separados, execuções, revisões, observações, feedback e auditoria. Migração e escrita usam bloqueio transacional; foreign keys, WAL, synchronous FULL e timeout são configurados. Triggers impedem editar/apagar registros históricos sensíveis pela aplicação.
+
+Valores monetários são centavos inteiros validados. Toda transferência é débito e crédito na mesma transação SQLite, com revalidação de titularidade, sessão, chave, restrições, limite e saldo. Falha entre partidas causa rollback integral. Idempotência e unicidade do rascunho impedem débito duplicado. Tesouraria de alocação é separada e inacessível como conta de participante; alocação, ajuste, histórico-base e restauração não se confundem com Pix concluído.
+
+### Etapa 3 — Autenticação e permissões
+
+Criados server/security.cjs, server/http.cjs, server/index.cjs e server/bootstrap.cjs. Senhas exclusivas são derivadas por scrypt com salt; tokens aleatórios têm hash no banco. Cookie HttpOnly/SameSite Strict, Secure com origem HTTPS, CSRF, validação de Origin/Host, limite de corpo e tentativas, timeouts e respostas sem stack trace. Autenticação expira após oito horas. Cadastro não permite escolher papel privilegiado.
+
+Administrador inicial é criado por CLI mediante senha fornecida pelo operador, sem padrão e sem impressão da senha. Convites são de uso único e expiram; permissões são verificadas em cada rota. Pesquisador não movimenta conta de outro participante. Sessões acadêmicas e dados privados são isolados; exportação é restrita e auditada. Servidor nega acesso a banco, código privado e arquivos de credenciais. Limitação de tentativas é por processo, sem alegação de proteção distribuída.
+
+### Etapa 4 — Contas, chaves e jornada bilateral
+
+Criados server/lab.cjs, server/profiles.cjs e laboratorio/index.html, app.js, lab.css. Login, adesão a sessões, múltiplas contas/perfis públicos configuráveis, chaves sintéticas @pix.justec.invalid, rotação/desativação, consulta interna, extrato bilateral, comprovantes e retomada de jornadas persistem no servidor. Perfis públicos não são rótulos de fraude.
+
+Jornada: origem/modalidade, destinatário, valor, conferência, verificação contextual quando cabível, pausa quando configurada, código demonstrativo 0000 e confirmação explícita, resultado. Código 0000 não autentica usuário. Pausa é medida pelo relógio do servidor, não avança automaticamente e permite reconsideração. Rascunhos expiram; dados são novamente validados antes do lançamento. Erro de armazenamento não apresenta sucesso. Recarga ou reinício do servidor não apagam contas ou histórico.
+
+### Etapa 5 — JUSTEC Guard integrado ao laboratório
+
+Criado server/guard.cjs. Reutilizadas evidências/mensagens existentes com regras versionadas por hash. Condições none, education, context, behavior e integrated; valores de pausa, pesos e limiares podem ser configurados pelo pesquisador na sessão, sem modificar o motor original. Destinatário novo sozinho não comprova fraude; respostas desconhecidas não são interpretadas como segurança. Condição comportamental não inclui perguntas contextuais ou pausa adicional. Restrição operacional ativa permanece válida em qualquer condição.
+
+Cada avaliação registra indicadores, justificativas, pontuação/classificação, ação, fase e versão. Interrupção contextual não restringe automaticamente a conta recebedora. Revisão manual preserva a decisão original e cria nova conferência vinculada, sem ignorar invariantes financeiras. Gabaritos e respostas futuras do roteiro não alimentam o Guard: criar tarefa só solicita contexto por opção explícita; respostas somente contam depois de fornecidas. Acrescentado teste específico contra antecipação por respostas previstas.
+
+### Etapa 6 — Experimentos e pesquisa
+
+Criado server/research.cjs. Cenários possuem estado-base observável e verdade experimental separada. Quatro exemplos demonstram operação legítima, fraude contextual, falso positivo e fraude sem sinais disponíveis. Execuções criam novas contas/sessão/chaves; hashes identificam base, titulares e configuração. Repetição conserva a política original mesmo após mudar a configuração da sessão-mãe. Captura/restauração cria nova sessão e preserva o histórico anterior, sem reaplicar débitos antigos.
+
+Painel permite configuração, convites/papéis, alocação, cenários, cinco condições, tarefas por titular, execuções, revisões, snapshots, anotações, auditoria e exportações JSON/CSV. Exportação não inclui segredos de autenticação e protege texto contra fórmulas CSV. Feedback opcional e imutável registra autorrelato de compreensão/intenção, sem afirmar validação psicométrica.
+
+Matriz define positivo como operação interrompida; concluídas são negativas, pendentes/canceladas são separadas. Registra VP/FP/VN/FN, taxas com denominadores e duração, sem inventar percentuais quando não há amostra. Revisões normais mantêm o vínculo experimental; liberação manual não apaga falso positivo original. Grupos comparáveis exigem base/titulares/configuração equivalentes. Métricas são descritivas, não comprovação de eficácia antifraude.
+
+### Etapa 7 — Integração visual e operação
+
+index.html e css/style.css receberam somente entrada para o laboratório; js/entry.js abre telas educativas existentes por lista permitida de parâmetros. js/pix-evidence.js aceita regras opcionais mantendo seus padrões. Runtime Tailwind existente foi fixado localmente em js/vendor/ (versão 3.4.17, licença MIT e hash documentados), evitando JavaScript remoto na origem autenticada. Interface do laboratório usa recursos locais, CSP, conteúdo textual escapado e navegação responsiva. Tabelas com rolagem têm região identificada e foco por teclado.
+
+Criados server/backup.cjs e server/run-regressions.cjs. Backup SQLite consistente, privado e sem sobrescrever destino; bootstrap recusa recriação silenciosa de administrador. README explica Bash/PowerShell, testes, backup e primeiro uso. Não foi criado administrador padrão ou banco permanente com pessoas reais.
+
+### Etapa 8 — Testes executados e resultados
+
+Baseline antes da alteração: 107 testes unitários e nove suítes originais de navegador aprovados. Validação final de domínio/HTTP/operação: npm test executou **147 testes, 147 aprovados, zero falhas, cancelados ou ignorados**. Composição: 107 testes existentes e 40 novos testes. Arquivos novos: tests/lab-core.cjs, lab-http.cjs, lab-operations.cjs, lab-fixture.cjs e lab-browser.cjs.
+
+Cobertura efetivamente executada: entradas monetárias inválidas sem mutação; transferências bilaterais; isolamento de usuários/sessões e papéis; chaves únicas/rotação; duas conexões SQLite independentes concorrendo pelo saldo; autorizações HTTP simultâneas; idempotência; rollback com falha injetada entre partidas; pausa e revalidação no servidor; contexto inconclusivo; revisão/falso positivo; quatro quadrantes; restauração e repetição equivalentes; imutabilidade; exportação sem credenciais; feedback e cadeia de revisões; perfis configuráveis; prevenção de antecipação por roteiro; persistência após fechamento/reabertura e reinício HTTP; bootstrap, migrações concorrentes e backup.
+
+npm run test:browser aprovado em Chromium: login real com participantes distintos, múltiplas contas, envio/recebimento com débito/crédito, extrato bilateral, recarga persistente, rejeição de acesso indevido, cenário falso positivo e exportação. Sessões, contas, extrato, revisões, educação e jornada Pix exercitados nas larguras **320, 375, 390, 768, 1024, 1366 e 1920 px**, sem rolagem horizontal observada. Executada espera inicial real de cinco segundos; repetições posteriores usam pausa reduzida configurada para o teste. Atributo Secure foi verificado com configuração HTTPS; não se apresenta esse teste como implantação TLS real.
+
+As nove suítes originais foram executadas após a integração: balance.cjs, statement.cjs, pix.cjs, pix-2.cjs, pix-layout-sequence.cjs, layout.cjs, guard-content.cjs, shortcuts.cjs e consumer-guidance.cjs. Resultado aprovado. Layout original cobre todas as telas previstas pela suíte e modais em sete larguras; preservados saldo, extrato, Pix, triagem, direitos, orientação e atalhos. Compartilhamento e links externos são interceptados: nenhum envio real nem certificação de disponibilidade de portais foi realizado.
+
+Ensaios intermediários não foram ocultados: classe repetida statement-link causou seletor ambíguo no teste antigo e foi corrigida para lab-entry; fixture concorrente utilizava relógios incompatíveis e foi alinhada; helper HTTP não encaminhava opções de HTTPS/limite e foi corrigido. Esses ensaios com erro não foram registrados como aprovados. A interrupção temporária da ferramenta de execução foi resolvida sem perda dos arquivos; testes finais concluíram depois da retomada.
+
+### Entrega, limitações e próximos passos
+
+Implementação local pronta para revisão técnica, com instruções em README.md e arquitetura detalhada no documento técnico. **Não houve commit, push ou publicação nesta entrega.** O site estático atual não foi substituído por armazenamento efêmero. SQLite requer processo Node e volume privado persistente; hospedagem pública exige configurar esse volume, origem e proxy HTTPS. PostgreSQL/serverless não foi implementado.
+
+Permanecem pendentes: implantação e ensaio de recuperação no ambiente real, revisão de segurança independente, testes de carga, MFA/recuperação de senha/identidade institucional, rate limit distribuído, dispositivos físicos/leitores de tela/Safari/Firefox, validação de usabilidade e eficácia com participantes, TCLE e política institucional de retenção. Não há alegação de prontidão bancária ou de conformidade jurídica certificada. QR Code, Copia e Cola e integrações bancárias reais continuam fora desta entrega. Histórico imutável por triggers não é blindagem contra administrador do sistema operacional. Somente dados sintéticos devem ser usados nesta fase.
+
+## 22/10/2026 — Separação das versões, preparação Render e documentos de apresentação
+
+Novo pedido autoriza envio ao GitHub e tentativa de publicação, preservando a versão anterior na Vercel. A referência remota main foi consultada e aponta para 837cb414ad27a149c9e0c57004f75af340ba9aec. Criadas branch versao-estatica-vercel e tag anotada prototipo-estatico-2026-10-22 nesse ponto. A implementação persistente e seus documentos ficam na branch laboratorio-multiusuario; não se modifica main nem se faz merge automático. A autorização desta etapa sucede o registro anterior de entrega apenas local.
+
+GitHub autenticado com permissão de administração do repositório. Não há conector/credencial Render ou Vercel disponível; o titular informou possuir conta Render. A consulta GitHub não mostrou deployments, o que não comprova a Production Branch da Vercel. A consulta pública ao domínio Vercel foi recusada pela rede (CONNECT 403); não se conclui que o site esteja indisponível. A Production Branch deve permanecer main, com conferência no painel pelo titular.
+
+Analisada compatibilidade: SQLite/WAL precisa de armazenamento durável e não pode ser tratado como arquivo persistente em funções Vercel. Não foi feita migração PostgreSQL, publicação de HTML sem API nem substituição por localStorage. Criados render.yaml e deploy/README.md para Node 24, uma instância, disco privado de 1 GB, origem HTTPS via RENDER_EXTERNAL_URL e health check. Atualização automática desativada. O plano Starter e volume podem gerar cobrança; nenhuma infraestrutura foi contratada. Bootstrap administrativo é posterior, no Shell com volume montado, sem senha padrão.
+
+Validação adicional executada: YAML lido e conferidos branch, disco, plano, instância e deploy manual. Comando de inicialização ensaiado localmente com origem externa HTTPS simulada e banco temporário em disco; API health e interface retornaram 200, com CSP. Um helper inicial com fetch não transmitiu o Host esperado; a conferência correta usou HTTP nativo com Host explícito. Esse ensaio é local e não é confirmação de implantação TLS/Render. Mantidos os resultados anteriores de 147 testes e nove suítes originais aprovadas; não houve nova alteração de lógica de negócio nesta preparação.
+
+Produzidos dois documentos em Documentação/Apresentacao/, com fontes Markdown, Word editável e PDF: (1) relatório detalhado da atualização, módulos, arquitetura e testes, com captura real local; (2) descrição do sistema completo, fluxos, prevenção, pesquisa, segurança, limitações e proposta de piloto empresarial. PDFs de 10 e 14 páginas, respectivamente. Exportações Word abertas programaticamente para conferir parágrafos/tabelas/imagem; PDFs verificados com pdfinfo e páginas amostrais inspecionadas visualmente. Capa, sumário, hierarquia, tabelas, referências e paginação incluídos. Não se afirma conformidade ABNT, certificação bancária, parecer jurídico ou eficácia científica.
+
+O material diferencia educação de proteção efetiva, pontuação de comprovação, interrupção interna de bloqueio real, MED informativo de solicitação efetiva e teste de software de estudo com consumidores. Referências externas são fundamentos para aprofundamento; portais não foram certificados como disponíveis. Proposta empresarial não inventa clientes, retorno financeiro, prazo ou preço contratado.
+
+Limitação de entrega externa: a associação da conta Render ao repositório, confirmação do plano/volume, criação do primeiro administrador e ensaio remoto precisam ser concluídos no painel. Ter conta não concede acesso técnico ao agente. Até existir URL verificada, não registrar laboratório como publicado. Guia concreto de ativação está versionado em deploy/README.md. Histórico deste relatório e do arquivo homônimo em Documentação preservados.
+
+Proteção adicional: vercel.json na branch do laboratório desabilita seus deployments Git na Vercel, sem alterar main. JSON conferido localmente; a aplicação dessa opção pela integração remota não foi certificada sem acesso ao painel.
