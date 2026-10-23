@@ -955,3 +955,10 @@ Ensaios intermediários esperavam educação antes do login e saldo de administr
 Workflow público adaptado para distinguir login-first de legacy-entry-awaiting-deploy sem credenciais. O estado público é conferido separadamente do push; Render com deploy manual exige aplicar o commit no painel. Nenhuma senha do titular foi solicitada nem operações em suas contas realizadas. A mudança não exige recriar banco ou redefinir administrador.
 
 Fechamento desta etapa: commit 3620e35fd52f5ff909b061bc7a90a7c2179c575e enviado à branch laboratorio-multiusuario; main confirmada no mesmo 837cb414ad27a149c9e0c57004f75af340ba9aec. A execução pública Actions 39878474257 concluiu success para infraestrutura/arquivos e identificou explicitamente o passo Published entrypoint legacy-entry-awaiting-deploy. Logo, no instante da consulta a nova entrada ainda não estava aplicada no Render; é necessário Manual Deploy → Deploy latest commit. Não se classificou sucesso de infraestrutura como publicação do novo visual. URL de evidência: https://github.com/pauloalbertoofc-hue/Justec-Bank/actions/runs/39878474257 .
+
+
+## 22/10/2026 — Tentativa de destravar atualização no Render
+
+O titular pediu tentar corrigir a publicação. Consultada a integração GitHub: deployment 7265939327 aponta para commit 6800502dad9720b0f3adbd9b7ec8de85cd9c389b, anterior à interface bancária. A execução pública 39878586067 identificou legacy-entry-awaiting-deploy. O serviço associado é srv-dbd9fugae00c73fcbq50. O blueprint estava com autoDeploy false; alterado para true, preservando plano Free, banco externo, variáveis e branch. Essa é configuração desejada versionada, não confirmação de aplicação no painel.
+
+Não há credencial/API Render nesta sessão; listagem de secrets GitHub foi recusada pela integração com HTTP 403, sem revelar valores. Não foram enviados tokens GitHub a outros provedores. A tentativa usa somente configuração no repositório e integração já existente; estado remoto é verificado separadamente. Guia atualizado com link direto do serviço e sincronização, caso o Render não aplique o YAML automaticamente.

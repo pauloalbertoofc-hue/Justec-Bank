@@ -9,7 +9,7 @@ services:
     buildCommand: npm ci --omit=dev
     startCommand: node server/index.cjs
     healthCheckPath: /api/health
-    autoDeploy: false
+    autoDeploy: true
     envVars:
       - key: NODE_VERSION
         value: 24.19.0

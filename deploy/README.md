@@ -73,3 +73,9 @@ Dados SQLite anteriores não são importados automaticamente. Antes de eventual 
 As mutações são serializadas por advisory lock transacional no PostgreSQL, adquirido na mesma conexão usada por AsyncLocalStorage. É uma escolha para laboratório pequeno, equivalente à serialização de escrita anterior; não demonstra escalabilidade bancária. Não usa trava apenas em memória de um processo.
 
 A configuração paga anterior está arquivada em `deploy/render-sqlite-paid.yaml`, com permissão explícita para SQLite em volume. Ela não é usada pelo blueprint gratuito. O guia antigo foi preservado como histórico em `deploy/README_SQLITE_HISTORICO.md`.
+
+## Atualização automática da interface
+
+O blueprint passou a `autoDeploy: true` após identificar que o serviço continuava em commit anterior à interface bancária autenticada. Esse arquivo só muda o serviço existente quando o Render sincroniza o Blueprint; não equivale a uma chamada à API Render. Se a sincronização automática do Blueprint estiver desligada, aplicar **Manual Sync** ou configurar no serviço **Settings → Build & Deploy → Auto-Deploy** para publicar commits da branch `laboratorio-multiusuario`. Para aplicar imediatamente: **Manual Deploy → Deploy latest commit**.
+
+Serviço informado pela integração GitHub: https://dashboard.render.com/web/srv-dbd9fugae00c73fcbq50 . O teste público informa `login-first` quando a nova entrada está ativa. Não recriar banco ou alterar senha para aplicar essa atualização.
