@@ -1,0 +1,27 @@
+{
+  "name": "justec-bank-laboratory",
+  "version": "1.1.0",
+  "private": true,
+  "description": "Laboratório acadêmico de transferências exclusivamente virtuais",
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "scripts": {
+    "start": "node server/index.cjs",
+    "bootstrap": "node server/bootstrap.cjs",
+    "test:lab": "node --test tests/lab-core.cjs tests/lab-http.cjs tests/lab-operations.cjs",
+    "test:unit": "node --test tests/state-invariants.cjs tests/guard.test.mjs tests/pix-journey.cjs",
+    "test": "node --test tests/state-invariants.cjs tests/guard.test.mjs tests/pix-journey.cjs tests/lab-core.cjs tests/lab-http.cjs tests/lab-operations.cjs tests/storage-flow.cjs",
+    "test:browser": "node tests/lab-browser.cjs",
+    "test:legacy": "node server/run-regressions.cjs",
+    "backup": "node server/backup.cjs",
+    "test:postgres": "node --test tests/postgres.cjs",
+    "test:browser:postgres": "node server/require-postgres-test.cjs"
+  },
+  "devDependencies": {
+    "playwright": "1.62.1"
+  },
+  "dependencies": {
+    "pg": "8.16.3"
+  }
+}

@@ -295,3 +295,8 @@ body:has(#app-modal:not(.hidden)), body:has(dialog[open]) { overflow: hidden; }
 #screen-pix .pix-amount-box input { text-align: center; font-weight: 800; }
 #pix-auth .pix-code-input { padding: 18px 10px; margin-top: 20px; }
 .pix-screen-reader { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+/* Acesso ao laboratório persistente sem reutilizar o vínculo do extrato. */
+.lab-entry { display: inline-flex; align-items: center; min-height: 44px; margin-top: 6px; color: #ffcc00; font-size: 12px; font-weight: 700; }
+.lab-entry:hover { text-decoration: underline; }
+.lab-entry:focus-visible { outline: 2px solid #ffcc00; outline-offset: 3px; }

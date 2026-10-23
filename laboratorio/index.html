@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>JUSTEC — Laboratório acadêmico</title>
+    <link rel="stylesheet" href="/css/style.css" />
+    <link rel="stylesheet" href="/laboratorio/lab.css" />
+    <script src="/js/pix-messages.js" defer></script>
+    <script src="/laboratorio/bank.js" defer></script>
+    <script src="/laboratorio/app.js" defer></script>
+  </head>
+  <body class="lab-body" data-access="login" data-mode="bank">
+    <a class="skip-link" href="#lab-main">Pular para o conteúdo</a>
+    <header class="lab-header">
+      <a href="/laboratorio/" class="lab-brand"
+        ><span aria-hidden="true" class="bank-logo">▥</span>
+        <div>
+          JUSTEC <b>BANK</b><small>◈ Proteção ativa · simulação</small>
+        </div></a
+      >
+      <div id="identity"></div>
+      <button id="security-shortcut" data-bank-view="security" hidden>
+        ◈ Segurança
+      </button>
+      <button id="admin-switch" hidden>Administração</button>
+      <button id="logout" hidden>Sair</button>
+    </header>
+    <main id="lab-main" tabindex="-1">
+      <p id="lab-feedback" role="status" aria-live="polite"></p>
+      <section id="auth-view" class="lab-grid">
+        <form id="login-form" class="lab-card">
+          <h1>Bem-vindo ao JUSTEC</h1>
+          <p>Entre para acessar sua conta simulada.</p>
+          <label
+            >Pseudônimo<input
+              name="alias"
+              autocomplete="username"
+              required
+              maxlength="32" /></label
+          ><label
+            >Senha exclusiva do laboratório<input
+              name="password"
+              type="password"
+              autocomplete="current-password"
+              required
+              maxlength="128" /></label
+          ><button class="primary" type="submit">Entrar</button>
+          <p>
+            Ambiente acadêmico, com valores fictícios. Use apenas a senha
+            exclusiva que você criou para o JUSTEC.
+          </p>
+        </form>
+        <details id="register-access">
+          <summary>Criar meu acesso</summary>
+          <form id="register-form" class="lab-card">
+            <h2>Criar acesso de participante</h2>
+            <label
+              >Pseudônimo sintético<input
+                name="alias"
+                autocomplete="off"
+                required
+                minlength="3"
+                maxlength="32"
+                pattern="[a-zA-Z][a-zA-Z0-9_-]{2,31}"
+                placeholder="participante-01" /></label
+            ><label
+              >Senha nova, exclusiva deste laboratório<input
+                name="password"
+                type="password"
+                autocomplete="new-password"
+                required
+                minlength="12"
+                maxlength="128" /></label
+            ><label class="check"
+              ><input name="consent" type="checkbox" required /> Reconheço o
+              caráter acadêmico, usarei apenas dados fictícios e não
+              movimentarei dinheiro real.</label
+            ><button type="submit">Criar acesso</button>
+            <p>
+              O cadastro não substitui consentimento de pesquisa ou aprovação
+              ética. Para participar, será necessário convite da equipe.
+            </p>
+          </form>
+        </details>
+      </section>
+      <section id="bank-view" hidden>
+        <div class="lab-toolbar" id="session-toolbar" hidden>
+          <label
+            >Sessão experimental<select
+              id="session-select"
+              aria-label="Sessão experimental"
+            ></select></label
+          ><span id="session-status"></span>
+        </div>
+        <nav class="lab-nav" id="admin-nav" hidden aria-label="Laboratório">
+          <button data-view="sessions">Sessões</button
+          ><button data-view="accounts">Minhas contas</button
+          ><button data-view="pix">Fazer Pix</button
+          ><button data-view="statement">Extrato</button
+          ><button data-view="reviews">Revisões</button
+          ><button data-view="research" id="research-nav" hidden>
+            Pesquisa
+          </button>
+        </nav>
+        <nav id="bank-nav" aria-label="Navegação bancária" hidden>
+          <button data-bank-view="home">Início</button
+          ><button data-bank-view="pix">Pix</button
+          ><button data-bank-view="screening">Triagem</button
+          ><button data-bank-view="action-post">Pós-Golpe</button
+          ><button data-bank-view="rights">Direitos</button>
+        </nav>
+        <div id="workspace"></div>
+      </section>
+    </main>
+    <dialog id="bank-dialog" aria-labelledby="bank-dialog-title"></dialog>
+    <footer>JUSTEC Guard · simulação acadêmica, sem valor financeiro.</footer>
+  </body>
+</html>
