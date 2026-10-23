@@ -461,3 +461,412 @@
   outline: 2px solid #ffcc00;
   outline-offset: 3px;
 }
+
+/* Experiência bancária persistente, com entrada anterior à Home. */
+.lab-body svg {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  vertical-align: middle;
+}
+.lab-body [data-bank-view] {
+  cursor: pointer;
+}
+.lab-body[data-access="login"] #lab-main {
+  max-width: 500px;
+  padding-top: 36px;
+}
+.lab-body[data-access="login"] #auth-view {
+  display: block;
+}
+.lab-body[data-access="login"] .lab-header {
+  position: relative;
+}
+#register-access {
+  margin-top: 18px;
+}
+#register-access > summary {
+  color: #ffcc00;
+  padding: 14px;
+  cursor: pointer;
+}
+#auth-view h1 {
+  font-size: 24px;
+  line-height: 1.3;
+  margin: 0 0 10px;
+}
+.lab-body[data-mode="bank"] #identity {
+  display: none;
+}
+.lab-header #admin-switch,
+.lab-header #security-shortcut {
+  font-size: 11px;
+  padding: 10px;
+  min-height: 42px;
+}
+.lab-body[data-mode="bank"] #lab-main {
+  padding-bottom: 115px;
+}
+.bank-home {
+  display: grid;
+  gap: 16px;
+}
+.bank-home .lab-card {
+  margin: 0;
+}
+.bank-security {
+  display: block;
+  padding: 16px;
+}
+.bank-security h2 {
+  margin: 0;
+  font-size: 17px;
+  line-height: 1.3;
+  color: #fff;
+}
+.bank-security p {
+  margin: 5px 0 0;
+  font-size: 12px;
+  line-height: 1.45;
+  color: #b8c5d6;
+}
+.bank-security .security-prompt-actions {
+  margin-top: 14px;
+}
+.bank-security .security-mini {
+  min-height: 48px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 7px;
+  font-size: 12px;
+  font-weight: 750;
+}
+.bank-security .security-mini svg {
+  width: 17px;
+  height: 17px;
+}
+.lab-body .bank-balance {
+  border-left: 4px solid #ffcc00;
+  padding: 20px;
+  border-radius: 22px;
+  background: #101827;
+}
+.bank-balance-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.bank-balance-heading h2 {
+  font-size: 15px;
+  color: #c9d3df;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.bank-protection-badge {
+  border: 1px solid #0d7661;
+  border-radius: 24px;
+  background: #0c3837;
+  color: #31cba3;
+  padding: 4px 8px;
+  font-size: 10px;
+  font-weight: 700;
+}
+.bank-balance-values {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 20px 0;
+}
+.bank-balance-values p {
+  margin: 0;
+  font-size: 12px;
+}
+.bank-balance .money {
+  font-size: 30px;
+  margin: 0;
+  line-height: 1.4;
+}
+.lab-body .bank-eye {
+  border: 0;
+  background: transparent;
+  color: #ffcc00;
+  padding: 10px;
+  min-width: 44px;
+}
+.lab-body .bank-text-link {
+  border: 0;
+  background: transparent;
+  color: #ffcc00;
+  display: flex;
+  gap: 7px;
+  font-size: 15px;
+  font-weight: 750;
+  padding: 5px 0;
+}
+.bank-services {
+  border: 1px solid #334155;
+  background: #101827;
+  border-radius: 20px;
+  padding: 16px;
+}
+.bank-services h2 {
+  margin: 0 0 12px;
+  color: #ffcc00;
+  font-size: 17px;
+}
+.bank-services-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+.lab-body .bank-services-grid button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 14px 3px;
+  min-height: 90px;
+  border-radius: 12px;
+  background: #1d2329;
+  border: 1px solid #73601b;
+  color: #ffcc00;
+  font-size: 11px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+.bank-services-grid button svg {
+  width: 26px;
+  height: 26px;
+}
+.bank-account-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.bank-account-actions button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+}
+#bank-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 35;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  background: #10182a;
+  border-top: 1px solid #263348;
+  padding: 8px 5px calc(8px + env(safe-area-inset-bottom));
+}
+#bank-nav button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  border: 0;
+  background: transparent;
+  color: #94a3b8;
+  min-width: 0;
+  padding: 7px 1px;
+  font-size: 10px;
+}
+#bank-nav button[aria-current] {
+  background: #20262d;
+  color: #ffcc00;
+  border-radius: 12px;
+}
+.lab-body[data-mode="bank"] .journey {
+  border: 0;
+  background: transparent;
+  padding: 8px 0;
+  max-width: 460px;
+}
+.bank-view-heading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+.bank-view-heading h2 {
+  margin: 0;
+  font-size: 20px;
+}
+.bank-education {
+  max-width: 900px;
+  margin: auto;
+}
+.bank-education .glass-card {
+  padding: 16px;
+  margin: 12px 0;
+  border-radius: 16px;
+}
+.bank-education h2 {
+  font-size: 19px;
+  line-height: 1.35;
+}
+.bank-education h3,
+.bank-education h4 {
+  color: #ffcc00;
+  font-size: 14px;
+}
+.bank-education p {
+  font-size: 13px;
+  line-height: 1.6;
+}
+.bank-education button {
+  margin-top: 8px;
+}
+.bank-education .flex {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.bank-education .statement-heading {
+  flex-wrap: nowrap;
+}
+.bank-education svg {
+  width: 17px;
+  height: 17px;
+}
+.bank-security-link {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+  text-align: left;
+}
+#bank-dialog {
+  background: #101827;
+  color: #edf3fc;
+  border: 1px solid #5a6c87;
+  border-radius: 20px;
+  width: min(460px, calc(100% - 28px));
+  padding: 24px;
+  max-height: 80dvh;
+  overflow: auto;
+}
+#bank-dialog::backdrop {
+  background: #020617b8;
+}
+.lab-body[data-access="login"] footer {
+  max-width: 500px;
+  margin: auto;
+}
+@media (max-width: 400px) {
+  .lab-header {
+    gap: 5px;
+    padding: 10px;
+  }
+  .lab-brand {
+    font-size: 17px;
+    gap: 7px;
+  }
+  .lab-brand small {
+    font-size: 9px;
+  }
+  .lab-header #logout,
+  .lab-header #admin-switch,
+  .lab-header #security-shortcut {
+    font-size: 10px;
+    padding: 6px;
+  }
+  .bank-security h2 {
+    font-size: 15px;
+  }
+  .bank-security .security-mini {
+    font-size: 11px;
+  }
+}
+@media (min-width: 700px) {
+  .bank-home {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
+  }
+  .bank-security,
+  .bank-account-actions {
+    grid-column: 1/-1;
+  }
+  .bank-services-grid button {
+    min-height: 100px;
+  }
+  .bank-balance-values {
+    margin: 35px 0;
+  }
+}
+@media (min-width: 1024px) {
+  #bank-nav {
+    top: 77px;
+    bottom: 0;
+    right: auto;
+    width: 210px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 24px 14px;
+  }
+  #bank-nav button {
+    flex-direction: row;
+    justify-content: flex-start;
+    font-size: 13px;
+    padding: 12px;
+    gap: 10px;
+  }
+  .lab-body[data-access="authenticated"][data-mode="bank"] #lab-main {
+    margin-left: 230px;
+    max-width: 1240px;
+    padding: 30px 28px 70px;
+  }
+  .lab-body[data-mode="bank"][data-access="authenticated"] footer {
+    margin-left: 250px;
+  }
+  .bank-security {
+    padding: 20px;
+  }
+  .bank-security h2 {
+    font-size: 20px;
+  }
+  .bank-security .security-prompt-actions {
+    max-width: 600px;
+  }
+  .bank-services-grid button {
+    font-size: 12px;
+  }
+}
+/* Cores explícitas: os botões não herdam o fundo genérico dos formulários. */
+.lab-body .bank-security .security-mini-prevention {
+  background: #f6b609;
+  color: #101827;
+  border: 1px solid #ffd44d;
+}
+.lab-body .bank-security .security-mini-emergency {
+  background: #5b1f3e;
+  color: #fff;
+  border: 1px solid #d73b68;
+}
+#lab-feedback:empty {
+  display: none;
+}
+@media (max-width: 1023px) {
+  .lab-body[data-mode="bank"] footer {
+    padding-bottom: calc(100px + env(safe-area-inset-bottom));
+  }
+  .lab-body[data-mode="bank"] #admin-switch {
+    font-size: 0;
+    width: 36px;
+    padding: 6px;
+  }
+  .lab-body[data-mode="bank"] #admin-switch::before {
+    content: "⚙";
+    font-size: 18px;
+  }
+}

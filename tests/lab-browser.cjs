@@ -23,16 +23,79 @@ const { createServer } = require("../server/http.cjs");
   });
   const errors = [];
   try {
+    async function openView(page, view) {
+      if (await page.locator("#admin-nav").isVisible()) {
+        await page.locator(`[data-view=${view}]`).click();
+        return;
+      }
+      if (["pix", "screening", "action-post", "rights"].includes(view)) {
+        await page.locator(`#bank-nav [data-bank-view="${view}"]`).click();
+        return;
+      }
+      await page.locator("#bank-nav [data-bank-view=home]").click();
+      await page.locator("#bank-balance-card").waitFor();
+      const labels = {
+        accounts: "Minhas contas e chaves",
+        statement: "Ver extrato ›",
+        reviews: "Contestações",
+        sessions: "Convites e ambientes",
+        security: "Central de segurança",
+        protection: "Verificar chave Pix",
+      };
+      if (view === "edu-center") {
+        await openView(page, "security");
+        await page
+          .getByRole("button", { name: "Centro educativo", exact: true })
+          .click();
+        return;
+      }
+      if (view !== "home")
+        await page
+          .getByRole("button", { name: labels[view], exact: true })
+          .click();
+    }
     async function pageFor(user) {
       const context = await browser.newContext({
         viewport: { width: 390, height: 900 },
       });
       const page = await context.newPage();
       page.on("pageerror", (e) => errors.push(e.message));
-      await page.goto(base + "/laboratorio/", { waitUntil: "networkidle" });
+      await page.goto(base + "/", { waitUntil: "networkidle" });
+      assert.equal(new URL(page.url()).pathname, "/laboratorio/");
+      assert(await page.locator("#login-form").isVisible());
+      assert.equal(await page.locator("#bank-nav").isVisible(), false);
+      assert.equal(await page.locator("#home-security").count(), 0);
       await page.locator("#login-form [name=alias]").fill(user.alias);
       await page.locator("#login-form [name=password]").fill(PASSWORD);
       await page.locator("#login-form button[type=submit]").click();
+      await page.waitForSelector("#home-security");
+      if (user.id === f.alice.id) {
+        assert.equal(await page.locator("#admin-switch").isVisible(), false);
+        assert.equal(await page.locator("#admin-nav").isVisible(), false);
+        assert.equal(await page.locator("#session-toolbar").isVisible(), false);
+        assert.match(
+          await page.locator("#bank-balance").innerText(),
+          /2\.000,00/,
+        );
+        await page.locator("#bank-balance-toggle").click();
+        assert.equal(
+          await page.locator("#bank-balance").innerText(),
+          "R$ ••••••",
+        );
+        assert.equal(await f.lab.balance(f.a.id), 200000);
+        await page.locator("#bank-balance-toggle").click();
+        assert.match(
+          await page.locator("#bank-balance").innerText(),
+          /2\.000,00/,
+        );
+        await page.screenshot({
+          path: "/tmp/justec-bank-home-390.png",
+          fullPage: true,
+        });
+      }
+      if (user.globalRole === "admin")
+        await page.locator("#admin-switch").click();
+      else await openView(page, "accounts");
       await page.waitForSelector("#create-account-form");
       return { context, page };
     }
@@ -52,7 +115,7 @@ const { createServer } = require("../server/http.cjs");
       document.querySelector("#workspace").innerText.includes("Ana secundária"),
     );
     assert.equal((await f.lab.accounts(f.alice, f.sessionId)).length, 2);
-    await page.locator("[data-view=pix]").click();
+    await openView(page, "pix");
     await page
       .getByRole("button", {
         name: "Transferir por chave fictícia",
@@ -99,12 +162,12 @@ const { createServer } = require("../server/http.cjs");
       config: { initialCents: 100000, pauseMs: 40 },
     });
     await page.reload({ waitUntil: "networkidle" });
-    await page.waitForSelector("#create-account-form");
+    await page.waitForSelector("#bank-balance-card");
     assert.match(await page.locator("#workspace").innerText(), /1\.750,00/);
     await bob.page.reload({ waitUntil: "networkidle" });
-    await bob.page.waitForSelector("#create-account-form");
+    await bob.page.waitForSelector("#bank-balance-card");
     assert.match(await bob.page.locator("#workspace").innerText(), /1\.250,00/);
-    await bob.page.locator("[data-view=statement]").click();
+    await openView(bob.page, "statement");
     await bob.page
       .getByRole("button", { name: "Detalhes / comprovante", exact: true })
       .first()
@@ -178,9 +241,47 @@ const { createServer } = require("../server/http.cjs");
     for (const width of [320, 375, 390, 768, 1024, 1366, 1920]) {
       await page.setViewportSize({ width, height: 900 });
       await page.emulateMedia({ reducedMotion: "reduce" });
-      for (const view of ["sessions", "accounts", "statement", "reviews"]) {
-        await page.locator(`[data-view=${view}]`).click();
+      for (const view of [
+        "home",
+        "sessions",
+        "accounts",
+        "statement",
+        "reviews",
+        "screening",
+        "action-post",
+        "rights",
+        "edu-center",
+        "security",
+        "protection",
+      ]) {
+        await openView(page, view);
         await page.waitForTimeout(100);
+        if (view === "home") {
+          const cards = await page.locator("#home-security").boundingBox();
+          const balance = await page
+            .locator("#bank-balance-card")
+            .boundingBox();
+          assert(cards.y + cards.height <= balance.y + 1);
+        }
+        if (view === "screening") {
+          await page
+            .getByRole("button", {
+              name: "Ver Diagnóstico Rápido",
+              exact: true,
+            })
+            .first()
+            .click();
+          assert(await page.locator("#bank-dialog").isVisible());
+          await page.keyboard.press("Escape");
+          assert.equal(await page.locator("#bank-dialog").isVisible(), false);
+        }
+        if (view === "action-post") {
+          await page.getByRole("button", { name: /Gerar Roteiro/ }).click();
+          assert(await page.locator("#bank-dialog").isVisible());
+          await page
+            .getByRole("button", { name: "Fechar", exact: true })
+            .click();
+        }
         assert.equal(
           await page.evaluate(
             () => document.documentElement.scrollWidth > innerWidth + 1,
@@ -188,20 +289,10 @@ const { createServer } = require("../server/http.cjs");
           false,
           `${width}/${view}`,
         );
-        assert(
-          await page
-            .locator(".lab-education")
-            .getByRole("link", { name: /Tenho dúvida/ })
-            .isVisible(),
-        );
-        assert(
-          await page
-            .locator(".lab-education")
-            .getByRole("link", { name: /Sofri um golpe/ })
-            .isVisible(),
-        );
+        assert(await page.locator("#bank-nav").isVisible());
+        assert.equal(await page.locator("#admin-nav").isVisible(), false);
       }
-      await page.locator("[data-view=pix]").click();
+      await openView(page, "pix");
       await page
         .getByRole("button", {
           name: "Transferir por chave fictícia",
@@ -265,7 +356,7 @@ const { createServer } = require("../server/http.cjs");
     });
     assert(await education.locator("#screen-screening").isVisible());
     await education.close();
-    await page.locator("[data-view=accounts]").click();
+    await openView(page, "accounts");
     await page.screenshot({
       path: "/tmp/justec-laboratory-accounts.png",
       fullPage: true,
@@ -274,6 +365,12 @@ const { createServer } = require("../server/http.cjs");
       path: "/tmp/justec-laboratory-research.png",
       fullPage: true,
     });
+    await page.locator("#logout").click();
+    await page.locator("#login-form").waitFor();
+    assert.equal(await page.locator("#workspace").innerText(), "");
+    assert.equal(await page.locator("#bank-nav").isVisible(), false);
+    assert.equal(await page.locator("#identity").innerText(), "");
+    assert.equal((await f.lab.accounts(f.alice, f.sessionId)).length, 2);
     assert.deepEqual(errors, []);
     console.log(
       "PASS laboratório navegador: login real, múltiplas contas, Pix debitado/creditado, recarga persistente, extrato bilateral, papéis, cenário falso positivo, exportação e educação original.",

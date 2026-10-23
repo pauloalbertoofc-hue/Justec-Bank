@@ -14,3 +14,5 @@ Geração desta edição: Pandoc 3.1.11.1, python-docx para estilos Word e Chrom
 Consultar [publicação e separação das versões](../../deploy/README.md) e o [Relatório-Mestre](../../RELATORIO_MESTRE_JUSTEC.md) para estado da infraestrutura. As branchs foram separadas; aplicação de blueprint no Render e validação da URL dependem do painel do titular.
 
 Atualização posterior: os arquivos Word/PDF acima são o retrato da entrega inicial SQLite. O suporte PostgreSQL e o blueprint Render Free foram acrescentados depois; consultar o [adendo técnico PostgreSQL](../ATUALIZACAO_POSTGRESQL_RENDER_FREE_2026-10-22.md) para apresentar a arquitetura atual. Não apresentar a antiga pendência de implementação PostgreSQL como ainda existente; a pendência atual é provisionar/conectar os serviços e validar a URL pública.
+
+Adendo de experiência: [login antes da Home e apresentação bancária persistente](../INTERFACE_BANCARIA_AUTENTICADA_2026-10-22.md), com captura local atual em figuras/banco-autenticado-390.png. A interface técnica dos documentos iniciais agora corresponde ao modo Administração, não à experiência padrão do participante.

@@ -13,7 +13,10 @@ const {
 } = require("./security.cjs");
 attachResearch(Lab);
 const ROOT = path.resolve(__dirname, "..");
-function createServer(db, { origin, now, rateLimit = true } = {}) {
+function createServer(
+  db,
+  { origin, now, rateLimit = true, entrypoint = "bank" } = {},
+) {
   const lab = new Lab(db, {
     ...(now
       ? {
@@ -332,8 +335,19 @@ function createServer(db, { origin, now, rateLimit = true } = {}) {
       }
       if (!["GET", "HEAD"].includes(req.method))
         fail(405, "METHOD", "Método não permitido.");
+      if (
+        entrypoint === "bank" &&
+        ["/", "/index.html"].includes(url.pathname)
+      ) {
+        res.writeHead(302, {
+          Location: "/laboratorio/" + url.search,
+          "Cache-Control": "no-store",
+        });
+        return res.end();
+      }
       let relative = decodeURIComponent(url.pathname).replace(/^\//, "");
-      if (!relative) relative = "index.html";
+      if (!relative || relative === "demonstracao.html")
+        relative = "index.html";
       if (relative === "laboratorio" || relative === "laboratorio/")
         relative = "laboratorio/index.html";
       if (

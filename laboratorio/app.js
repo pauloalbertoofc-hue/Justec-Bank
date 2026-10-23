@@ -7,7 +7,9 @@ const state = {
   session: null,
   accounts: [],
   selectedAccount: null,
-  view: "sessions",
+  view: "home",
+  mode: "bank",
+  balanceVisible: true,
   draft: null,
   timer: null,
   scripted: null,
@@ -199,7 +201,20 @@ function focusWorkspace() {
   }
 }
 function showAuth() {
+  stopTimer();
+  state.user = null;
   state.csrf = null;
+  state.session = null;
+  state.accounts = [];
+  state.selectedAccount = null;
+  state.draft = null;
+  state.scripted = null;
+  state.idempotency.clear();
+  state.mode = "bank";
+  state.balanceVisible = true;
+  clear($("#workspace"));
+  document.body.dataset.access = "login";
+  syncBankShell();
   $("#auth-view").hidden = false;
   $("#bank-view").hidden = true;
   $("#logout").hidden = true;
@@ -232,6 +247,7 @@ async function refreshSessions(selectId) {
     ? `${displayLabel(state.session.status)} · ${displayLabel(state.session.role)}`
     : "";
   $("#research-nav").hidden = !isResearch();
+  syncBankShell();
 }
 async function refreshAccounts() {
   state.accounts = state.session
@@ -248,8 +264,15 @@ async function authenticated() {
   $("#bank-view").hidden = false;
   $("#logout").hidden = false;
   $("#identity").textContent = state.user.alias;
+  document.body.dataset.access = "authenticated";
+  state.mode = "bank";
   await refreshSessions(state.session?.id);
-  await renderView(state.sessions.length ? "accounts" : "sessions");
+  const requested = new URLSearchParams(location.search).get("screen");
+  await renderView(
+    ["screening", "action-post", "rights", "edu-center"].includes(requested)
+      ? requested
+      : "home",
+  );
 }
 function isResearch() {
   return ["admin", "researcher"].includes(state.session?.role);
@@ -289,9 +312,26 @@ async function renderView(view) {
     if (b.dataset.view === view) b.setAttribute("aria-current", "page");
     else b.removeAttribute("aria-current");
   }
+  if (view === "research" && (!isResearch() || state.mode !== "admin"))
+    throw new Error("Área restrita à equipe autorizada.");
+  syncBankShell();
   const w = $("#workspace");
   clear(w);
+  if (view === "home") return renderBankHome(w);
+  if (["screening", "action-post", "rights", "edu-center"].includes(view))
+    return renderBankEducation(w, view);
+  if (view === "security") return renderBankSecurity(w);
+  if (view === "protection") return renderBankProtection(w);
   if (view === "sessions") return renderSessions(w);
+  if (!state.session) return renderSessions(w);
+  if (
+    state.mode === "bank" &&
+    !activeAccount() &&
+    ["pix", "statement", "protection"].includes(view)
+  ) {
+    node("p", "Crie sua conta simulada para começar.", w);
+    return renderAccounts(w);
+  }
   needSession();
   if (view === "accounts") return renderAccounts(w);
   if (view === "statement") return renderStatement(w);
@@ -319,7 +359,7 @@ async function renderSessions(w) {
   });
   field(join, "Código de convite da equipe", "code", { required: true });
   submit(join, "Entrar na sessão");
-  if (state.user.globalRole === "admin") {
+  if (state.mode === "admin" && state.user.globalRole === "admin") {
     const create = form(
       grid,
       "create-session-form",
@@ -356,7 +396,8 @@ async function renderSessions(w) {
     );
 }
 async function renderAccounts(w) {
-  sessionActions(w);
+  if (state.mode === "bank") bankViewHeading(w, "Minhas contas");
+  else sessionActions(w);
   await refreshAccounts();
   const grid = node("div", null, w, "lab-grid");
   for (const a of state.accounts) {
@@ -413,7 +454,9 @@ async function renderAccounts(w) {
   const create = form(
     w,
     "create-account-form",
-    "Criar conta fictícia",
+    state.mode === "admin"
+      ? "Criar conta fictícia"
+      : "Adicionar conta simulada",
     async (f) => {
       const body = data(f);
       await api(`/sessions/${state.session.id}/accounts`, {
@@ -424,23 +467,44 @@ async function renderAccounts(w) {
       feedback("Conta e alocação virtual registradas no livro-razão.");
     },
   );
-  field(create, "Nome fictício do titular", "name", { required: true });
-  field(create, "Perfil experimental (não é sinal de fraude)", "profile", {
-    options: state.session.config.profiles.map((profile) => [
-      profile,
-      displayLabel(profile),
-    ]),
-  });
+  field(
+    create,
+    state.mode === "admin"
+      ? "Nome fictício do titular"
+      : "Nome da conta (fictício)",
+    "name",
+    { required: true },
+  );
+  field(
+    create,
+    state.mode === "admin"
+      ? "Perfil experimental (não é sinal de fraude)"
+      : "Tipo de conta",
+    "profile",
+    {
+      options: state.session.config.profiles.map((profile) => [
+        profile,
+        displayLabel(profile),
+      ]),
+    },
+  );
   submit(create, "Criar conta");
   node(
     "p",
-    `Alocação por conta: ${money(state.session.config.initialCents)}. Limite: ${state.session.config.maxAccounts} contas. O participante não edita o saldo.`,
+    state.mode === "admin"
+      ? `Alocação por conta: ${money(state.session.config.initialCents)}. Limite: ${state.session.config.maxAccounts} contas. O participante não edita o saldo.`
+      : `Cada conta começa com ${money(state.session.config.initialCents)} em valores virtuais.`,
     create,
     "muted",
   );
   const drafts = await api(`/sessions/${state.session.id}/drafts`);
   if (drafts.length) {
-    const section = card(w, "Jornadas e tentativas desta sessão");
+    const section = card(
+      w,
+      state.mode === "admin"
+        ? "Jornadas e tentativas desta sessão"
+        : "Minhas operações",
+    );
     for (const d of drafts) {
       const row = node("div", null, section, "lab-card");
       node(
@@ -461,7 +525,12 @@ async function renderAccounts(w) {
   }
   const tasks = await api(`/sessions/${state.session.id}/tasks`);
   if (tasks.length) {
-    const c = card(w, "Operações experimentais atribuídas");
+    const c = card(
+      w,
+      state.mode === "admin"
+        ? "Operações experimentais atribuídas"
+        : "Tarefas da sua equipe",
+    );
     const taskContext = field(
       c,
       "Quero verificar uma suspeita ao abrir a tarefa",
@@ -489,7 +558,7 @@ function accountPicker(parent, change) {
   const select = field(parent, "Conta de origem", "source", {
     options: state.accounts.map((a) => [
       a.id,
-      `${a.name} · ${money(a.balanceCents)}`,
+      `${a.name} · ${state.balanceVisible ? money(a.balanceCents) : "saldo oculto"}`,
     ]),
     value: state.selectedAccount,
   });
@@ -745,7 +814,8 @@ function renderReview(w, d) {
 function evaluationDetails(parent, d) {
   const info = details(parent, "Justificativa e indicadores do Guard");
   node("p", d.evaluation?.decision.justification || "", info);
-  node("pre", JSON.stringify(d.evaluation, null, 2), info);
+  if (state.mode === "admin" && isResearch())
+    node("pre", JSON.stringify(d.evaluation, null, 2), info);
 }
 function renderVerification(w, d) {
   const c = card(w, "Verificação adicional", "journey");
@@ -1084,7 +1154,12 @@ async function renderStatement(w) {
     const s = await api(
       `/accounts/${state.selectedAccount}/statement?${query}`,
     );
-    node("strong", money(s.balanceCents), result, "money");
+    node(
+      "strong",
+      state.balanceVisible ? money(s.balanceCents) : "R$ ••••••",
+      result,
+      "money",
+    );
     if (!s.entries.length)
       node("p", "Nenhum lançamento financeiro para este filtro.", result);
     for (const e of s.entries) {
@@ -1630,7 +1705,7 @@ $("#login-form").addEventListener("submit", (e) => {
     state.csrf = result.csrf;
     e.target.reset();
     await authenticated();
-    feedback("Acesso autenticado.");
+    feedback("");
   });
 });
 $("#register-form").addEventListener("submit", (e) => {
@@ -1648,9 +1723,6 @@ $("#logout").addEventListener("click", () =>
   safe(async () => {
     await api("/auth/logout", { method: "POST", body: {} });
     stopTimer();
-    state.user = null;
-    state.session = null;
-    state.draft = null;
     showAuth();
     feedback("Acesso encerrado; dados acadêmicos permanecem no servidor.");
   }),
@@ -1671,7 +1743,23 @@ $("#session-select").addEventListener("change", () =>
     state.scripted = null;
     state.selectedAccount = null;
     await refreshSessions(sid);
-    await renderView("accounts");
+    await renderView(state.mode === "admin" ? "accounts" : "home");
+  }),
+);
+initializeBankUI();
+for (const b of document.querySelectorAll("[data-bank-view]"))
+  b.addEventListener("click", () => safe(() => setView(b.dataset.bankView)));
+$("#admin-switch").addEventListener("click", () =>
+  safe(async () => {
+    if (!canManage()) throw new Error("Área restrita à equipe autorizada.");
+    state.mode = state.mode === "admin" ? "bank" : "admin";
+    await setView(
+      state.mode === "admin"
+        ? state.session
+          ? "accounts"
+          : "sessions"
+        : "home",
+    );
   }),
 );
 for (const b of document.querySelectorAll("[data-view]"))

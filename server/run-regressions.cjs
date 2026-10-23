@@ -5,7 +5,7 @@ const { openDatabase } = require("./db.cjs");
 const { createServer } = require("./http.cjs");
 (async () => {
   const db = openDatabase(":memory:"),
-    server = createServer(db, { rateLimit: false });
+    server = createServer(db, { rateLimit: false, entrypoint: "demo" });
   server.listen(0, "127.0.0.1");
   await once(server, "listening");
   try {

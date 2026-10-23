@@ -2,10 +2,9 @@
 
 Laboratório publicado: **https://justec-laboratorio.onrender.com/laboratorio/**. Saúde PostgreSQL, arquivos públicos e recusa de acesso sem login foram verificados externamente pelo GitHub Actions em 22/10/2026. [Evidência e limites da verificação](Documentação/VERIFICACAO_PUBLICACAO_RENDER_2026-10-22.md). Operações autenticadas em produção ainda dependem do roteiro de aceitação do titular.
 
-O projeto oferece duas áreas claramente separadas:
+No servidor desta branch, `/` abre primeiro o login em `/laboratorio/`. Depois de entrar, o participante usa a Home bancária com seu saldo persistente, Pix, extrato, chaves e educação na mesma navegação. O botão **Administração**, disponível somente à equipe autorizada, abre os instrumentos de gestão e pesquisa. Não existe mais a passagem de uma Home com saldo ilustrativo para outro painel de participante.
 
-- `/`: demonstração original, com saldo e operações ilustrativos reiniciados ao recarregar.
-- `/laboratorio/`: contas, chaves, autenticação, transferências bilaterais, pesquisa e histórico persistidos **no servidor**. Não depende de localStorage para dados bancários.
+A demonstração estática preservada está em `/demonstracao.html`; seus dados continuam ilustrativos. Na branch `main`, mantida para a Vercel, a versão anterior permanece inalterada. [Decisões e testes da interface autenticada](Documentação/INTERFACE_BANCARIA_AUTENTICADA_2026-10-22.md).
 
 Tudo é virtual, sem valor financeiro e sem comunicação com Pix, DICT, Banco Central ou bancos reais. Use apenas pseudônimos, nomes e chaves sintéticos. O código **0000** autoriza somente a operação fictícia; ele não substitui o login.
 

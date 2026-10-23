@@ -7,52 +7,31 @@
     <link rel="stylesheet" href="/css/style.css" />
     <link rel="stylesheet" href="/laboratorio/lab.css" />
     <script src="/js/pix-messages.js" defer></script>
+    <script src="/laboratorio/bank.js" defer></script>
     <script src="/laboratorio/app.js" defer></script>
   </head>
-  <body class="lab-body">
+  <body class="lab-body" data-access="login" data-mode="bank">
     <a class="skip-link" href="#lab-main">Pular para o conteúdo</a>
     <header class="lab-header">
       <a href="/laboratorio/" class="lab-brand"
-        ><span aria-hidden="true">▥</span>
+        ><span aria-hidden="true" class="bank-logo">▥</span>
         <div>
-          JUSTEC <b>BANK</b
-          ><small>Laboratório acadêmico · valores virtuais</small>
+          JUSTEC <b>BANK</b><small>◈ Proteção ativa · simulação</small>
         </div></a
       >
       <div id="identity"></div>
+      <button id="security-shortcut" data-bank-view="security" hidden>
+        ◈ Segurança
+      </button>
+      <button id="admin-switch" hidden>Administração</button>
       <button id="logout" hidden>Sair</button>
     </header>
     <main id="lab-main" tabindex="-1">
-      <p class="lab-notice">
-        SIMULAÇÃO ACADÊMICA — sem valor financeiro. Não use nomes, documentos,
-        chaves ou senhas bancárias reais.
-      </p>
-      <section
-        class="security-prompt lab-education"
-        aria-labelledby="lab-education-title"
-      >
-        <h1 id="lab-education-title">Antes de transferir, confira.</h1>
-        <p>Um minuto de atenção pode fazer diferença.</p>
-        <div class="security-prompt-actions">
-          <a
-            class="security-mini security-mini-prevention"
-            href="/?screen=screening"
-            target="_blank"
-            rel="noopener"
-            >Tenho dúvida ↗</a
-          ><a
-            class="security-mini security-mini-emergency"
-            href="/?screen=action-post"
-            target="_blank"
-            rel="noopener"
-            >Sofri um golpe ↗</a
-          >
-        </div>
-      </section>
       <p id="lab-feedback" role="status" aria-live="polite"></p>
       <section id="auth-view" class="lab-grid">
         <form id="login-form" class="lab-card">
-          <h2>Entrar no laboratório</h2>
+          <h1>Bem-vindo ao JUSTEC</h1>
+          <p>Entre para acessar sua conta simulada.</p>
           <label
             >Pseudônimo<input
               name="alias"
@@ -68,42 +47,45 @@
               maxlength="128" /></label
           ><button class="primary" type="submit">Entrar</button>
           <p>
-            Contas e operações persistem no servidor. O código 0000 é usado
-            apenas na autorização fictícia do Pix.
+            Ambiente acadêmico, com valores fictícios. Use apenas a senha
+            exclusiva que você criou para o JUSTEC.
           </p>
         </form>
-        <form id="register-form" class="lab-card">
-          <h2>Criar acesso de participante</h2>
-          <label
-            >Pseudônimo sintético<input
-              name="alias"
-              autocomplete="off"
-              required
-              minlength="3"
-              maxlength="32"
-              pattern="[a-zA-Z][a-zA-Z0-9_-]{2,31}"
-              placeholder="participante-01" /></label
-          ><label
-            >Senha nova, exclusiva deste laboratório<input
-              name="password"
-              type="password"
-              autocomplete="new-password"
-              required
-              minlength="12"
-              maxlength="128" /></label
-          ><label class="check"
-            ><input name="consent" type="checkbox" required /> Reconheço o
-            caráter acadêmico, usarei apenas dados fictícios e não movimentarei
-            dinheiro real.</label
-          ><button type="submit">Criar acesso</button>
-          <p>
-            O cadastro não substitui consentimento de pesquisa ou aprovação
-            ética. Para participar, será necessário convite da equipe.
-          </p>
-        </form>
+        <details id="register-access">
+          <summary>Criar meu acesso</summary>
+          <form id="register-form" class="lab-card">
+            <h2>Criar acesso de participante</h2>
+            <label
+              >Pseudônimo sintético<input
+                name="alias"
+                autocomplete="off"
+                required
+                minlength="3"
+                maxlength="32"
+                pattern="[a-zA-Z][a-zA-Z0-9_-]{2,31}"
+                placeholder="participante-01" /></label
+            ><label
+              >Senha nova, exclusiva deste laboratório<input
+                name="password"
+                type="password"
+                autocomplete="new-password"
+                required
+                minlength="12"
+                maxlength="128" /></label
+            ><label class="check"
+              ><input name="consent" type="checkbox" required /> Reconheço o
+              caráter acadêmico, usarei apenas dados fictícios e não
+              movimentarei dinheiro real.</label
+            ><button type="submit">Criar acesso</button>
+            <p>
+              O cadastro não substitui consentimento de pesquisa ou aprovação
+              ética. Para participar, será necessário convite da equipe.
+            </p>
+          </form>
+        </details>
       </section>
       <section id="bank-view" hidden>
-        <div class="lab-toolbar">
+        <div class="lab-toolbar" id="session-toolbar" hidden>
           <label
             >Sessão experimental<select
               id="session-select"
@@ -111,7 +93,7 @@
             ></select></label
           ><span id="session-status"></span>
         </div>
-        <nav class="lab-nav" aria-label="Laboratório">
+        <nav class="lab-nav" id="admin-nav" hidden aria-label="Laboratório">
           <button data-view="sessions">Sessões</button
           ><button data-view="accounts">Minhas contas</button
           ><button data-view="pix">Fazer Pix</button
@@ -121,12 +103,17 @@
             Pesquisa
           </button>
         </nav>
+        <nav id="bank-nav" aria-label="Navegação bancária" hidden>
+          <button data-bank-view="home">Início</button
+          ><button data-bank-view="pix">Pix</button
+          ><button data-bank-view="screening">Triagem</button
+          ><button data-bank-view="action-post">Pós-Golpe</button
+          ><button data-bank-view="rights">Direitos</button>
+        </nav>
         <div id="workspace"></div>
       </section>
     </main>
-    <footer>
-      JUSTEC Guard — hipóteses experimentais, sem promessa de detecção ou
-      recuperação de valores. <a href="/">Abrir demonstração original</a>
-    </footer>
+    <dialog id="bank-dialog" aria-labelledby="bank-dialog-title"></dialog>
+    <footer>JUSTEC Guard · simulação acadêmica, sem valor financeiro.</footer>
   </body>
 </html>

@@ -297,8 +297,9 @@ test("Servidor não expõe banco, código privado, propostas ou arquivos fora da
     page.headers.get("content-security-policy").includes("unsafe-inline"),
     false,
   );
-  assert.match(page.data, /Antes de transferir, confira/);
-  assert.match(page.data, /SIMULAÇÃO ACADÊMICA/);
+  assert.match(page.data, /Bem-vindo ao JUSTEC/);
+  assert.match(page.data, /data-access="login"/);
+  assert.equal(page.data.includes('id="home-security"'), false);
 });
 test("Sessões persistem através de nova conexão autenticada e não dependem de localStorage", async (t) => {
   const f = await httpFixture(t),
@@ -388,4 +389,27 @@ test("Reinício do servidor preserva cookie autenticado, contas e transferência
     await new Promise((resolve) => replacement.close(resolve));
     reopened.close();
   }
+});
+
+test("Entrada principal redireciona ao login e demonstração fica em rota identificada", async (t) => {
+  const f = await httpFixture(t);
+  const server = f.server;
+  const origin = `http://127.0.0.1:${server.address().port}`;
+  for (const route of ["/", "/index.html", "/?screen=rights"]) {
+    const r = await fetch(origin + route, { redirect: "manual" });
+    assert.equal(r.status, 302);
+    assert.equal(
+      r.headers.get("location"),
+      route.includes("?") ? "/laboratorio/?screen=rights" : "/laboratorio/",
+    );
+    assert.match(r.headers.get("cache-control"), /no-store/);
+  }
+  const login = await fetch(origin + "/");
+  const html = await login.text();
+  assert.equal(new URL(login.url).pathname, "/laboratorio/");
+  assert.match(html, /data-access="login"/);
+  assert.equal(html.includes('id="home-security"'), false);
+  const demo = await fetch(origin + "/demonstracao.html");
+  assert.equal(demo.status, 200);
+  assert.match(await demo.text(), /id="home-security"/);
 });
