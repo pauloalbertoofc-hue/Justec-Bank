@@ -1,6 +1,6 @@
 # JUSTEC Bank — laboratório acadêmico multiusuário
 
-Laboratório publicado: **https://justec-laboratorio.onrender.com/laboratorio/**. Saúde PostgreSQL, arquivos públicos e recusa de acesso sem login foram verificados externamente pelo GitHub Actions em 22/10/2026. [Evidência e limites da verificação](Documentação/VERIFICACAO_PUBLICACAO_RENDER_2026-10-22.md). Operações autenticadas em produção ainda dependem do roteiro de aceitação do titular.
+Laboratório publicado: **https://justec-laboratorio.onrender.com/**. Em **25/10/2026**, a verificação externa confirmou a entrada **login-first**, o PostgreSQL e os arquivos da nova interface. Saúde PostgreSQL, arquivos públicos e recusa de acesso sem login foram verificados externamente pelo GitHub Actions em 22/10/2026. [Evidência e limites da verificação](Documentação/VERIFICACAO_PUBLICACAO_RENDER_2026-10-22.md). Operações autenticadas em produção ainda dependem do roteiro de aceitação do titular.
 
 No servidor desta branch, `/` abre primeiro o login em `/laboratorio/`. Depois de entrar, o participante usa a Home bancária com seu saldo persistente, Pix, extrato, chaves e educação na mesma navegação. O botão **Administração**, disponível somente à equipe autorizada, abre os instrumentos de gestão e pesquisa. Não existe mais a passagem de uma Home com saldo ilustrativo para outro painel de participante.
 

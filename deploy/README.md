@@ -1,5 +1,7 @@
 # Ativar JUSTEC: Render gratuito + PostgreSQL gratuito
 
+**Confirmação de 25/10/2026:** o deploy do commit `ba03b6e0698b066d9697874915ad36cf27bce68e` foi registrado com sucesso no Render e a tentativa 2 do teste público 39879102987 identificou `login-first`. A nova entrada está aplicada. As instruções de sincronização ao final são para eventuais atualizações futuras, não uma pendência desta versão.
+
 A branch `laboratorio-multiusuario` agora suporta PostgreSQL real. O blueprint raiz usa `plan: free`, sem disco e sem recurso de banco pago no Render. A versão anterior continua em `main`/`versao-estatica-vercel` para a Vercel; não fazer merge automático.
 
 **Estado atualizado:** o titular publicou https://justec-laboratorio.onrender.com/laboratorio/ e informou usar Neon. O teste público confirmou saúde PostgreSQL, recursos e recusa sem autenticação. A aceitação de operações autenticadas ainda é pendente. [Evidência](../Documentação/VERIFICACAO_PUBLICACAO_RENDER_2026-10-22.md). Não há credencial de controle Render nesta sessão nem certificação do plano comercial ou de gratuidade permanente. Os provedores podem mudar cotas, hibernar ou suspender recursos; conferir o plano exibido antes de criar. Não habilitar serviços pagos para seguir este guia.

@@ -1,5 +1,7 @@
 # JUSTEC — login anterior à Home e interface bancária persistente
 
+**Atualização em 25/10/2026:** publicação aplicada e entrada `login-first` confirmada pela execução pública 39879102987, tentativa 2. A pendência de aplicação descrita no registro original abaixo foi resolvida. Operações autenticadas em produção permanecem fora do teste público.
+
 22/10/2026, horário de São Paulo. Ajuste solicitado a partir de cinco capturas do titular. A primeira mostrava a demonstração estática; as demais, o painel do laboratório, autenticação e criação de conta.
 
 ## Problema e decisão
