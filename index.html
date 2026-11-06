@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>JUSTEC Bank - Banco Digital com Proteção Anti-Golpe</title>
     <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="./js/vendor/tailwind-runtime-3.4.17.js"></script>
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Fonts -->
@@ -120,7 +120,7 @@
                     <button type="button" class="statement-link" onclick="navigateTo('statement')"><i class="fa-solid fa-receipt" aria-hidden="true"></i> Ver extrato <span aria-hidden="true">›</span></button>
                 </div>
 
-                <section id="home-services" class="demo-panel" aria-labelledby="services-title"><h2 id="services-title">Serviços Bancários</h2><div class="demo-services"><button type="button" onclick="openPixFlow('safe')"><i class="fa-solid fa-paper-plane" aria-hidden="true"></i><span>Fazer Pix</span></button><button type="button" onclick="navigateTo('statement')"><i class="fa-solid fa-receipt" aria-hidden="true"></i><span>Consultar movimentações</span></button><button type="button" onclick="navigateTo('protection')"><i class="fa-solid fa-key" aria-hidden="true"></i><span>Verificar chave Pix</span></button><button type="button" onclick="navigateTo('protection')"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i><span>Bloqueios preventivos</span></button><button type="button" onclick="navigateTo('reviews')"><i class="fa-solid fa-file-signature" aria-hidden="true"></i><span>Contestações</span></button><button type="button" onclick="navigateTo('security')"><i class="fa-solid fa-lock" aria-hidden="true"></i><span>Central de segurança</span></button></div></section>
+                <section id="home-services" class="demo-panel" aria-labelledby="services-title"><h2 id="services-title">Serviços Bancários</h2><div class="demo-services"><button type="button" onclick="openPixFlow('safe')"><i class="fa-solid fa-paper-plane" aria-hidden="true"></i><span>Fazer Pix</span></button><button type="button" onclick="navigateTo('statement')"><i class="fa-solid fa-receipt" aria-hidden="true"></i><span>Consultar movimentações</span></button><button type="button" onclick="navigateTo('protection')"><i class="fa-solid fa-key" aria-hidden="true"></i><span>Verificar chave Pix</span></button><button type="button" onclick="navigateTo('protection')"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i><span>Bloqueios preventivos</span></button><button type="button" onclick="navigateTo('reviews')"><i class="fa-solid fa-file-signature" aria-hidden="true"></i><span>Contestações</span></button><button type="button" onclick="navigateTo('security')"><i class="fa-solid fa-lock" aria-hidden="true"></i><span>Central de segurança</span></button></div><p class="statement-caption">Esta tela é a demonstração local. <a class="lab-entry" href="/laboratorio/">Abrir laboratório persistente e multiusuário ›</a></p></section>
 
 
             </div>
@@ -589,5 +589,6 @@
     <script src="./js/pix-evidence.js"></script>
     <script src="./js/pix-journey.js"></script>
     <script src="./js/pix.js"></script>
+    <script src="./js/entry.js"></script>
 </body>
 </html>

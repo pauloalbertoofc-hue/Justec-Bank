@@ -1,0 +1,25 @@
+# Render gratuito + PostgreSQL externo: sem volume, sem banco pago Render.
+services:
+  - type: web
+    name: justec-laboratorio
+    runtime: node
+    branch: laboratorio-multiusuario
+    plan: free
+    numInstances: 1
+    buildCommand: npm ci --omit=dev
+    startCommand: node server/index.cjs
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: 24.19.0
+      - key: NODE_ENV
+        value: production
+      - key: HOST
+        value: 0.0.0.0
+      - key: DATABASE_URL
+        sync: false
+      - key: JUSTEC_ADMIN_ALIAS
+        value: pesquisador-admin
+      - key: JUSTEC_ADMIN_PASSWORD
+        sync: false

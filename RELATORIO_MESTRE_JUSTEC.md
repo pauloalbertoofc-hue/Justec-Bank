@@ -815,3 +815,207 @@ Testes executados no Chromium, servidor local porta 8810 e adaptador HTTPS das C
 Inspecionadas capturas da pausa e autorização em 390 px; a ação de continuar está larga e legível, com senha e resultado funcionais. Não se declarou equivalência pixel a pixel com uma ilustração; os elementos e a ordem internos foram aproximados, preservando responsividade, acessibilidade e funções adicionais entre as etapas. Auditoria com aparelho físico/leitor de tela e disponibilidade dos portais externos continuam fora desta verificação. Publicação segue a autorização vigente do usuário para esta evolução e suas correções; relatório histórico preservado.
 
 Fechamento: tests/pix-layout-sequence.cjs reexecutado e aprovado nas sete larguras e em 1366x630, com avanço real da pausa à senha, autorização com 0000 e único lançamento. tests/guard-content.cjs aprovado em 390/1366 e tests/shortcuts.cjs aprovado com 49 verificações. git diff --check final aprovado. Nenhuma mudança em js/state.js, js/risk.js, js/transactions.js ou js/guard/ nesta correção.
+
+
+## 22/10/2026 — Laboratório acadêmico persistente multiusuário e prevenção integrada
+
+### Escopo, fontes e preservação
+
+Implementação local orientada pelo PROMPT MESTRE enviado em Texto colado.txt e pelos documentos JUSTEC_Estrategia_Integrada_Prevencao_Pix.docx e Proposta_JUSTEC_Bank_Laboratorio_Multiusuario.docx. O texto de proposta não foi confundido com autorização autônoma: a autorização de implementação está no pedido direto do usuário. Não houve integração financeira, comunicação com DICT, Banco Central ou bancos, movimentação real nem criação de serviços pagos.
+
+Antes das alterações, inspecionados estrutura, módulos, jornadas e testes. A raiz já continha o protótipo estático e o Relatório-Mestre principal; o documento homônimo em Documentação é arquivo histórico anterior e foi preservado sem alterações. Este registro é aditivo. O HTML alternativo legado não foi alterado nem incluído na entrega. Diagnóstico e planejamento completos em Documentação/LABORATORIO_DIAGNOSTICO_2026-10-22.md; arquitetura e limitações em Documentação/LABORATORIO_TECNICO_2026-10-22.md.
+
+A demonstração original permanece na raiz, com seu estado ilustrativo. O laboratório foi acrescentado em /laboratorio/, com servidor próprio, sem converter estado local em suposta persistência. js/state.js, js/transactions.js, js/risk.js, js/pix.js e js/guard/ foram preservados nesta etapa. Não houve alteração dos pesos originais do motor. O laboratório importa a coleta de evidências com parâmetro opcional de regras, mantendo o padrão anterior para o protótipo.
+
+### Etapa 1 — Diagnóstico e contrato arquitetural
+
+Confirmado que Live Server não oferece autenticação, isolamento nem persistência transacional. Escolhidos Node.js 24 e SQLite nativo, sem dependências de execução. Dados são armazenados fora da raiz pública; nenhum saldo ou papel é confiado ao navegador. Nova interface usa API autenticada. Educação inicial e conteúdos existentes continuam acessíveis antes de iniciar Pix.
+
+Arquivos: diagnóstico, README.md, package.json, package-lock.json e .gitignore. Playwright é dependência apenas de desenvolvimento. O formatador utilizado pontualmente não foi adicionado ao projeto.
+
+### Etapa 2 — Persistência e invariantes
+
+Criados server/db.cjs e três migrações em server/migrations/. Entidades incluem usuários, autenticações, sessões acadêmicas, membros, convites, contas, chaves, rascunhos, avaliações, transferências, livro-razão, cenários, gabaritos separados, execuções, revisões, observações, feedback e auditoria. Migração e escrita usam bloqueio transacional; foreign keys, WAL, synchronous FULL e timeout são configurados. Triggers impedem editar/apagar registros históricos sensíveis pela aplicação.
+
+Valores monetários são centavos inteiros validados. Toda transferência é débito e crédito na mesma transação SQLite, com revalidação de titularidade, sessão, chave, restrições, limite e saldo. Falha entre partidas causa rollback integral. Idempotência e unicidade do rascunho impedem débito duplicado. Tesouraria de alocação é separada e inacessível como conta de participante; alocação, ajuste, histórico-base e restauração não se confundem com Pix concluído.
+
+### Etapa 3 — Autenticação e permissões
+
+Criados server/security.cjs, server/http.cjs, server/index.cjs e server/bootstrap.cjs. Senhas exclusivas são derivadas por scrypt com salt; tokens aleatórios têm hash no banco. Cookie HttpOnly/SameSite Strict, Secure com origem HTTPS, CSRF, validação de Origin/Host, limite de corpo e tentativas, timeouts e respostas sem stack trace. Autenticação expira após oito horas. Cadastro não permite escolher papel privilegiado.
+
+Administrador inicial é criado por CLI mediante senha fornecida pelo operador, sem padrão e sem impressão da senha. Convites são de uso único e expiram; permissões são verificadas em cada rota. Pesquisador não movimenta conta de outro participante. Sessões acadêmicas e dados privados são isolados; exportação é restrita e auditada. Servidor nega acesso a banco, código privado e arquivos de credenciais. Limitação de tentativas é por processo, sem alegação de proteção distribuída.
+
+### Etapa 4 — Contas, chaves e jornada bilateral
+
+Criados server/lab.cjs, server/profiles.cjs e laboratorio/index.html, app.js, lab.css. Login, adesão a sessões, múltiplas contas/perfis públicos configuráveis, chaves sintéticas @pix.justec.invalid, rotação/desativação, consulta interna, extrato bilateral, comprovantes e retomada de jornadas persistem no servidor. Perfis públicos não são rótulos de fraude.
+
+Jornada: origem/modalidade, destinatário, valor, conferência, verificação contextual quando cabível, pausa quando configurada, código demonstrativo 0000 e confirmação explícita, resultado. Código 0000 não autentica usuário. Pausa é medida pelo relógio do servidor, não avança automaticamente e permite reconsideração. Rascunhos expiram; dados são novamente validados antes do lançamento. Erro de armazenamento não apresenta sucesso. Recarga ou reinício do servidor não apagam contas ou histórico.
+
+### Etapa 5 — JUSTEC Guard integrado ao laboratório
+
+Criado server/guard.cjs. Reutilizadas evidências/mensagens existentes com regras versionadas por hash. Condições none, education, context, behavior e integrated; valores de pausa, pesos e limiares podem ser configurados pelo pesquisador na sessão, sem modificar o motor original. Destinatário novo sozinho não comprova fraude; respostas desconhecidas não são interpretadas como segurança. Condição comportamental não inclui perguntas contextuais ou pausa adicional. Restrição operacional ativa permanece válida em qualquer condição.
+
+Cada avaliação registra indicadores, justificativas, pontuação/classificação, ação, fase e versão. Interrupção contextual não restringe automaticamente a conta recebedora. Revisão manual preserva a decisão original e cria nova conferência vinculada, sem ignorar invariantes financeiras. Gabaritos e respostas futuras do roteiro não alimentam o Guard: criar tarefa só solicita contexto por opção explícita; respostas somente contam depois de fornecidas. Acrescentado teste específico contra antecipação por respostas previstas.
+
+### Etapa 6 — Experimentos e pesquisa
+
+Criado server/research.cjs. Cenários possuem estado-base observável e verdade experimental separada. Quatro exemplos demonstram operação legítima, fraude contextual, falso positivo e fraude sem sinais disponíveis. Execuções criam novas contas/sessão/chaves; hashes identificam base, titulares e configuração. Repetição conserva a política original mesmo após mudar a configuração da sessão-mãe. Captura/restauração cria nova sessão e preserva o histórico anterior, sem reaplicar débitos antigos.
+
+Painel permite configuração, convites/papéis, alocação, cenários, cinco condições, tarefas por titular, execuções, revisões, snapshots, anotações, auditoria e exportações JSON/CSV. Exportação não inclui segredos de autenticação e protege texto contra fórmulas CSV. Feedback opcional e imutável registra autorrelato de compreensão/intenção, sem afirmar validação psicométrica.
+
+Matriz define positivo como operação interrompida; concluídas são negativas, pendentes/canceladas são separadas. Registra VP/FP/VN/FN, taxas com denominadores e duração, sem inventar percentuais quando não há amostra. Revisões normais mantêm o vínculo experimental; liberação manual não apaga falso positivo original. Grupos comparáveis exigem base/titulares/configuração equivalentes. Métricas são descritivas, não comprovação de eficácia antifraude.
+
+### Etapa 7 — Integração visual e operação
+
+index.html e css/style.css receberam somente entrada para o laboratório; js/entry.js abre telas educativas existentes por lista permitida de parâmetros. js/pix-evidence.js aceita regras opcionais mantendo seus padrões. Runtime Tailwind existente foi fixado localmente em js/vendor/ (versão 3.4.17, licença MIT e hash documentados), evitando JavaScript remoto na origem autenticada. Interface do laboratório usa recursos locais, CSP, conteúdo textual escapado e navegação responsiva. Tabelas com rolagem têm região identificada e foco por teclado.
+
+Criados server/backup.cjs e server/run-regressions.cjs. Backup SQLite consistente, privado e sem sobrescrever destino; bootstrap recusa recriação silenciosa de administrador. README explica Bash/PowerShell, testes, backup e primeiro uso. Não foi criado administrador padrão ou banco permanente com pessoas reais.
+
+### Etapa 8 — Testes executados e resultados
+
+Baseline antes da alteração: 107 testes unitários e nove suítes originais de navegador aprovados. Validação final de domínio/HTTP/operação: npm test executou **147 testes, 147 aprovados, zero falhas, cancelados ou ignorados**. Composição: 107 testes existentes e 40 novos testes. Arquivos novos: tests/lab-core.cjs, lab-http.cjs, lab-operations.cjs, lab-fixture.cjs e lab-browser.cjs.
+
+Cobertura efetivamente executada: entradas monetárias inválidas sem mutação; transferências bilaterais; isolamento de usuários/sessões e papéis; chaves únicas/rotação; duas conexões SQLite independentes concorrendo pelo saldo; autorizações HTTP simultâneas; idempotência; rollback com falha injetada entre partidas; pausa e revalidação no servidor; contexto inconclusivo; revisão/falso positivo; quatro quadrantes; restauração e repetição equivalentes; imutabilidade; exportação sem credenciais; feedback e cadeia de revisões; perfis configuráveis; prevenção de antecipação por roteiro; persistência após fechamento/reabertura e reinício HTTP; bootstrap, migrações concorrentes e backup.
+
+npm run test:browser aprovado em Chromium: login real com participantes distintos, múltiplas contas, envio/recebimento com débito/crédito, extrato bilateral, recarga persistente, rejeição de acesso indevido, cenário falso positivo e exportação. Sessões, contas, extrato, revisões, educação e jornada Pix exercitados nas larguras **320, 375, 390, 768, 1024, 1366 e 1920 px**, sem rolagem horizontal observada. Executada espera inicial real de cinco segundos; repetições posteriores usam pausa reduzida configurada para o teste. Atributo Secure foi verificado com configuração HTTPS; não se apresenta esse teste como implantação TLS real.
+
+As nove suítes originais foram executadas após a integração: balance.cjs, statement.cjs, pix.cjs, pix-2.cjs, pix-layout-sequence.cjs, layout.cjs, guard-content.cjs, shortcuts.cjs e consumer-guidance.cjs. Resultado aprovado. Layout original cobre todas as telas previstas pela suíte e modais em sete larguras; preservados saldo, extrato, Pix, triagem, direitos, orientação e atalhos. Compartilhamento e links externos são interceptados: nenhum envio real nem certificação de disponibilidade de portais foi realizado.
+
+Ensaios intermediários não foram ocultados: classe repetida statement-link causou seletor ambíguo no teste antigo e foi corrigida para lab-entry; fixture concorrente utilizava relógios incompatíveis e foi alinhada; helper HTTP não encaminhava opções de HTTPS/limite e foi corrigido. Esses ensaios com erro não foram registrados como aprovados. A interrupção temporária da ferramenta de execução foi resolvida sem perda dos arquivos; testes finais concluíram depois da retomada.
+
+### Entrega, limitações e próximos passos
+
+Implementação local pronta para revisão técnica, com instruções em README.md e arquitetura detalhada no documento técnico. **Não houve commit, push ou publicação nesta entrega.** O site estático atual não foi substituído por armazenamento efêmero. SQLite requer processo Node e volume privado persistente; hospedagem pública exige configurar esse volume, origem e proxy HTTPS. PostgreSQL/serverless não foi implementado.
+
+Permanecem pendentes: implantação e ensaio de recuperação no ambiente real, revisão de segurança independente, testes de carga, MFA/recuperação de senha/identidade institucional, rate limit distribuído, dispositivos físicos/leitores de tela/Safari/Firefox, validação de usabilidade e eficácia com participantes, TCLE e política institucional de retenção. Não há alegação de prontidão bancária ou de conformidade jurídica certificada. QR Code, Copia e Cola e integrações bancárias reais continuam fora desta entrega. Histórico imutável por triggers não é blindagem contra administrador do sistema operacional. Somente dados sintéticos devem ser usados nesta fase.
+
+## 22/10/2026 — Separação das versões, preparação Render e documentos de apresentação
+
+Novo pedido autoriza envio ao GitHub e tentativa de publicação, preservando a versão anterior na Vercel. A referência remota main foi consultada e aponta para 837cb414ad27a149c9e0c57004f75af340ba9aec. Criadas branch versao-estatica-vercel e tag anotada prototipo-estatico-2026-10-22 nesse ponto. A implementação persistente e seus documentos ficam na branch laboratorio-multiusuario; não se modifica main nem se faz merge automático. A autorização desta etapa sucede o registro anterior de entrega apenas local.
+
+GitHub autenticado com permissão de administração do repositório. Não há conector/credencial Render ou Vercel disponível; o titular informou possuir conta Render. A consulta GitHub não mostrou deployments, o que não comprova a Production Branch da Vercel. A consulta pública ao domínio Vercel foi recusada pela rede (CONNECT 403); não se conclui que o site esteja indisponível. A Production Branch deve permanecer main, com conferência no painel pelo titular.
+
+Analisada compatibilidade: SQLite/WAL precisa de armazenamento durável e não pode ser tratado como arquivo persistente em funções Vercel. Não foi feita migração PostgreSQL, publicação de HTML sem API nem substituição por localStorage. Criados render.yaml e deploy/README.md para Node 24, uma instância, disco privado de 1 GB, origem HTTPS via RENDER_EXTERNAL_URL e health check. Atualização automática desativada. O plano Starter e volume podem gerar cobrança; nenhuma infraestrutura foi contratada. Bootstrap administrativo é posterior, no Shell com volume montado, sem senha padrão.
+
+Validação adicional executada: YAML lido e conferidos branch, disco, plano, instância e deploy manual. Comando de inicialização ensaiado localmente com origem externa HTTPS simulada e banco temporário em disco; API health e interface retornaram 200, com CSP. Um helper inicial com fetch não transmitiu o Host esperado; a conferência correta usou HTTP nativo com Host explícito. Esse ensaio é local e não é confirmação de implantação TLS/Render. Mantidos os resultados anteriores de 147 testes e nove suítes originais aprovadas; não houve nova alteração de lógica de negócio nesta preparação.
+
+Produzidos dois documentos em Documentação/Apresentacao/, com fontes Markdown, Word editável e PDF: (1) relatório detalhado da atualização, módulos, arquitetura e testes, com captura real local; (2) descrição do sistema completo, fluxos, prevenção, pesquisa, segurança, limitações e proposta de piloto empresarial. PDFs de 10 e 14 páginas, respectivamente. Exportações Word abertas programaticamente para conferir parágrafos/tabelas/imagem; PDFs verificados com pdfinfo e páginas amostrais inspecionadas visualmente. Capa, sumário, hierarquia, tabelas, referências e paginação incluídos. Não se afirma conformidade ABNT, certificação bancária, parecer jurídico ou eficácia científica.
+
+O material diferencia educação de proteção efetiva, pontuação de comprovação, interrupção interna de bloqueio real, MED informativo de solicitação efetiva e teste de software de estudo com consumidores. Referências externas são fundamentos para aprofundamento; portais não foram certificados como disponíveis. Proposta empresarial não inventa clientes, retorno financeiro, prazo ou preço contratado.
+
+Limitação de entrega externa: a associação da conta Render ao repositório, confirmação do plano/volume, criação do primeiro administrador e ensaio remoto precisam ser concluídos no painel. Ter conta não concede acesso técnico ao agente. Até existir URL verificada, não registrar laboratório como publicado. Guia concreto de ativação está versionado em deploy/README.md. Histórico deste relatório e do arquivo homônimo em Documentação preservados.
+
+Proteção adicional: vercel.json na branch do laboratório desabilita seus deployments Git na Vercel, sem alterar main. JSON conferido localmente; a aplicação dessa opção pela integração remota não foi certificada sem acesso ao painel.
+
+Confirmação de envio: commit 71a9e859d0aa8c1d12c194ea8e66a25f3b039ee3 enviado com sucesso à branch remota laboratorio-multiusuario. Branch versao-estatica-vercel e tag anotada prototipo-estatico-2026-10-22 enviadas. git ls-remote confirmou main e cópia estática ainda em 837cb414ad27a149c9e0c57004f75af340ba9aec e tag resolvendo para o mesmo commit. Documentos Word reabertos e seus ZIPs internos conferidos sem corrupção; PDFs têm 10 e 14 páginas. O único arquivo local não rastreado remanescente é o HTML alternativo legado, intocado. Publicação de código e documentos no GitHub confirmada; publicação do serviço Render continua pendente de associação/aplicação pelo titular.
+
+## 22/10/2026 — PostgreSQL e configuração de publicação gratuita
+
+O usuário decidiu não tratar Android agora e autorizou Render gratuito + PostgreSQL gratuito. Informou ainda não possuir projeto PostgreSQL. Implementado suporte externo com `pg` 8.16.3 fixado no lock, preservando SQLite local e a versão main/Vercel. Nenhuma conta externa ou recurso pago foi criado; a autorização de publicar não supre conexão de provedor ou banco ainda inexistente.
+
+Arquivos principais: server/postgres.cjs, flow.cjs, bootstrap-admin.cjs, migrations-postgres/, db.cjs, index.cjs, bootstrap.cjs, backup.cjs, lab.cjs, research.cjs, security.cjs, http.cjs; package e lock; render.yaml; testes PostgreSQL e executor; navegador compartilhado; README e guia deploy. Arquivada a configuração paga anterior em deploy/render-sqlite-paid.yaml e seu guia como histórico. Documentação completa em Documentação/ATUALIZACAO_POSTGRESQL_RENDER_FREE_2026-10-22.md. Os documentos Word/PDF iniciais não foram apagados; seu índice remete ao adendo atualizado.
+
+Acesso PostgreSQL é assíncrono com pool limitado, TLS verificado, parâmetros vinculados e contexto transacional por AsyncLocalStorage. Domínio usa um executor nativo de generators para preservar contrato síncrono SQLite e aguardar PostgreSQL sem duplicar regras ou bloquear o event loop por I/O de rede. HTTP aguarda os dois modos. Mutações usam advisory lock transacional na mesma conexão; READ COMMITTED evita snapshot anterior à aquisição da trava. Extrato é consultado em transação para manter saldo/linhas coerentes durante transferências concorrentes. PostgreSQL usa sequência identity para desempate, não rowid SQLite.
+
+Migrações PostgreSQL têm checks, FKs, JSON validado, alias sem distinção de caixa e triggers imutáveis. Centavos seguem inteiros seguros; BIGINT/numeric inválidos não viram strings nem arredondamentos silenciosos. Preservadas regras e pesos em js/risk.js, domínio original em js/state.js e jornada original em js/pix.js. Nenhuma integração bancária real. Dados SQLite anteriores não são importados automaticamente para o banco novo.
+
+Blueprint raiz passa a plan free, sem disco ou banco pago Render. DATABASE_URL seleciona PostgreSQL; sem ela o Render gratuito recusa iniciar em vez de gravar dados efêmeros. Bootstrap por segredo no primeiro início atende ao plano sem Shell, não redefine senha existente e é serializado contra inícios simultâneos. Remover segredo inicial do painel após login; CLI permanece disponível. Health consulta o banco e informa storage/version sem credenciais. Backup SQLite recusa atuar no modo PostgreSQL, que exige procedimento próprio de dump/recuperação.
+
+Resultados executados: 153 testes gerais aprovados (147 preservados + 6 novos de fluxo/driver/proteção contra fallback), 17 testes em PostgreSQL 17 real aprovados, navegador do laboratório aprovado com SQLite e PostgreSQL nas sete larguras, e nove suítes originais aprovadas. Instalação de produção isolada via npm ci --omit=dev validada, com pg e sem Playwright. PostgreSQL testou concorrência em pools independentes, rollback entre partidas, idempotência, revisão, métricas com gabarito separado, reconexão, processo reiniciado, bootstrap concorrente e consistência do extrato durante envio. Não se declara teste local como ensaio em nuvem ou validação científica.
+
+Uma execução geral expôs corrida SQLite preexistente em PRAGMA journal_mode: database is locked. Retry limitado foi adicionado apenas à inicialização, sem repetir lançamento financeiro. O teste concorrente passou depois em cinco execuções adicionais. Ensaios PostgreSQL iniciais também detectaram rowid incompatível e expectativas incorretas em novos testes; corrigidos antes dos resultados finais. Histórico das falhas não foi apagado nem classificado como aprovação.
+
+Publicação externa continua pendente da criação do Neon/Supabase Free e cadastro secreto no Render. Nenhuma DATABASE_URL ou credencial de controle Render existe na sessão. Há guia concreto para o titular completar associação/segredos; não se solicita enviar senha pelo chat. Cotas, hibernação, TLS de provedor, URL pública, carga e recuperação de produção não foram testados. main permanece destinada à Vercel, sem merge desta branch.
+
+Atualização durante a etapa: o titular informou ter criado a conta PostgreSQL. Solicitada somente a identificação do provedor (Neon/Supabase/outro), sem pedir senha ou URL secreta pelo chat. Essa informação não confirma criação do projeto, cadastro de DATABASE_URL no Render ou deploy público.
+
+
+## 22/10/2026 — URL Render e verificação pública externa
+
+O titular forneceu https://justec-laboratorio.onrender.com/ após configurar Neon/Render. O laboratório persistente está em /laboratorio/. Acesso direto via curl (inclusive com permissão ampliada) foi bloqueado por proxy CONNECT 403; Chromium retornou ERR_TUNNEL_CONNECTION_FAILED. Isso não foi registrado como falha do site. A leitura de permissões administrativas Actions pela integração também recebeu 403, mas criação de workflow e leitura de runs/jobs foram autorizadas pelo GitHub.
+
+Criado .github/workflows/verify-public-laboratory.yml apenas na branch do laboratório, com runner padrão público, sem segredos/dependências/checkout e somente requisições GET. Execução final 39870634272, commit 11d8c0260d3226b9ec90845bf40551f2f04f0663, concluiu success, incluindo o passo inteiro de verificação pública (job 120143873899). Verificados status 200 e saúde PostgreSQL/versão 1.1.0, cache no-store, HTML de login/cadastro/educação, CSP e proteção de frame, recursos locais 200, rotas privadas 401 sem login e Home/telas educativas presentes. A validação exige passar todas as assertions antes de aceitar a saúde. O log bruto no armazenamento Actions foi bloqueado pela rede; conclusão e passos foram confirmados pela API, com script versionado como evidência. Nenhuma operação autenticada foi executada.
+
+Publicação básica e acesso ao PostgreSQL agora confirmados por teste externo, substituindo somente a pendência equivalente dos registros anteriores. Login, transferência bilateral, revisões e persistência após reinício em produção ainda devem ser aceitos pelo titular com participantes sintéticos. Testes locais de 153 + 17 casos e navegador continuam sendo evidência separada. Não se certificam plano/cobrança, disponibilidade contínua, desempenho ou eficácia contra golpes. Nenhuma senha foi solicitada ou incluída no workflow.
+
+Atualizados README e guia de deploy; evidência detalhada em Documentação/VERIFICACAO_PUBLICACAO_RENDER_2026-10-22.md. A main foi novamente conferida em 837cb414ad27a149c9e0c57004f75af340ba9aec, sem mudanças na versão Vercel. Nenhuma regra de negócio foi alterada nesta etapa. Após confirmar o primeiro login, o titular deve remover JUSTEC_ADMIN_PASSWORD do painel; isso não apaga a conta já criada.
+
+## 22/10/2026 — Login anterior à Home e apresentação bancária persistente
+
+A partir de cinco capturas, o titular pediu que a senha viesse antes da primeira tela e que a experiência do participante seguisse o visual bancário, reservando o painel técnico à administração. Diagnosticada a separação anterior: raiz estática com saldo fictício e outro laboratório persistente com painel. Corrigida a entrada do servidor para redirecionar / e /index.html ao login; a Home só é construída após autenticar e consultar contas. A demonstração antiga fica em /demonstracao.html, sem alterar main/Vercel.
+
+Criado laboratorio/bank.js e adaptados laboratorio/app.js, index.html, lab.css e server/http.cjs. Home com cabeçalho azul, prevenção antes do saldo, olho acessível, extrato, seis serviços, contas/chaves e navegação inferior/lateral. Saldo/nome pertencem à conta autenticada; não se hardcodeou Ana Paula ou R$ 2.480,50. Rótulos técnicos são limitados ao modo Administração da equipe autorizada; participantes mantêm criação de conta própria/convites em apresentação simplificada. Autorizações continuam no servidor, inclusive contra acesso por manipulação do DOM. Pesquisador não recebeu privilégios extras.
+
+Pix, extrato, chaves, revisões e Guard usam os mesmos serviços. Educação é selecionada do HTML original por DOMParser, sem executar seus scripts ou handlers inline; ações conhecidas usam a navegação persistente e dialog nativo. Logout/401 limpam dados exibidos, rascunhos, temporizador e credenciais efêmeras da UI, sem apagar banco. Não houve alteração de pesos, regras financeiras, esquema ou contas existentes. A versão estática foi preservada; seu runner de regressão seleciona explicitamente a entrada demo.
+
+Testes executados: 154 gerais aprovados (novo teste de entrada/redirecionamento/login e preservação da demo), 17 PostgreSQL 17 real aprovados, navegador com SQLite e PostgreSQL aprovado nas sete larguras e 11 vistas por largura, além da jornada Pix completa. Testados ocultar/revelar saldo sem mutação, modais de triagem/MED, fechamento/Escape, extratos bilaterais, recarga, papéis, pesquisa/exportação e limpeza visual após logout. Nove suítes antigas aprovadas. Inspecionada captura final 390 px; valores são da fixture sintética. Não se declara teste em telefone físico ou produção autenticada.
+
+Ensaios intermediários esperavam educação antes do login e saldo de administrador sem conta: expectativas ajustadas ao requisito, sem fabricar saldo. Fundo genérico que prejudicava contraste preventivo foi corrigido. Documentação detalhada em Documentação/INTERFACE_BANCARIA_AUTENTICADA_2026-10-22.md e captura em Documentação/Apresentacao/figuras/banco-autenticado-390.png. Histórico dos dois relatórios preservado.
+
+Workflow público adaptado para distinguir login-first de legacy-entry-awaiting-deploy sem credenciais. O estado público é conferido separadamente do push; Render com deploy manual exige aplicar o commit no painel. Nenhuma senha do titular foi solicitada nem operações em suas contas realizadas. A mudança não exige recriar banco ou redefinir administrador.
+
+Fechamento desta etapa: commit 3620e35fd52f5ff909b061bc7a90a7c2179c575e enviado à branch laboratorio-multiusuario; main confirmada no mesmo 837cb414ad27a149c9e0c57004f75af340ba9aec. A execução pública Actions 39878474257 concluiu success para infraestrutura/arquivos e identificou explicitamente o passo Published entrypoint legacy-entry-awaiting-deploy. Logo, no instante da consulta a nova entrada ainda não estava aplicada no Render; é necessário Manual Deploy → Deploy latest commit. Não se classificou sucesso de infraestrutura como publicação do novo visual. URL de evidência: https://github.com/pauloalbertoofc-hue/Justec-Bank/actions/runs/39878474257 .
+
+
+## 22/10/2026 — Tentativa de destravar atualização no Render
+
+O titular pediu tentar corrigir a publicação. Consultada a integração GitHub: deployment 7265939327 aponta para commit 6800502dad9720b0f3adbd9b7ec8de85cd9c389b, anterior à interface bancária. A execução pública 39878586067 identificou legacy-entry-awaiting-deploy. O serviço associado é srv-dbd9fugae00c73fcbq50. O blueprint estava com autoDeploy false; alterado para true, preservando plano Free, banco externo, variáveis e branch. Essa é configuração desejada versionada, não confirmação de aplicação no painel.
+
+Não há credencial/API Render nesta sessão; listagem de secrets GitHub foi recusada pela integração com HTTP 403, sem revelar valores. Não foram enviados tokens GitHub a outros provedores. A tentativa usa somente configuração no repositório e integração já existente; estado remoto é verificado separadamente. Guia atualizado com link direto do serviço e sincronização, caso o Render não aplique o YAML automaticamente.
+
+Resultado da tentativa: commit a5b186a21b5712f9e6dbf43128b6822875754d8e enviado. Em seis consultas durante aproximadamente cinquenta segundos, não surgiu novo deployment no GitHub. A execução pública 39878928447 concluiu success para infraestrutura e informou Published entrypoint legacy-entry-awaiting-deploy. Logo, autoDeploy true no repositório ainda não foi aplicado pelo serviço existente; é necessário sincronizar o Blueprint ou usar Manual Deploy no painel https://dashboard.render.com/web/srv-dbd9fugae00c73fcbq50 . Não se afirma que o site foi atualizado. Não houve modificação do banco, acesso às senhas ou mudança na main.
+
+
+## 25/10/2026 — Continuação e confirmação do site atualizado
+
+O titular pediu continuar. Consultada a integração: há deployment Render 7267168169 no commit ba03b6e0698b066d9697874915ad36cf27bce68e com status success, posterior à tentativa antes documentada. Em São Paulo, esse deploy foi concluído em 22/10 às 21:36:56 (23/10 00:36:56 UTC). Não se presume se o acionamento foi manual ou por sincronização.
+
+Reexecutada pela API GitHub a verificação pública 39879102987. Tentativa 2, job 121237539194, concluiu success e identificou **Published entrypoint login-first**. Confirmados redirecionamento da raiz para login, PostgreSQL respondendo, arquivos da nova interface, CSP e rotas privadas recusando acesso sem autenticação. Demonstração anterior está em rota identificada. Isso resolve a pendência de publicação da entrada bancária. Não foram solicitadas senhas, acessadas contas do titular ou feitas operações financeiras em produção. Os 154 testes gerais, 17 PostgreSQL e testes de navegador anteriormente executados continuam evidência local separada, sem repetição desnecessária para esta atualização apenas documental.
+
+Atualizados README, guia e documentos técnicos de estado, preservando o histórico. Evidência: https://github.com/pauloalbertoofc-hue/Justec-Bank/actions/runs/39879102987/attempts/2 . main conferida em 837cb414ad27a149c9e0c57004f75af340ba9aec, sem alteração da versão Vercel. Não houve mudança de código de negócio, banco ou credenciais nesta continuação.
+
+## Próxima etapa — Acesso, convites e preparação do estudo da pausa
+
+Inspecionado o checkout inicial (protótipo estático 837cb41) e localizada no remoto a versão persistente 4e1ebf3. Criada branch local melhorias-acesso-convites a partir da versão do laboratório, preservando a versão estática. Comparados os dois Relatórios-Mestres: o da raiz contém as entregas recentes e permanece principal; o de Documentação preserva os registros iniciais e não foi alterado.
+
+Problemas tratados: significado pouco claro de pseudônimo, ausência de orientação para acesso esquecido, necessidade de copiar manualmente código de convite e redigitar pseudônimo após cadastro. Modificados laboratorio/index.html e laboratorio/app.js: ajuda contextual, preenchimento do login após cadastro, link com convite em fragmento, retirada do fragmento da URL atual, manutenção somente em memória e aceitação explícita após autenticação. Convite não define privilégios globais; o servidor existente continua validando papel, prazo e uso único. Sem mudanças em autenticação do backend, cálculo financeiro, risco ou Pix.
+
+Criado tests/access-invitations.cjs e comando npm run test:access. Teste de navegador verifica que o código não aparece nas URLs HTTP, link administrativo corresponde ao convite gerado, cadastro continua participante global, convite não é consumido antes da confirmação, aceitação vincula papel pesquisador, não cria conta financeira e logout remove o aviso consumido. Primeira execução detectou desencontro entre relógio fixo da fixture e relógio HTTP real; corrigido apenas o relógio do teste, sem alterar validade dos convites no produto.
+
+Executados: npm test, 154 aprovados, zero falhas ou ignorados; node tests/access-invitations.cjs aprovado, inclusive geração de link administrativo; npm run test:browser aprovado com Chromium/SQLite, sete larguras de 320 a 1920 px, Pix, extrato bilateral, papéis e pesquisa; node --check laboratorio/app.js e git diff --check aprovados. Instalação inicial falhou por cache npm fora das pastas graváveis; npm ci com cache em /tmp concluiu. Não executados PostgreSQL nesta etapa, produção autenticada, dispositivos físicos ou outros navegadores. Não inferir esses resultados dos testes SQLite.
+
+Criado Documentação/PLANO_ACESSO_CONVITES_E_ESTUDO_DA_PAUSA.md com funcionamento, limitações, validação manual e roteiro de recuperação segura e avaliação comparativa da pausa. Recuperação automática NÃO implementada: requer verificação de identidade, token de uso único, prazo, auditoria e revogação de sessões. Ajuda visual informa essa limitação. Link de convite é segredo de acesso ao ambiente; fragmento não elimina riscos de compartilhamento ou histórico sincronizado; recarregar perde o código em memória. Métricas/protocolo propostos não são resultados de pesquisa. Sem publicação, push, alteração de produção ou consulta a contas reais nesta entrega.
+
+## Continuação — Recuperação segura por código prévio
+
+Implementado o próximo item autorizado: recuperação por segredo gerado previamente pelo próprio usuário autenticado, inclusive administrador. A interface não anuncia recuperação sem verificação. Sem código guardado ainda é necessário atendimento verificado, não implementado como redefinição arbitrária nesta etapa.
+
+Arquivos: server/recovery.cjs (issue/recover), migração aditiva 004_access_recovery.sql nos dois armazenamentos, server/http.cjs (rotas e limitação de autenticação), server/security.cjs (exportação interna das primitivas de senha e proteção contra login concorrente com senha antiga), laboratorio/bank.js (gerar/copiar/ocultar), laboratorio/index.html e app.js (recuperar e entrar novamente), tests/recovery.cjs, tests/access-invitations.cjs, package.json. Atualizadas expectativas das suítes de migração SQLite/PostgreSQL de três para quatro migrações. Não alterados pesos, cálculo financeiro, fluxo Pix ou papéis.
+
+Código aleatório de 256 bits, hash no banco, validade de 30 dias, uso único; geração exige senha atual, autenticação e CSRF; recuperação exige pseudônimo e segredo. Troca da senha, consumo, revogação de todas as sessões e auditoria sem segredos são atômicos. Rechecagem da senha na transação de login evita que derivação iniciada com senha antiga sobreviva à recuperação. Geração também revalida sessão depois da confirmação assíncrona da senha. Nenhuma senha, código ou connection string foi solicitado ao titular.
+
+Testes executados nesta continuação: npm test, 161 aprovados sem ignorados; PostgreSQL 17 real em contêiner temporário, 24 aprovados (17 anteriores + 7 recuperação); navegador de acesso aprovado com geração administrativa, recuperação, nova senha e permissões preservadas; verificações de sintaxe dos cinco arquivos JS/CJS e git diff --check aprovadas. Testados rotação, prazo, conta errada, senha inválida, reutilização, consumo concorrente, revogação, origem/CSRF, cache no-store, login concorrente e rollback integral mediante falha de auditoria. Dados sintéticos em schemas isolados; contêiner removido depois do uso.
+
+Falhas intermediárias: testes de migração esperavam três registros; atualizados para a migração adicional sem remover verificações de concorrência. Primeiro ensaio de navegador fechou a ajuda que já estava aberta; ajustada precondição do teste. Primeiro reinício do contêiner de testes detectou prontidão no servidor temporário de inicialização e teve conexões interrompidas; o ensaio passou a aguardar prontidão TCP do servidor definitivo. Não houve afrouxamento de verificações no produto.
+
+Documentação detalhada: Documentação/RECUPERACAO_SEGURA_DE_ACESSO.md. Documento de planejamento anterior preservado e marcado com referência à implementação seguinte. Sem testes autenticados de produção, dispositivos físicos ou outros navegadores. Sem publicação ou push; branch melhorias-acesso-convites mantém a entrega separada. Recuperação por e-mail, atendimento verificado sem código, lembretes de renovação e limitação distribuída são pendências explícitas.
+
+Verificação final de navegador após a proteção de login concorrente: npm run test:browser aprovado em Chromium/SQLite nas sete larguras (320, 375, 390, 768, 1024, 1366 e 1920 px), com Pix debitado/creditado, extrato bilateral, pesquisa, educação e permissões. Nenhuma rolagem horizontal detectada pelas verificações da suíte.
+
+## Publicação autorizada — acesso, convites e recuperação
+
+O titular autorizou prosseguir. Revisada a entrega na branch local melhorias-acesso-convites para envio à branch laboratorio-multiusuario, usada pelo Render. main consultada e mantida em 837cb414ad27a149c9e0c57004f75af340ba9aec. Nenhuma integração financeira, senha do titular ou credencial Neon foi utilizada; a migração 004 é aditiva. Não foi gerado backup remoto por ausência de acesso ao provedor/banco neste ambiente.
+
+Reexecutado npm test: 161 aprovados. Na revisão, identificado erro ao gerar dois convites consecutivos: campos de saída do primeiro convite entravam no JSON do segundo, rejeitado pela validação estrita do servidor. Ampliado tests/access-invitations.cjs para reproduzir; execução anterior à correção falhou aguardando o segundo link. Corrigido envio para incluir somente role, preservando a validação do backend. Nova execução npm run test:access aprovada, incluindo segundo convite com papel pesquisador e recuperação administrativa. Sem alteração de esquema ou política adicional por essa correção.
+
+Workflow de verificação pública atualizado para aguardar formulário de recuperação e conferir os arquivos de recuperação/convites, sem contas de teste ou transações em produção. Sintaxe do script do workflow e git diff --check aprovados. Execução real do workflow não deve ser inferida dessas verificações locais.
+
+Consultas à API GitHub e ao domínio onrender.com recusadas pelo proxy do ambiente (HTTP 403 no túnel CONNECT); tentativa de consulta GitHub com execução escalada teve a mesma recusa. Transporte Git conseguiu consultar branches. Estado antes do envio: atualização local pronta; envio e deploy serão registrados após suas respectivas verificações, sem classificar push como confirmação do site.
+
+### Resultado do envio e confirmação externa
+
+Push concluído: laboratorio-multiusuario avançou de 4e1ebf39fda0d6e90ea90c07870273c56638f3e0 para fcb0ee923a3b33f7e2bbd574d6a178fbe261a783. ls-remote confirmou o commit remoto e main inalterada em 837cb414ad27a149c9e0c57004f75af340ba9aec. Sem force push.
+
+A página pública GitHub Actions estava acessível, alternativa à API bloqueada. Consultadas a execução 42136666531 e a página do job 127626445551: Status Success; etapas Check public deployment without credentials or data changes e Published entrypoint recovery-and-invitations-ready com data-conclusion success. Conclusão registrada pelo GitHub em 2026-11-06T00:25:56Z. Evidência: https://github.com/pauloalbertoofc-hue/Justec-Bank/actions/runs/42136666531 .
+
+Isso confirma a publicação do HTML com recovery-form e invitation-notice, dos scripts contendo as funções novas e a saúde PostgreSQL; confirma também login inicial, CSP e recusa de acesso às rotas privadas sem autenticação. Nenhuma operação autenticada, senha redefinida ou transferência em produção foi realizada. Testes de uso completo continuam os ensaios locais anteriormente registrados. A migração é aplicada no início do serviço, sem recriar usuários. README e guia atualizados com o resultado observado. Atualização documental posterior não modifica o código já verificado.
