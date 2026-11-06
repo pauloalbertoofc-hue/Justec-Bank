@@ -1,6 +1,7 @@
 const { flow, collect, wrapMethods } = require("./flow.cjs");
 const { fail, id, hash, text, cents, exact } = require("./security.cjs");
 const guard = require("./guard.cjs");
+const { summarizeJourneys } = require("./study-summary.cjs");
 const { PROFILES } = require("./lab.cjs");
 function normalizeBaseline(input, allowedProfiles = PROFILES) {
   exact(input, ["accounts", "history", "operations"]);
@@ -666,7 +667,7 @@ function attachResearch(Lab) {
     yield this.member(user, sid, ["admin", "researcher"]);
     const rows = yield collect(
       (yield this.all(
-        `SELECT r.id runId,r.condition,r.config_hash configHash,r.baseline_hash baselineHash,o.operation_id operationId,g.label,d.id draftId,d.status,d.created_at,d.finished_at,e.decision
+        `SELECT r.id runId,r.condition,r.config_snapshot,r.config_hash configHash,r.baseline_hash baselineHash,o.operation_id operationId,g.label,d.id draftId,d.status,d.created_at,d.finished_at,e.decision
   FROM runs r JOIN run_operations o ON o.run_id=r.id JOIN ground_truth g ON g.scenario_id=r.scenario_id AND g.operation_id=o.operation_id
   LEFT JOIN drafts d ON d.operation_id=o.id LEFT JOIN evaluations e ON e.id=d.evaluation_id WHERE r.parent_session_id=? ORDER BY r.created_at,o.id`,
         sid,
@@ -709,6 +710,7 @@ function attachResearch(Lab) {
             return {
               runId: r.runId,
               condition: r.condition,
+              pauseConfiguredMs: JSON.parse(r.config_snapshot).pauseMs,
               configHash: r.configHash,
               baselineHash: r.baselineHash,
               operationId: r.operationId,
@@ -735,7 +737,9 @@ function attachResearch(Lab) {
         groups.set(k, {
           baselineHash: row.baselineHash,
           condition: row.condition,
+          pauseConfiguredMs: row.pauseConfiguredMs,
           configHash: row.configHash,
+          journeyRows: [],
           TP: 0,
           FP: 0,
           TN: 0,
@@ -746,6 +750,7 @@ function attachResearch(Lab) {
           durations: [],
         });
       const g = groups.get(k);
+      g.journeyRows.push(row);
       if (row.reconsidered) g.reconsidered++;
       if (row.status === "cancelled") {
         g.cancelled++;
@@ -771,8 +776,9 @@ function attachResearch(Lab) {
       definition:
         "Positivo = operação interrompida. Só operações concluídas ou bloqueadas entram na matriz; alertas, pendentes e canceladas são separados. Não é estimativa de eficácia de mercado.",
       rows,
-      groups: [...groups.values()].map(({ durations, ...g }) => ({
+      groups: [...groups.values()].map(({ durations, journeyRows, ...g }) => ({
         ...g,
+        journey: summarizeJourneys(journeyRows),
         n: g.TP + g.FP + g.TN + g.FN,
         sensitivity: g.TP + g.FN ? g.TP / (g.TP + g.FN) : null,
         falsePositiveRate: g.FP + g.TN ? g.FP / (g.FP + g.TN) : null,
@@ -866,6 +872,8 @@ function attachResearch(Lab) {
     const fields = [
       "runId",
       "condition",
+      "pauseConfiguredMs",
+      "reconsidered",
       "configHash",
       "baselineHash",
       "operationId",

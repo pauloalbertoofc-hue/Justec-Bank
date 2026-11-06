@@ -228,6 +228,16 @@ const { createServer } = require("../server/http.cjs");
       exported.metrics.groups.reduce((n, g) => n + g.FP, 0),
       1,
     );
+    assert.equal(exported.metrics.groups[0].journey.assigned, 1);
+    assert.equal(exported.metrics.groups[0].journey.byLabel.legitimate.blocked, 1);
+    assert.equal(exported.metrics.groups[0].pauseConfiguredMs, 40);
+    for (const width of [320, 375, 390, 768, 1024, 1366, 1920]) {
+      await researcher.setViewportSize({ width, height: 900 });
+      assert(await researcher.getByRole("heading", { name: "Todas as jornadas atribuídas", exact: true }).isVisible());
+      assert.match(await researcher.locator(".study-journeys").innerText(), /Não iniciadas/);
+      assert.equal(await researcher.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1), false, `research/${width}`);
+    }
+    await researcher.setViewportSize({ width: 390, height: 900 });
     assert.equal(exported.executions.length, 1);
     assert.equal(JSON.stringify(exported).includes(PASSWORD), false);
     // Perfil participante não recebe rótulos experimentais nem endpoints de pesquisa.

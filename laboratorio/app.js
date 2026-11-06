@@ -1368,6 +1368,25 @@ async function renderResearch(w) {
     metrics,
     "muted",
   );
+  const journeys = card(metrics, "Todas as jornadas atribuídas", "study-journeys");
+  node("p", "Inclui cada operação prevista, mesmo sem início ou conclusão. Não iniciada não significa abandono; reconsiderada não significa fraude evitada. A pausa indicada é a configuração do ambiente, não prova de que a tela foi vista.", journeys, "muted");
+  const studyRate = value => value === null ? "Sem dados" : `${(value * 100).toFixed(1)}%`;
+  table(journeys, ["Condição / base / configuração", "Pausa configurada", "Atribuídas", "Não iniciadas", "Em andamento", "Concluídas", "Interrompidas pelo sistema", "Canceladas", "Com reconsideração", "Concluídas / atribuídas", "Canceladas / atribuídas"],
+    overview.metrics.groups.map(g => [
+      `${displayLabel(g.condition)} / ${g.baselineHash.slice(0, 8)} / ${g.configHash.slice(0, 8)}`,
+      `${g.pauseConfiguredMs} ms`, g.journey.assigned, g.journey.notStarted,
+      g.journey.inProgress, g.journey.completed, g.journey.blocked,
+      g.journey.cancelled, g.journey.reconsidered,
+      studyRate(g.journey.completionRate), studyRate(g.journey.cancellationRate),
+    ]));
+  const byLabel = details(journeys, "Resultados por rótulo do cenário — somente equipe autorizada");
+  table(byLabel, ["Condição / configuração", "Rótulo fictício", "Atribuídas", "Não iniciadas", "Em andamento", "Concluídas", "Interrompidas", "Canceladas"],
+    overview.metrics.groups.flatMap(g => Object.entries(g.journey.byLabel).map(([label, counts]) => [
+      `${g.condition} / ${g.configHash.slice(0, 8)}`,
+      label === "legitimate" ? "Legítimo" : "Fraudulento (gabarito fictício)",
+      counts.assigned, counts.notStarted, counts.inProgress, counts.completed, counts.blocked, counts.cancelled,
+    ])));
+  node("p", "Para estudar a pausa, compare a mesma base e o mesmo modo, mantendo regras e demais configurações iguais. Estes totais são descritivos: não há randomização, inferência causal ou eficácia comprovada.", journeys, "muted");
   if (overview.participantFeedback?.length) {
     const reports = details(
       metrics,
