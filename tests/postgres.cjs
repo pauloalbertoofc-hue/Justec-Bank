@@ -19,7 +19,7 @@ test("PostgreSQL: migrações, inteiros e transferência bilateral idempotente",
   const f = await fixture(t);
   assert.equal(
     (await f.db.prepare("SELECT COUNT(*) n FROM schema_migrations").get()).n,
-    3,
+    4,
   );
   const d = await evaluated(f);
   const tx = await approve(f, d);
@@ -341,7 +341,7 @@ test("PostgreSQL: inicialização concorrente não repete migrações", async (t
     for (const db of databases)
       assert.equal(
         (await db.prepare("SELECT COUNT(*) n FROM schema_migrations").get()).n,
-        3,
+        4,
       );
   } finally {
     await Promise.all(databases.map((db) => db.close()));

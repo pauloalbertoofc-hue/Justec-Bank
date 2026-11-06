@@ -107,5 +107,5 @@ test("Migrações simultâneas são serializadas e registradas uma única vez", 
     ),
   );
   await Promise.all(workers.map((w) => w.terminate()));
-  assert.deepEqual(results, [{ count: 3 }, { count: 3 }]);
+  assert.deepEqual(results, [{ count: 4 }, { count: 4 }]);
 });

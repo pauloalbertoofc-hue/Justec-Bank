@@ -10,7 +10,7 @@ concurrency:
 jobs:
   public-smoke:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 8
     steps:
       - name: Check public deployment without credentials or data changes
         id: smoke
@@ -41,19 +41,33 @@ jobs:
             }
             if (!health || health.storage !== 'postgres') throw lastError || new Error('No PostgreSQL health');
             console.log('PASS health: simulation, PostgreSQL and version 1.1.0');
-            const response = await get('/laboratorio/');
-            assert.equal(response.status, 200);
-            const html = await response.text();
-            for (const id of ['login-form', 'register-form', 'auth-view']) assert(html.includes('id="' + id + '"'), id);
+            let response, html;
+            for (let attempt = 0; attempt < 12; attempt++) {
+              response = await get('/laboratorio/');
+              assert.equal(response.status, 200);
+              html = await response.text();
+              if (html.includes('id="recovery-form"')) break;
+              if (attempt < 11) await new Promise(resolve => setTimeout(resolve, 10000));
+            }
+            for (const id of ['login-form', 'register-form', 'auth-view', 'recovery-form', 'invitation-notice']) assert(html.includes('id="' + id + '"'), id);
             assert.match(response.headers.get('content-security-policy') || '', /script-src 'self'/);
             assert.equal(response.headers.get('x-frame-options'), 'DENY');
-            console.log('PASS laboratory HTML: forms, education, CSP and frame protection');
+            console.log('PASS laboratory HTML: recovery, invitations, CSP and frame protection');
             const assets = [...html.matchAll(/<(?:script|link)\b[^>]*(?:src|href)="([^"]+)"/g)].map(match => match[1]);
             assert(assets.length >= 4);
             for (const asset of assets) {
               assert(asset.startsWith('/') && !asset.startsWith('//'), 'Only own assets');
               const result = await get(asset);
               assert.equal(result.status, 200, 'Asset ' + asset);
+              if (asset === '/laboratorio/app.js') {
+                const source = await result.text();
+                assert(source.includes('/auth/recover'));
+                assert(source.includes('Copiar link de convite'));
+              }
+              if (asset === '/laboratorio/bank.js') {
+                const source = await result.text();
+                assert(source.includes('/auth/recovery-code'));
+              }
               console.log('PASS asset ' + asset);
             }
             for (const route of ['/api/auth/me', '/api/sessions']) {
@@ -75,7 +89,7 @@ jobs:
             } else {
               assert(text.includes('id="home-security"'));
             }
-            require('node:fs').appendFileSync(process.env.GITHUB_OUTPUT, 'ui_mode=' + (bankEntry ? 'login-first' : 'legacy-entry-awaiting-deploy') + '\n');
+            require('node:fs').appendFileSync(process.env.GITHUB_OUTPUT, 'ui_mode=' + (bankEntry ? 'recovery-and-invitations-ready' : 'legacy-entry-awaiting-deploy') + '\n');
             console.log('PASS public entrypoint detected; original education preserved');
             console.log('Read-only public smoke passed. No authenticated transactions, live browser rendering or efficacy study performed.');
           })().catch(error => { console.error(error.message); process.exitCode = 1; });

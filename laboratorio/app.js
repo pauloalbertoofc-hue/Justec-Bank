@@ -1,5 +1,14 @@
 "use strict";
 const $ = (selector) => document.querySelector(selector);
+// O fragmento não é enviado ao servidor nem incluído no Referer.
+const invitationParams = new URLSearchParams(location.hash.slice(1));
+const invitationValue = invitationParams.get("convite");
+let pendingInvitation = /^[A-Za-z0-9_-]{43}$/.test(invitationValue || "")
+  ? invitationValue
+  : null;
+if (invitationParams.has("convite"))
+  history.replaceState(null, "", location.pathname + location.search);
+$("#invitation-notice").hidden = !pendingInvitation;
 const state = {
   user: null,
   csrf: null,
@@ -267,6 +276,11 @@ async function authenticated() {
   document.body.dataset.access = "authenticated";
   state.mode = "bank";
   await refreshSessions(state.session?.id);
+  if (pendingInvitation) {
+    await renderView("sessions");
+    focusWorkspace();
+    return;
+  }
   const requested = new URLSearchParams(location.search).get("screen");
   await renderView(
     ["screening", "action-post", "rights", "edu-center"].includes(requested)
@@ -353,11 +367,17 @@ async function renderSessions(w) {
       method: "POST",
       body: { code: data(f).code },
     });
+    pendingInvitation = null;
+    $("#invitation-notice").hidden = true;
     await refreshSessions(joined.id);
-    feedback("Convite aceito.");
-    await renderView("accounts");
+    feedback("Convite aceito. Seu papel foi definido pela equipe deste ambiente.");
+    await renderView("home");
   });
-  field(join, "Código de convite da equipe", "code", { required: true });
+  node("p", "Confira se está usando seu próprio acesso antes de aceitar. O convite é de uso único e define seu papel apenas neste ambiente.", join);
+  field(join, "Código de convite da equipe", "code", {
+    required: true,
+    value: pendingInvitation || "",
+  });
   submit(join, "Entrar na sessão");
   if (state.mode === "admin" && state.user.globalRole === "admin") {
     const create = form(
@@ -1387,7 +1407,7 @@ async function renderResearch(w) {
       async (f) => {
         const result = await api(`/sessions/${sid}/invitations`, {
           method: "POST",
-          body: data(f),
+          body: { role: data(f).role },
         });
         const out = node("div", null, f);
         node(
@@ -1401,6 +1421,15 @@ async function renderResearch(w) {
         input.readOnly = true;
         action(out, "Copiar convite", () =>
           navigator.clipboard.writeText(result.code),
+        );
+        const invitationLink = new URL("/laboratorio/", location.origin);
+        invitationLink.hash = new URLSearchParams({ convite: result.code }).toString();
+        const link = field(out, "Link de convite — compartilhe somente com a pessoa convidada", "invitationLink", {
+          value: invitationLink.href,
+        });
+        link.readOnly = true;
+        action(out, "Copiar link de convite", () =>
+          navigator.clipboard.writeText(invitationLink.href),
         );
       },
     );
@@ -1715,8 +1744,26 @@ $("#register-form").addEventListener("submit", (e) => {
       method: "POST",
       body: data(e.currentTarget),
     });
+    const alias = data(e.target).alias;
     e.target.reset();
-    feedback("Acesso criado. Entre com seu pseudônimo e senha exclusiva.");
+    $("#register-access").open = false;
+    $("#login-form [name=alias]").value = alias;
+    $("#login-form [name=password]").focus();
+    feedback("Acesso criado como participante. Entre com sua senha; o convite da equipe define seu papel no ambiente.");
+  });
+});
+$("#recovery-form").addEventListener("submit", (event) => {
+  event.preventDefault();
+  const f = event.currentTarget;
+  safe(async () => {
+    const body = data(f);
+    await api("/auth/recover", { method: "POST", body });
+    f.reset();
+    showAuth();
+    $("#login-form [name=alias]").value = body.alias;
+    $("#access-help").open = false;
+    $("#login-form [name=password]").focus();
+    feedback("Senha redefinida. Entre com a nova senha e gere outro código na Central de segurança.");
   });
 });
 $("#logout").addEventListener("click", () =>

@@ -231,6 +231,23 @@ async function renderBankProtection(w) {
 }
 async function renderBankSecurity(w) {
   bankViewHeading(w, "Central de segurança");
+  const recovery = form(w, "issue-recovery-form", "Proteja seu acesso", async (f) => {
+    const result = await api("/auth/recovery-code", { method: "POST", body: data(f) });
+    f.reset();
+    f.querySelector(".recovery-result")?.remove();
+    const out = node("div", null, f, "recovery-result");
+    node("p", `Guarde este código fora do JUSTEC. Ele aparece somente agora e vence em ${date(result.expiresAt)}. Um novo código invalida o anterior. Não compartilhe.`, out);
+    const input = field(out, "Código de recuperação", "savedRecoveryCode", { value: result.code });
+    input.readOnly = true;
+    // Não incluir esse campo nas próximas solicitações de geração.
+    input.removeAttribute("name");
+    action(out, "Copiar código de recuperação", () => navigator.clipboard.writeText(result.code));
+    action(out, "Já guardei; ocultar código", () => out.remove());
+  });
+  node("p", "Gere um código para recuperar sua conta se esquecer a senha. Funciona também para a equipe e administradores; confirme sua senha atual.", recovery);
+  const currentPassword = field(recovery, "Senha atual do JUSTEC", "password", { type: "password", required: true });
+  currentPassword.autocomplete = "current-password";
+  submit(recovery, "Gerar código de recuperação");
   for (const [label, icon, view] of [
     ["Verificar chave Pix", "key", "protection"],
     ["Contestações e revisões", "review", "reviews"],

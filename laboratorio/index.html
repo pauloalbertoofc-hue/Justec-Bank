@@ -29,16 +29,18 @@
     <main id="lab-main" tabindex="-1">
       <p id="lab-feedback" role="status" aria-live="polite"></p>
       <section id="auth-view" class="lab-grid">
+        <p id="invitation-notice" class="lab-card" hidden>Você recebeu um convite. Entre ou crie seu acesso; depois confirme sua participação no ambiente.</p>
         <form id="login-form" class="lab-card">
           <h1>Bem-vindo ao JUSTEC</h1>
           <p>Entre para acessar sua conta simulada.</p>
           <label
             >Pseudônimo<input
               name="alias"
+              aria-describedby="alias-help"
               autocomplete="username"
               required
               maxlength="32" /></label
-          ><label
+          ><p id="alias-help">Pseudônimo é o nome de acesso que você escolheu no cadastro. Cada pessoa usa seu próprio acesso; o papel é definido pela equipe.</p><label
             >Senha exclusiva do laboratório<input
               name="password"
               type="password"
@@ -51,6 +53,19 @@
             exclusiva que você criou para o JUSTEC.
           </p>
         </form>
+        <details id="access-help" class="lab-card">
+          <summary>Esqueci meu acesso</summary>
+          <p>Confira os acessos salvos no gerenciador de senhas do navegador. Se não encontrar, procure a equipe responsável pelo laboratório para verificar seu cadastro.</p>
+          <p>Para se preparar, gere um código em Segurança após entrar. Se você guardou um código de recuperação, use o formulário abaixo. Sem esse código, procure a equipe para atendimento verificado. Criar outro cadastro não recupera as contas anteriores. Não compartilhe senhas ou códigos.</p>
+          <form id="recovery-form">
+            <h2>Recuperar com meu código</h2>
+            <label>Pseudônimo<input name="alias" autocomplete="username" required minlength="3" maxlength="32" /></label>
+            <label>Código de recuperação guardado<input name="code" autocomplete="off" type="password" required minlength="43" maxlength="43" /></label>
+            <label>Nova senha exclusiva do JUSTEC<input name="password" type="password" autocomplete="new-password" required minlength="12" maxlength="128" /></label>
+            <button type="submit">Definir nova senha</button>
+            <p>O código é de uso único e vence em 30 dias após ser gerado. A recuperação encerra todos os acessos abertos.</p>
+          </form>
+        </details>
         <details id="register-access">
           <summary>Criar meu acesso</summary>
           <form id="register-form" class="lab-card">

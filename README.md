@@ -8,6 +8,12 @@ A demonstração estática preservada está em `/demonstracao.html`; seus dados 
 
 Tudo é virtual, sem valor financeiro e sem comunicação com Pix, DICT, Banco Central ou bancos reais. Use apenas pseudônimos, nomes e chaves sintéticos. O código **0000** autoriza somente a operação fictícia; ele não substitui o login.
 
+## Melhorias de acesso e convites
+
+A atualização inclui convite por link, orientação sobre pseudônimo e recuperação com código previamente gerado em **Segurança → Proteja seu acesso**. O código é de uso único, vale 30 dias e exige confirmação da senha atual para ser emitido. Recuperar a conta encerra os acessos antigos e preserva contas, saldo e permissões. Sem código guardado, ainda é necessário atendimento verificado. [Guia e limites](Documentação/RECUPERACAO_SEGURA_DE_ACESSO.md).
+
+O envio ao GitHub e a confirmação do deploy são registrados separadamente no Relatório-Mestre; esta descrição do recurso não certifica sua disponibilidade pública.
+
 ## Iniciar no VS Code
 
 Requer **Node.js 24 ou superior**, com `node:sqlite`. O modo SQLite local usa módulos nativos. O modo PostgreSQL usa o driver `pg`, fixado no package-lock; execute `npm ci --omit=dev` antes de iniciar nesse modo.

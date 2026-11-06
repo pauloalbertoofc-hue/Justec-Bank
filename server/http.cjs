@@ -12,6 +12,7 @@ const {
   equal,
 } = require("./security.cjs");
 attachResearch(Lab);
+const recovery = require("./recovery.cjs");
 const ROOT = path.resolve(__dirname, "..");
 function createServer(
   db,
@@ -44,7 +45,7 @@ function createServer(
         res.setHeader("Cache-Control", "no-store");
         if (req.headers.host !== new URL(expected).host)
           fail(403, "HOST", "Host não autorizado.");
-        const action = /^\/api\/auth\/(login|register)$/.test(url.pathname)
+        const action = /^\/api\/auth\/(login|register|recover|recovery-code)$/.test(url.pathname)
           ? url.pathname
           : "api";
         if (rateLimit) {
@@ -131,6 +132,8 @@ function createServer(
             csrf: result.csrf,
           });
         }
+        if (req.method === "POST" && url.pathname === "/api/auth/recover")
+          return send(await recovery.recover(db, body, now ? now() : Date.now()));
         const secret = (req.headers.cookie || "")
           .split(";")
           .map((c) => c.trim())
@@ -139,6 +142,8 @@ function createServer(
         user = await authenticate(db, secret, now ? now() : Date.now());
         if (mutating && !equal(user.csrf, req.headers["x-csrf-token"]))
           fail(403, "CSRF", "Atualize o acesso e tente novamente.");
+        if (req.method === "POST" && url.pathname === "/api/auth/recovery-code")
+          return send(await recovery.issue(db, user, body, now ? now() : Date.now()));
         if (req.method === "GET" && url.pathname === "/api/auth/me")
           return send({
             user: {

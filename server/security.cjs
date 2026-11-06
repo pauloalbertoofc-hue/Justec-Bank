@@ -126,9 +126,15 @@ async function login(db, body, now = Date.now()) {
     fail(401, "LOGIN", "Credenciais do laboratório inválidas.");
   const secret = token(),
     csrf = token();
-  await db
-    .prepare("INSERT INTO auth_sessions VALUES(?,?,?,?,?)")
-    .run(hash(secret), row.id, csrf, now + 8 * 3600000, now);
+  // Recuperação pode trocar a senha durante a derivação assíncrona.
+  // Verificação final e criação de sessão usam a mesma transação da revogação.
+  await require("./db.cjs").atomic(db, flow(function* () {
+    const current = yield db.prepare("SELECT password_hash FROM users WHERE id=?").get(row.id);
+    if (current?.password_hash !== encoded)
+      fail(401, "LOGIN", "Credenciais do laboratório inválidas.");
+    yield db.prepare("INSERT INTO auth_sessions VALUES(?,?,?,?,?)")
+      .run(hash(secret), row.id, csrf, now + 8 * 3600000, now);
+  }));
   return {
     secret,
     csrf,
@@ -163,4 +169,6 @@ module.exports = {
   register,
   login,
   authenticate,
+  passwordHash,
+  passwordMatches,
 };
