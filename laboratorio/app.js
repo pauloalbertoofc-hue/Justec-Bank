@@ -1647,6 +1647,47 @@ async function renderResearch(w) {
       { type: "textarea", value: "{}" },
     );
     submit(f, "Iniciar nova execução");
+    let pairAttempt = null;
+    const pairForm = form(w, "pair-" + scenario.id, `Par de pausa · ${scenario.name}`, async (form) => {
+      const v = data(form);
+      const body = { condition: v.condition, pauseMs: Number(v.pause), owners: JSON.parse(v.owners) };
+      const signature = JSON.stringify(body);
+      if (!pairAttempt || pairAttempt.signature !== signature)
+        pairAttempt = { signature, key: crypto.randomUUID() };
+      await api(`/sessions/${sid}/scenarios/${scenario.id}/run-pairs`, {
+        method: "POST", body, idem: pairAttempt.key,
+      });
+      await refreshSessions(sid);
+      await renderView("research");
+      feedback("Par criado: espera de 0 ms e pausa configurada, com a mesma base e regras. Nenhum Pix foi iniciado.");
+    });
+    node("p", "Cria duas execuções independentes. Apenas a duração da pausa muda; não há distribuição automática de pessoas nem prova de eficácia.", pairForm, "muted");
+    field(pairForm, "Mesmo modo nas duas execuções", "condition", {
+      options: [["education", "Apenas educação"], ["context", "Educação e contexto"], ["behavior", "Comportamental"], ["integrated", "Integrada"]],
+      value: "education",
+    });
+    field(pairForm, "Pausa da segunda execução (ms); primeira = 0", "pause", {
+      type: "number", value: 5000, min: 1, max: 60000, required: true,
+    });
+    field(pairForm, "Mesmos vínculos slot → participante (JSON; vazio = pesquisador)", "owners", { type: "textarea", value: "{}" });
+    submit(pairForm, "Criar par de pausa");
+  }
+  const pairs = await api(`/sessions/${sid}/run-pairs`);
+  const pairList = card(w, "Pares controlados de pausa", "run-pair-list");
+  node("p", "Equivalência verificada na criação. A duração configurada não prova exposição à pausa. Alterações posteriores e efeitos de ordem precisam ser considerados antes de interpretar resultados.", pairList, "muted");
+  if (!pairs.length) node("p", "Nenhum par criado neste ambiente.", pairList);
+  for (const pair of pairs) {
+    const panel = card(pairList, `${pair.scenarioName} · ${pair.condition}`, "run-pair-card");
+    node("p", `Par ${pair.id.slice(0, 12)} · Base ${pair.baselineHash.slice(0, 12)} · Parâmetros fixos ${pair.fixedSettingsHash.slice(0, 12)}`, panel, "muted");
+    if ([pair.control, pair.paused].some(arm => arm.sessionUpdated || !arm.currentConfigurationMatches))
+      node("p", "Atenção: um ambiente do par foi alterado depois da criação. Confira a auditoria; não presuma equivalência durante o uso.", panel);
+    table(panel, ["Execução", "Espera configurada", "Atribuídas", "Não iniciadas", "Em andamento", "Concluídas", "Interrompidas", "Canceladas"],
+      [["Sem espera", pair.control], ["Com espera", pair.paused]].map(([label, arm]) => [
+        label, `${arm.pauseConfiguredMs} ms`, arm.journey.assigned, arm.journey.notStarted,
+        arm.journey.inProgress, arm.journey.completed, arm.journey.blocked, arm.journey.cancelled,
+      ]));
+    for (const [label, arm] of [["Abrir execução sem espera", pair.control], ["Abrir execução com espera", pair.paused]])
+      action(panel, label, async () => { await refreshSessions(arm.sessionId); await renderView("accounts"); });
   }
   const runs = await api(`/sessions/${sid}/runs`);
   const runList = card(w, "Histórico de execuções");

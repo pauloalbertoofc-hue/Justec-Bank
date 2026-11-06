@@ -210,6 +210,8 @@ function createServer(
             if (method === "POST")
               return send(await lab.createScenario(user, rid, body), 201);
           }
+          if (sub === "run-pairs" && method === "GET")
+            return send(await lab.runPairs(user, rid));
           if (sub === "runs" && method === "GET")
             return send(await lab.runs(user, rid));
           if (sub === "snapshots") {
@@ -250,6 +252,9 @@ function createServer(
           method === "POST"
         )
           return send(await lab.startRun(user, rid, subid, body), 201);
+        if (resource === "sessions" && sub === "scenarios" && parts.length === 5 &&
+            parts[4] === "run-pairs" && method === "POST")
+          return send(await lab.startRunPair(user, rid, subid, body, req.headers["idempotency-key"]), 201);
         if (resource === "accounts" && parts.length === 2) {
           if (method === "GET") return send(await lab.account(user, rid));
           if (method === "PATCH")

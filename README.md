@@ -18,6 +18,10 @@ Publicação confirmada por verificação externa no commit `fcb0ee9`: PostgreSQ
 
 A branch local de pesquisa acrescenta ao painel os totais de operações atribuídas, não iniciadas, em andamento, concluídas, interrompidas e canceladas, além do histórico de reconsideração e da pausa configurada. Esta etapa ainda não foi publicada. [Funcionamento e limitações](Documentação/ACOMPANHAMENTO_DAS_JORNADAS_EXPERIMENTAIS.md).
 
+## Próxima etapa em desenvolvimento — pares de pausa
+
+A construção local permite criar duas execuções da mesma base, com modo e regras iguais, variando apenas a espera configurada (0 ms e duração escolhida). Criação atômica, idempotência e vínculo auditável. Ainda não publicada. [Guia dos pares controlados](Documentação/PARES_CONTROLADOS_DE_PAUSA.md).
+
 ## Iniciar no VS Code
 
 Requer **Node.js 24 ou superior**, com `node:sqlite`. O modo SQLite local usa módulos nativos. O modo PostgreSQL usa o driver `pg`, fixado no package-lock; execute `npm ci --omit=dev` antes de iniciar nesse modo.

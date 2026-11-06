@@ -200,111 +200,194 @@ function attachResearch(Lab) {
         },
         sid,
       );
-    return yield this.tx(
-      flow(
-        function* () {
-          const newSession = yield this._newSession(
-            user,
-            `${scenario.name} · ${settings.mode}`,
-            settings,
-            sid,
-          );
-          for (const m of yield this.all(
-            "SELECT * FROM memberships WHERE session_id=?",
-            sid,
-          ))
-            yield this.run(
-              "INSERT OR IGNORE INTO memberships VALUES(?,?,?,?)",
-              newSession,
-              m.user_id,
-              m.role,
-              this.now(),
-            );
-          const runId = id();
-          const accounts = {};
-          for (const spec of baseline.accounts) {
-            const owner = {
-              id: owners[spec.slot] || user.id,
-            };
-            const aid = yield this._account(
-              owner,
-              newSession,
-              {
-                name: spec.name,
-                profile: spec.profile,
-              },
-              spec.initialCents,
-              user,
-            );
-            yield this.run(
-              "UPDATE accounts SET limit_cents=? WHERE id=?",
-              spec.limitCents,
-              aid,
-            );
-            accounts[spec.slot] = aid;
-          }
-          const baselineHash = hash(
-            JSON.stringify([
-              scenario.baseline_hash,
-              baseline.accounts.map((a) => [a.slot, owners[a.slot] || user.id]),
-            ]),
-          );
-          yield this.run(
-            "INSERT INTO runs VALUES(?,?,?,?,?,?,?,?,?,?)",
-            runId,
-            sid,
-            newSession,
-            scenarioId,
-            baselineHash,
-            settings.mode,
-            JSON.stringify(settings),
-            hash(JSON.stringify(settings)),
-            JSON.stringify(accounts),
-            this.now(),
-          );
-          for (const [index, h] of baseline.history.entries())
-            yield this._post(
-              user,
-              newSession,
-              accounts[h.from],
-              accounts[h.to],
-              h.amountCents,
-              "scenario_history",
-              `baseline:${runId}:${index}`,
-              null,
-              null,
-              "Histórico sintético de cenário: estado-base reproduzível, não dado externo.",
-            );
-          for (const op of baseline.operations)
-            yield this.run(
-              "INSERT INTO run_operations VALUES(?,?,?,?,?,?,?)",
-              id(),
-              runId,
-              op.id,
-              accounts[op.from],
-              accounts[op.to],
-              op.amountCents,
-              JSON.stringify(op.answers),
-            );
-          yield this.audit(newSession, user.id, "run.started", runId, {
-            parentSessionId: sid,
-            baselineHash,
-            condition: settings.mode,
-            settings,
-          });
-          yield this.audit(sid, user.id, "experiment.started", runId, {
-            sessionId: newSession,
-            baselineHash,
-          });
-          return {
-            id: runId,
-            sessionId: newSession,
-            baselineHash,
-            condition: settings.mode,
-          };
-        }.bind(this),
-      ),
+    return yield this.tx(flow(function* () {
+      return yield this._createRun(user, sid, scenario, settings, owners);
+    }.bind(this)));
+  });
+  // Primitiva interna: chamadores validam contexto e abrem a transação.
+  Lab.prototype._createRun = flow(function* (user, sid, scenario, settings, owners) {
+    const baseline = JSON.parse(scenario.baseline);
+    const newSession = yield this._newSession(
+      user,
+      `${scenario.name} · ${settings.mode}`,
+      settings,
+      sid,
     );
+    for (const m of yield this.all(
+      "SELECT * FROM memberships WHERE session_id=?",
+      sid,
+    ))
+      yield this.run(
+        "INSERT OR IGNORE INTO memberships VALUES(?,?,?,?)",
+        newSession,
+        m.user_id,
+        m.role,
+        this.now(),
+      );
+    const runId = id();
+    const accounts = {};
+    for (const spec of baseline.accounts) {
+      const owner = {
+        id: owners[spec.slot] || user.id,
+      };
+      const aid = yield this._account(
+        owner,
+        newSession,
+        {
+          name: spec.name,
+          profile: spec.profile,
+        },
+        spec.initialCents,
+        user,
+      );
+      yield this.run(
+        "UPDATE accounts SET limit_cents=? WHERE id=?",
+        spec.limitCents,
+        aid,
+      );
+      accounts[spec.slot] = aid;
+    }
+    const baselineHash = hash(
+      JSON.stringify([
+        scenario.baseline_hash,
+        baseline.accounts.map((a) => [a.slot, owners[a.slot] || user.id]),
+      ]),
+    );
+    yield this.run(
+      "INSERT INTO runs VALUES(?,?,?,?,?,?,?,?,?,?)",
+      runId,
+      sid,
+      newSession,
+      scenario.id,
+      baselineHash,
+      settings.mode,
+      JSON.stringify(settings),
+      hash(JSON.stringify(settings)),
+      JSON.stringify(accounts),
+      this.now(),
+    );
+    for (const [index, h] of baseline.history.entries())
+      yield this._post(
+        user,
+        newSession,
+        accounts[h.from],
+        accounts[h.to],
+        h.amountCents,
+        "scenario_history",
+        `baseline:${runId}:${index}`,
+        null,
+        null,
+        "Histórico sintético de cenário: estado-base reproduzível, não dado externo.",
+      );
+    for (const op of baseline.operations)
+      yield this.run(
+        "INSERT INTO run_operations VALUES(?,?,?,?,?,?,?)",
+        id(),
+        runId,
+        op.id,
+        accounts[op.from],
+        accounts[op.to],
+        op.amountCents,
+        JSON.stringify(op.answers),
+      );
+    yield this.audit(newSession, user.id, "run.started", runId, {
+      parentSessionId: sid,
+      baselineHash,
+      condition: settings.mode,
+      settings,
+    });
+    yield this.audit(sid, user.id, "experiment.started", runId, {
+      sessionId: newSession,
+      baselineHash,
+    });
+    return {
+      id: runId,
+      sessionId: newSession,
+      baselineHash,
+      condition: settings.mode,
+    };
+  });
+  Lab.prototype.startRunPair = flow(function* (user, sid, scenarioId, body, requestKey) {
+    exact(body, ["condition", "pauseMs", "owners"]);
+    const key = text(requestKey, "Identificador da solicitação", 16, 100);
+    if (!/^[A-Za-z0-9_-]+$/.test(key)) fail(400, "PAIR_KEY", "Identificador inválido.");
+    if (!["education", "context", "behavior", "integrated"].includes(body.condition) ||
+        !Number.isInteger(body.pauseMs) || body.pauseMs <= 0 || body.pauseMs > 60000)
+      fail(400, "PAIR_CONFIG", "Escolha um modo com intervenção e pausa de 1 a 60000 ms.");
+    const owners = body.owners === undefined ? {} : body.owners;
+    if (!owners || typeof owners !== "object" || Array.isArray(owners) ||
+        Object.values(owners).some(owner => typeof owner !== "string"))
+      fail(400, "OWNERS", "Vínculos inválidos.");
+    const requestHash = hash(JSON.stringify([scenarioId, body.condition, body.pauseMs,
+      Object.entries(owners).sort(([a], [b]) => a.localeCompare(b))]));
+    const pairId = hash(JSON.stringify([sid, user.id, key]));
+    return yield this.tx(flow(function* () {
+      yield this.member(user, sid, ["admin", "researcher"]);
+      yield this.active(sid);
+      const previous = yield this.one(
+        "SELECT payload FROM audit_events WHERE session_id=? AND action=? AND entity_id=?",
+        sid, "experiment.pair_created", pairId,
+      );
+      if (previous) {
+        const pair = JSON.parse(previous.payload);
+        if (pair.requestHash !== requestHash)
+          fail(409, "PAIR_CONFLICT", "Identificador já usado para outro par.");
+        return pair;
+      }
+      const scenario = yield this.one("SELECT * FROM scenarios WHERE id=? AND session_id=?", scenarioId, sid);
+      if (!scenario) fail(404, "SCENARIO", "Cenário inexistente nesta sessão.");
+      const baseline = JSON.parse(scenario.baseline);
+      if (Object.keys(owners).some(slot => !baseline.accounts.some(account => account.slot === slot)))
+        fail(400, "OWNERS", "Vínculos inválidos.");
+      for (const owner of Object.values(owners)) yield this.member({ id: owner }, sid);
+      const parent = yield this.one("SELECT config FROM sessions WHERE id=?", sid);
+      const controlSettings = guard.config({ ...JSON.parse(parent.config), mode: body.condition, pauseMs: 0 });
+      const pausedSettings = guard.config({ ...controlSettings, pauseMs: body.pauseMs });
+      const control = yield this._createRun(user, sid, scenario, controlSettings, owners);
+      const paused = yield this._createRun(user, sid, scenario, pausedSettings, owners);
+      if (control.baselineHash !== paused.baselineHash)
+        fail(409, "PAIR_BASELINE", "Estados-base incompatíveis.");
+      const { pauseMs, ...fixedSettings } = controlSettings;
+      const pair = {
+        version: "justec-pause-pair/1.0.0",
+        id: pairId, parentSessionId: sid, scenarioId, scenarioName: scenario.name,
+        condition: body.condition, baselineHash: control.baselineHash,
+        fixedSettingsHash: hash(JSON.stringify(fixedSettings)), requestHash,
+        control: { ...control, pauseConfiguredMs: 0 },
+        paused: { ...paused, pauseConfiguredMs: body.pauseMs },
+        createdAt: this.now(),
+      };
+      yield this.audit(sid, user.id, "experiment.pair_created", pairId, pair);
+      return pair;
+    }.bind(this)));
+  });
+  Lab.prototype.runPairs = flow(function* (user, sid) {
+    yield this.member(user, sid, ["admin", "researcher"]);
+    const records = yield this.all(
+      "SELECT payload FROM audit_events WHERE session_id=? AND action=? ORDER BY created_at DESC,id",
+      sid, "experiment.pair_created",
+    );
+    if (!records.length) return [];
+    const metrics = yield this.metrics(user, sid);
+    return yield collect(records.map(flow(function* (record) {
+      const pair = JSON.parse(record.payload);
+      const arms = {};
+      for (const name of ["control", "paused"]) {
+        const arm = pair[name];
+        const run = yield this.one(
+          "SELECT r.config_snapshot,r.config_hash,s.config,s.config_version FROM runs r JOIN sessions s ON s.id=r.session_id WHERE r.id=?",
+          arm.id,
+        );
+        arms[name] = {
+          ...arm,
+          configHash: run.config_hash,
+          currentConfigurationMatches: run.config === run.config_snapshot,
+          sessionUpdated: run.config_version > 1,
+          journey: summarizeJourneys(metrics.rows.filter(row => row.runId === arm.id)),
+        };
+      }
+      return { ...pair, ...arms };
+    }.bind(this))));
   });
   Lab.prototype.runs = flow(function* (user, sid) {
     yield this.member(user, sid, ["admin", "researcher"]);
@@ -853,6 +936,7 @@ function attachResearch(Lab) {
               "SELECT id,name,baseline,baseline_hash FROM scenarios WHERE session_id=?",
               sid,
             ),
+            pairs: yield this.runPairs(user, sid),
             runs: yield this.runs(user, sid),
             executions: yield collect(
               (yield this.runs(user, sid)).map(

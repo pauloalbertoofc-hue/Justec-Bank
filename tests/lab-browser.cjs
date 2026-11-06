@@ -231,10 +231,31 @@ const { createServer } = require("../server/http.cjs");
     assert.equal(exported.metrics.groups[0].journey.assigned, 1);
     assert.equal(exported.metrics.groups[0].journey.byLabel.legitimate.blocked, 1);
     assert.equal(exported.metrics.groups[0].pauseConfiguredMs, 40);
+    const pairForm = researcher.locator('form[id^="pair-"]').filter({
+      has: researcher.getByRole("heading", { name: "Par de pausa · Transferência legítima", exact: true }),
+    });
+    await pairForm.locator('[name=pause]').fill("250");
+    await pairForm.locator('button[type=submit]').click();
+    await researcher.locator(".run-pair-card").waitFor();
+    const pairData = await researcher.evaluate(async sid =>
+      (await fetch(`/api/sessions/${sid}/run-pairs`)).json(), f.sessionId);
+    assert.equal(pairData.length, 1);
+    assert.equal(pairData[0].control.pauseConfiguredMs, 0);
+    assert.equal(pairData[0].paused.pauseConfiguredMs, 250);
+    assert.equal(pairData[0].control.journey.notStarted, 1);
+    assert.equal(pairData[0].paused.journey.notStarted, 1);
+    await researcher.getByRole("button", { name: "Abrir execução sem espera", exact: true }).click();
+    await researcher.locator("#create-account-form").waitFor();
+    assert.equal(await researcher.locator("#session-select").inputValue(), pairData[0].control.sessionId);
+    await researcher.locator("#session-select").selectOption(f.sessionId);
+    await researcher.locator("#create-account-form").waitFor();
+    await researcher.locator("#research-nav").click();
+    await researcher.locator(".run-pair-card").waitFor();
     for (const width of [320, 375, 390, 768, 1024, 1366, 1920]) {
       await researcher.setViewportSize({ width, height: 900 });
       assert(await researcher.getByRole("heading", { name: "Todas as jornadas atribuídas", exact: true }).isVisible());
       assert.match(await researcher.locator(".study-journeys").innerText(), /Não iniciadas/);
+      assert.match(await researcher.locator(".run-pair-card").innerText(), /250 ms/);
       assert.equal(await researcher.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1), false, `research/${width}`);
     }
     await researcher.setViewportSize({ width: 390, height: 900 });
@@ -248,6 +269,8 @@ const { createServer } = require("../server/http.cjs");
       ),
       403,
     );
+    assert.equal(await page.evaluate(async sid =>
+      (await fetch(`/api/sessions/${sid}/run-pairs`)).status, f.sessionId), 403);
     for (const width of [320, 375, 390, 768, 1024, 1366, 1920]) {
       await page.setViewportSize({ width, height: 900 });
       await page.emulateMedia({ reducedMotion: "reduce" });
