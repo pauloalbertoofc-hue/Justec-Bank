@@ -1011,3 +1011,11 @@ Reexecutado npm test: 161 aprovados. Na revisão, identificado erro ao gerar doi
 Workflow de verificação pública atualizado para aguardar formulário de recuperação e conferir os arquivos de recuperação/convites, sem contas de teste ou transações em produção. Sintaxe do script do workflow e git diff --check aprovados. Execução real do workflow não deve ser inferida dessas verificações locais.
 
 Consultas à API GitHub e ao domínio onrender.com recusadas pelo proxy do ambiente (HTTP 403 no túnel CONNECT); tentativa de consulta GitHub com execução escalada teve a mesma recusa. Transporte Git conseguiu consultar branches. Estado antes do envio: atualização local pronta; envio e deploy serão registrados após suas respectivas verificações, sem classificar push como confirmação do site.
+
+### Resultado do envio e confirmação externa
+
+Push concluído: laboratorio-multiusuario avançou de 4e1ebf39fda0d6e90ea90c07870273c56638f3e0 para fcb0ee923a3b33f7e2bbd574d6a178fbe261a783. ls-remote confirmou o commit remoto e main inalterada em 837cb414ad27a149c9e0c57004f75af340ba9aec. Sem force push.
+
+A página pública GitHub Actions estava acessível, alternativa à API bloqueada. Consultadas a execução 42136666531 e a página do job 127626445551: Status Success; etapas Check public deployment without credentials or data changes e Published entrypoint recovery-and-invitations-ready com data-conclusion success. Conclusão registrada pelo GitHub em 2026-11-06T00:25:56Z. Evidência: https://github.com/pauloalbertoofc-hue/Justec-Bank/actions/runs/42136666531 .
+
+Isso confirma a publicação do HTML com recovery-form e invitation-notice, dos scripts contendo as funções novas e a saúde PostgreSQL; confirma também login inicial, CSP e recusa de acesso às rotas privadas sem autenticação. Nenhuma operação autenticada, senha redefinida ou transferência em produção foi realizada. Testes de uso completo continuam os ensaios locais anteriormente registrados. A migração é aplicada no início do serviço, sem recriar usuários. README e guia atualizados com o resultado observado. Atualização documental posterior não modifica o código já verificado.

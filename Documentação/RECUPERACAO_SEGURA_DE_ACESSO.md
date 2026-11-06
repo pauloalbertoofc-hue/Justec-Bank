@@ -36,6 +36,12 @@ Para testar manualmente, use uma conta fictícia: gere código; encerre acesso; 
 
 Entrega preparada na branch local `melhorias-acesso-convites`; o titular autorizou prosseguir com o envio à branch de publicação `laboratorio-multiusuario`. A inicialização aplica a migração aditiva. A versão estática da Vercel permanece separada. Não foram usados dados ou credenciais de produção, nem gerado backup do banco remoto neste ambiente. O envio e a confirmação do deploy são estados distintos, registrados no Relatório-Mestre.
 
+## Confirmação pública
+
+Atualização enviada no commit `fcb0ee923a3b33f7e2bbd574d6a178fbe261a783` à branch `laboratorio-multiusuario`. A verificação externa [42136666531](https://github.com/pauloalbertoofc-hue/Justec-Bank/actions/runs/42136666531), job `127626445551`, concluiu com sucesso e identificou **Published entrypoint recovery-and-invitations-ready**. Foram conferidos saúde PostgreSQL, HTML com recuperação/convites, arquivos novos, CSP, entrada por login e proteção das rotas privadas sem autenticação.
+
+A evidência foi lida pela página pública do GitHub, alternativa à API e ao acesso direto ao Render bloqueados no ambiente. Não houve login, recuperação de conta ou operação financeira de produção nos testes externos. A versão estática `main` permaneceu no commit `837cb414ad27a149c9e0c57004f75af340ba9aec`.
+
 ## Resultados executados
 
 - `npm test`: **161 aprovados**, zero falhas ou ignorados.

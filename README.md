@@ -12,7 +12,7 @@ Tudo é virtual, sem valor financeiro e sem comunicação com Pix, DICT, Banco C
 
 A atualização inclui convite por link, orientação sobre pseudônimo e recuperação com código previamente gerado em **Segurança → Proteja seu acesso**. O código é de uso único, vale 30 dias e exige confirmação da senha atual para ser emitido. Recuperar a conta encerra os acessos antigos e preserva contas, saldo e permissões. Sem código guardado, ainda é necessário atendimento verificado. [Guia e limites](Documentação/RECUPERACAO_SEGURA_DE_ACESSO.md).
 
-O envio ao GitHub e a confirmação do deploy são registrados separadamente no Relatório-Mestre; esta descrição do recurso não certifica sua disponibilidade pública.
+Publicação confirmada por verificação externa no commit `fcb0ee9`: PostgreSQL, formulário de recuperação, arquivos novos e recusa de acesso sem login. [Execução de verificação](https://github.com/pauloalbertoofc-hue/Justec-Bank/actions/runs/42136666531). Isso não inclui operações autenticadas em produção.
 
 ## Iniciar no VS Code
 
