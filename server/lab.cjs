@@ -866,6 +866,7 @@ class Lab {
         d.destination_id,
       ),
       key = yield this.one("SELECT value FROM pix_keys WHERE id=?", d.key_id);
+    const pauseRun = yield this.one("SELECT config_snapshot FROM runs WHERE session_id=?", d.session_id);
     return {
       id: d.id,
       sessionId: d.session_id,
@@ -878,6 +879,7 @@ class Lab {
       amountCents: d.amount_cents,
       status: d.status,
       readyAt: d.ready_at,
+      canObservePause: !!pauseRun && JSON.parse(pauseRun.config_snapshot).observePause === true,
       serverNow: this.now(),
       transferId:
         (yield this.one("SELECT id FROM transfers WHERE draft_id=?", d.id))

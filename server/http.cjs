@@ -210,6 +210,8 @@ function createServer(
             if (method === "POST")
               return send(await lab.createScenario(user, rid, body), 201);
           }
+          if (sub === "pause-exposure" && method === "GET")
+            return send(await lab.pauseExposure(user, rid));
           if (sub === "run-pairs" && method === "GET")
             return send(await lab.runPairs(user, rid));
           if (sub === "runs" && method === "GET")
@@ -286,6 +288,8 @@ function createServer(
         if (resource === "drafts" && parts.length === 2 && method === "GET")
           return send(await lab.draft(user, rid));
         if (resource === "drafts" && parts.length === 3 && method === "POST") {
+          if (sub === "pause-observations")
+            return send(await lab.observePause(user, rid, body));
           if (sub === "feedback")
             return send(await lab.feedback(user, rid, body), 201);
           if (sub === "revise")

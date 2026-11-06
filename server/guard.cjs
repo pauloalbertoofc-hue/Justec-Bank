@@ -32,6 +32,7 @@ function config(value = {}) {
         ![
           "mode",
           "pauseMs",
+          "observePause",
           "initialCents",
           "maxAccounts",
           "consentNotice",
@@ -52,6 +53,7 @@ function config(value = {}) {
   };
   if (
     !MODES.includes(result.mode) ||
+    (result.observePause !== undefined && typeof result.observePause !== "boolean") ||
     !Number.isInteger(result.pauseMs) ||
     result.pauseMs < 0 ||
     result.pauseMs > 60000 ||

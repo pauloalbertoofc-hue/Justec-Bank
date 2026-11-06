@@ -17,7 +17,7 @@ O modo de proteção, regras, perfis, instruções, titulares dos slots, histór
 
 1. Entrar na área administrativa e abrir **Pesquisa** no ambiente de origem.
 2. Criar um cenário ou usar um exemplo existente.
-3. No formulário **Par de pausa · nome do cenário**, escolher o modo e a duração da segunda execução. O modo padrão é educação. “Sem intervenção adicional” não é aceito para pares porque não permite estudar a espera aplicada pela intervenção.
+3. No formulário **Par de pausa · nome do cenário**, escolher o modo e a duração da segunda execução. O modo padrão é educação. “Sem intervenção adicional” e “Comportamental” não são aceitos para pares de duração porque o motor não aplica espera temporal nesses modos. A seleção foi ajustada na etapa de registro mínimo; execuções individuais preservam todos os modos.
 4. Manter o JSON de vínculos vazio para usar o criador como titular, ou informar os mesmos participantes por slot para os dois lados. Todos os titulares informados devem pertencer ao ambiente de origem.
 5. Selecionar **Criar par de pausa**. A criação não inicia Pix nem distribui participantes automaticamente.
 6. Em **Pares controlados de pausa**, conferir os identificadores, parâmetros fixos, durações e resultados de cada lado. Usar os botões para abrir a execução desejada.
@@ -68,3 +68,7 @@ Os testes cobrem equivalência dos parâmetros e titulares, bases separadas, ope
 Um primeiro teste tentou alterar a configuração de uma execução pela API e foi corretamente recusado pela proteção já existente. A expectativa foi corrigida: agora verifica a recusa, o aviso de arquivamento e uma edição externa simulada exclusivamente no banco de testes. Nenhuma proteção do produto foi removida.
 
 PostgreSQL usou schemas isolados em contêiner temporário removido depois dos testes. Não executados navegador com PostgreSQL nesta etapa, testes autenticados de produção, aparelhos físicos, outros navegadores ou estudos com pessoas. O teste temporal específico do par usa relógio controlado; os testes de navegador já existentes continuam exercitando a espera real de cinco segundos na jornada Pix.
+
+## Continuação — observação opcional
+
+A etapa seguinte acrescenta ativação explícita do mesmo registro mínimo nos dois lados e contadores separados de sinais. Permanece desativado por padrão. Consulte [REGISTRO_MINIMO_DA_PAUSA.md](REGISTRO_MINIMO_DA_PAUSA.md) para limites, privacidade e testes; ativação pela equipe não substitui consentimento para estudos com pessoas.

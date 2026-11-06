@@ -93,6 +93,7 @@ function publicBaseline(base) {
   };
 }
 function attachResearch(Lab) {
+  require("./pause-observations.cjs").attachPauseObservations(Lab);
   Lab.prototype.scenarios = flow(function* (user, sid) {
     yield this.member(user, sid, ["admin", "researcher"]);
     return yield this.all(
@@ -158,7 +159,7 @@ function attachResearch(Lab) {
     body,
     originalSettings = null,
   ) {
-    exact(body, ["condition", "pauseMs", "owners"]);
+    exact(body, ["condition", "pauseMs", "owners", "observePause"]);
     yield this.member(user, sid, ["admin", "researcher"]);
     yield this.active(sid);
     const scenario = yield this.one(
@@ -175,6 +176,7 @@ function attachResearch(Lab) {
         originalSettings || {
           ...JSON.parse(parent.config),
           mode: body.condition || "integrated",
+          observePause: body.observePause === undefined ? false : body.observePause,
           ...(body.pauseMs !== undefined
             ? {
                 pauseMs: body.pauseMs,
@@ -308,18 +310,21 @@ function attachResearch(Lab) {
     };
   });
   Lab.prototype.startRunPair = flow(function* (user, sid, scenarioId, body, requestKey) {
-    exact(body, ["condition", "pauseMs", "owners"]);
+    exact(body, ["condition", "pauseMs", "owners", "observePause"]);
     const key = text(requestKey, "Identificador da solicitação", 16, 100);
     if (!/^[A-Za-z0-9_-]+$/.test(key)) fail(400, "PAIR_KEY", "Identificador inválido.");
-    if (!["education", "context", "behavior", "integrated"].includes(body.condition) ||
+    if (!["education", "context", "integrated"].includes(body.condition) ||
         !Number.isInteger(body.pauseMs) || body.pauseMs <= 0 || body.pauseMs > 60000)
       fail(400, "PAIR_CONFIG", "Escolha um modo com intervenção e pausa de 1 a 60000 ms.");
+    if (body.observePause !== undefined && typeof body.observePause !== "boolean")
+      fail(400, "PAIR_CONFIG", "Ativação de registro inválida.");
     const owners = body.owners === undefined ? {} : body.owners;
     if (!owners || typeof owners !== "object" || Array.isArray(owners) ||
         Object.values(owners).some(owner => typeof owner !== "string"))
       fail(400, "OWNERS", "Vínculos inválidos.");
     const requestHash = hash(JSON.stringify([scenarioId, body.condition, body.pauseMs,
-      Object.entries(owners).sort(([a], [b]) => a.localeCompare(b))]));
+      Object.entries(owners).sort(([a], [b]) => a.localeCompare(b)),
+      ...(body.observePause === true ? [true] : [])]));
     const pairId = hash(JSON.stringify([sid, user.id, key]));
     return yield this.tx(flow(function* () {
       yield this.member(user, sid, ["admin", "researcher"]);
@@ -341,7 +346,7 @@ function attachResearch(Lab) {
         fail(400, "OWNERS", "Vínculos inválidos.");
       for (const owner of Object.values(owners)) yield this.member({ id: owner }, sid);
       const parent = yield this.one("SELECT config FROM sessions WHERE id=?", sid);
-      const controlSettings = guard.config({ ...JSON.parse(parent.config), mode: body.condition, pauseMs: 0 });
+      const controlSettings = guard.config({ ...JSON.parse(parent.config), mode: body.condition, pauseMs: 0, observePause: body.observePause === true });
       const pausedSettings = guard.config({ ...controlSettings, pauseMs: body.pauseMs });
       const control = yield this._createRun(user, sid, scenario, controlSettings, owners);
       const paused = yield this._createRun(user, sid, scenario, pausedSettings, owners);
@@ -369,6 +374,7 @@ function attachResearch(Lab) {
     );
     if (!records.length) return [];
     const metrics = yield this.metrics(user, sid);
+    const exposure = yield this.pauseExposure(user, sid);
     return yield collect(records.map(flow(function* (record) {
       const pair = JSON.parse(record.payload);
       const arms = {};
@@ -383,6 +389,10 @@ function attachResearch(Lab) {
           configHash: run.config_hash,
           currentConfigurationMatches: run.config === run.config_snapshot,
           sessionUpdated: run.config_version > 1,
+          pauseExposure: {
+            enabled: JSON.parse(run.config_snapshot).observePause === true,
+            ...require("./pause-observations.cjs").summarizeVisits(exposure.visits.filter(visit => visit.runId === arm.id)),
+          },
           journey: summarizeJourneys(metrics.rows.filter(row => row.runId === arm.id)),
         };
       }
@@ -936,6 +946,7 @@ function attachResearch(Lab) {
               "SELECT id,name,baseline,baseline_hash FROM scenarios WHERE session_id=?",
               sid,
             ),
+            pauseExposure: yield this.pauseExposure(user, sid),
             pairs: yield this.runPairs(user, sid),
             runs: yield this.runs(user, sid),
             executions: yield collect(

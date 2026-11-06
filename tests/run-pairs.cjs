@@ -79,7 +79,7 @@ test("Valida duração, modo, identificador, cenário e vínculos sem mutação"
   const before = await counts(f);
   for (const invalid of [0, -1, NaN, Infinity, "5000", 1.5, 60001, null])
     await assert.rejects(async () => create(body({ pauseMs: invalid })));
-  for (const invalid of [body({ condition: "none" }), body({ condition: "other" }), body({ owners: [] }),
+  for (const invalid of [body({ condition: "none" }), body({ condition: "behavior" }), body({ condition: "other" }), body({ owners: [] }),
     body({ owners: { unknown: f.alice.id } }), body({ owners: { ana: f.outsider.id } }), body({ rules: {} })])
     await assert.rejects(async () => create(invalid));
   await assert.rejects(async () => create(body(), "short"));

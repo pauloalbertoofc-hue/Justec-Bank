@@ -24,6 +24,8 @@ const state = {
   scripted: null,
   idempotency: new Map(),
 };
+let pauseDisplay = null;
+let pauseVisit = null;
 const money = (c) =>
   new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(
     c / 100,
@@ -60,6 +62,10 @@ function displayLabel(value) {
   );
 }
 function clear(el) {
+  if (el === $("#workspace")) {
+    finishPauseVisit("leave");
+    pauseDisplay = null;
+  }
   el.replaceChildren();
 }
 function feedback(message) {
@@ -198,6 +204,33 @@ async function safe(fn) {
     }
   }
 }
+// Observação opcional e independente da autorização financeira.
+async function sendPauseSignal(visit, event) {
+  const response = await fetch(`/api/drafts/${visit.draftId}/pause-observations`, {
+    method: "POST", credentials: "same-origin",
+    headers: { "Content-Type": "application/json", "X-CSRF-Token": visit.csrf },
+    body: JSON.stringify({ visitId: visit.id, event }),
+    signal: AbortSignal.timeout(5000),
+  });
+  if (!response.ok) throw new Error("Registro experimental indisponível.");
+}
+function beginPauseVisit() {
+  if (pauseVisit || !pauseDisplay?.element.isConnected || document.visibilityState !== "visible") return;
+  const visit = { id: crypto.randomUUID(), draftId: pauseDisplay.draftId, csrf: state.csrf };
+  pauseVisit = visit;
+  visit.opened = sendPauseSignal(visit, "opened").then(() => true, () => false);
+}
+function finishPauseVisit(event) {
+  const visit = pauseVisit;
+  pauseVisit = null;
+  if (!visit) return;
+  // Saída é enviada após a abertura; falhas nunca bloqueiam a jornada.
+  visit.opened.then(opened => opened ? sendPauseSignal(visit, event).catch(() => {}) : undefined);
+}
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState !== "visible") finishPauseVisit("hidden");
+  else beginPauseVisit();
+});
 function stopTimer() {
   if (state.timer !== null) clearInterval(state.timer);
   state.timer = null;
@@ -923,6 +956,7 @@ function renderPause(w, d) {
       if (fresh.serverNow < fresh.readyAt)
         throw new Error("A pausa do servidor ainda não terminou.");
       state.draft = fresh;
+      finishPauseVisit("continue");
       renderAuthorization(w, fresh);
     },
     "secondary wide",
@@ -949,9 +983,15 @@ function renderPause(w, d) {
     c,
     "muted",
   );
+  if (d.canObservePause) {
+    node("p", "Registro experimental ativo: abertura e ação de saída desta pausa serão registradas, sem capturar digitação. Esses sinais não comprovam leitura.", c, "muted");
+    pauseDisplay = { element: c, draftId: d.id };
+    requestAnimationFrame(beginPauseVisit);
+  }
   focusWorkspace();
 }
 async function cancelJourney(d) {
+  finishPauseVisit("reconsider");
   stopTimer();
   state.draft = await api(`/drafts/${d.id}/cancel`, {
     method: "POST",
@@ -1615,6 +1655,7 @@ async function renderResearch(w) {
         method: "POST",
         body: {
           condition: v.condition,
+          observePause: v.observePause,
           pauseMs: Number(v.pause),
           owners: JSON.parse(v.owners),
         },
@@ -1646,11 +1687,12 @@ async function renderResearch(w) {
       "owners",
       { type: "textarea", value: "{}" },
     );
+    field(f, "Ativar registro mínimo de abertura/saída da pausa (dados fictícios; não substitui consentimento)", "observePause", { type: "checkbox", value: false });
     submit(f, "Iniciar nova execução");
     let pairAttempt = null;
     const pairForm = form(w, "pair-" + scenario.id, `Par de pausa · ${scenario.name}`, async (form) => {
       const v = data(form);
-      const body = { condition: v.condition, pauseMs: Number(v.pause), owners: JSON.parse(v.owners) };
+      const body = { condition: v.condition, pauseMs: Number(v.pause), owners: JSON.parse(v.owners), observePause: v.observePause };
       const signature = JSON.stringify(body);
       if (!pairAttempt || pairAttempt.signature !== signature)
         pairAttempt = { signature, key: crypto.randomUUID() };
@@ -1663,15 +1705,31 @@ async function renderResearch(w) {
     });
     node("p", "Cria duas execuções independentes. Apenas a duração da pausa muda; não há distribuição automática de pessoas nem prova de eficácia.", pairForm, "muted");
     field(pairForm, "Mesmo modo nas duas execuções", "condition", {
-      options: [["education", "Apenas educação"], ["context", "Educação e contexto"], ["behavior", "Comportamental"], ["integrated", "Integrada"]],
+      options: [["education", "Apenas educação"], ["context", "Educação e contexto"], ["integrated", "Integrada"]],
       value: "education",
     });
     field(pairForm, "Pausa da segunda execução (ms); primeira = 0", "pause", {
       type: "number", value: 5000, min: 1, max: 60000, required: true,
     });
     field(pairForm, "Mesmos vínculos slot → participante (JSON; vazio = pesquisador)", "owners", { type: "textarea", value: "{}" });
+    field(pairForm, "Ativar o mesmo registro mínimo nos dois lados (dados fictícios; não substitui consentimento)", "observePause", { type: "checkbox", value: false });
     submit(pairForm, "Criar par de pausa");
   }
+  const exposure = await api(`/sessions/${sid}/pause-exposure`);
+  const exposureCard = card(w, "Sinais de abertura e saída da pausa", "pause-exposure-report");
+  node("p", exposure.definition, exposureCard, "muted");
+  summary(exposureCard, [
+    ["Visitas com abertura informada", exposure.summary.openedVisits],
+    ["Visitas com saída informada", exposure.summary.closedVisits],
+    ["Registros incompletos", exposure.summary.incompleteVisits],
+    ["Intervalos com inconsistência de relógio", exposure.summary.clockAnomalies],
+    ["Pedidos para continuar", exposure.summary.continued],
+    ["Pedidos de reconsideração", exposure.summary.reconsidered],
+    ["Saídas por navegação", exposure.summary.leftView],
+    ["Documento ocultado", exposure.summary.hidden],
+    ["Intervalo médio entre recebimentos", exposure.summary.meanServerIntervalMs === null ? "Sem dados" : `${Math.round(exposure.summary.meanServerIntervalMs)} ms`],
+  ]);
+  node("p", "Ativação é opcional e vale apenas para novas execuções experimentais. Múltiplas visitas não representam pessoas distintas. Registro ausente pode significar falha de rede ou coleta desativada; não é abandono comprovado.", exposureCard, "muted");
   const pairs = await api(`/sessions/${sid}/run-pairs`);
   const pairList = card(w, "Pares controlados de pausa", "run-pair-list");
   node("p", "Equivalência verificada na criação. A duração configurada não prova exposição à pausa. Alterações posteriores e efeitos de ordem precisam ser considerados antes de interpretar resultados.", pairList, "muted");
@@ -1681,10 +1739,11 @@ async function renderResearch(w) {
     node("p", `Par ${pair.id.slice(0, 12)} · Base ${pair.baselineHash.slice(0, 12)} · Parâmetros fixos ${pair.fixedSettingsHash.slice(0, 12)}`, panel, "muted");
     if ([pair.control, pair.paused].some(arm => arm.sessionUpdated || !arm.currentConfigurationMatches))
       node("p", "Atenção: um ambiente do par foi alterado depois da criação. Confira a auditoria; não presuma equivalência durante o uso.", panel);
-    table(panel, ["Execução", "Espera configurada", "Atribuídas", "Não iniciadas", "Em andamento", "Concluídas", "Interrompidas", "Canceladas"],
+    table(panel, ["Execução", "Espera configurada", "Atribuídas", "Não iniciadas", "Em andamento", "Concluídas", "Interrompidas", "Canceladas", "Registro", "Aberturas informadas", "Saídas informadas"],
       [["Sem espera", pair.control], ["Com espera", pair.paused]].map(([label, arm]) => [
         label, `${arm.pauseConfiguredMs} ms`, arm.journey.assigned, arm.journey.notStarted,
         arm.journey.inProgress, arm.journey.completed, arm.journey.blocked, arm.journey.cancelled,
+        arm.pauseExposure.enabled ? "Ativo" : "Desativado", arm.pauseExposure.openedVisits, arm.pauseExposure.closedVisits,
       ]));
     for (const [label, arm] of [["Abrir execução sem espera", pair.control], ["Abrir execução com espera", pair.paused]])
       action(panel, label, async () => { await refreshSessions(arm.sessionId); await renderView("accounts"); });

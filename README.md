@@ -22,6 +22,10 @@ A branch local de pesquisa acrescenta ao painel os totais de operações atribu�
 
 A construção local permite criar duas execuções da mesma base, com modo e regras iguais, variando apenas a espera configurada (0 ms e duração escolhida). Criação atômica, idempotência e vínculo auditável. Ainda não publicada. [Guia dos pares controlados](Documentação/PARES_CONTROLADOS_DE_PAUSA.md).
 
+## Próxima etapa em desenvolvimento — sinais da pausa
+
+Registro mínimo opcional, desativado por padrão e restrito às execuções experimentais. Mostra sinais de abertura/saída e resultados por lado do par, sem afirmar leitura ou impedir Pix se o registro falhar. Ainda não publicado. [Guia e limites do registro](Documentação/REGISTRO_MINIMO_DA_PAUSA.md).
+
 ## Iniciar no VS Code
 
 Requer **Node.js 24 ou superior**, com `node:sqlite`. O modo SQLite local usa módulos nativos. O modo PostgreSQL usa o driver `pg`, fixado no package-lock; execute `npm ci --omit=dev` antes de iniciar nesse modo.
