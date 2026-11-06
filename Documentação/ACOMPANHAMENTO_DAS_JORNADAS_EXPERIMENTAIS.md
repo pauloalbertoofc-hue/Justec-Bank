@@ -1,5 +1,7 @@
 # JUSTEC — Acompanhamento das jornadas experimentais
 
+**Estado atualizado:** esta etapa foi integrada e publicada no Render. [Revisão e evidência externa](REVISAO_INTEGRADA_PAINEL_PESQUISA.md). As referências abaixo à branch local e à ausência de publicação descrevem a preparação original da etapa.
+
 ## Objetivo e estado da entrega
 
 Preparar o laboratório para futuras comparações com dados fictícios, verificadas automaticamente antes dos testes com pessoas. Implementação local na branch `pesquisa-jornadas-incompletas`, sem publicação nesta etapa. Não há recrutamento, ativação de experimento com usuários reais ou comprovação de eficácia.

@@ -2,7 +2,7 @@
 
 ## Entrega
 
-Reúne o acompanhamento das jornadas, pares controlados de duração e registro mínimo opcional da pausa. Acrescenta organização do painel e revisão de compatibilidade antes da publicação autorizada. O resultado da publicação será registrado separadamente: passar nos testes locais e enviar ao GitHub não equivale a confirmar disponibilidade no Render.
+Reúne o acompanhamento das jornadas, pares controlados de duração e registro mínimo opcional da pausa. Acrescenta organização do painel e revisão de compatibilidade antes da publicação autorizada. Publicação confirmada externamente conforme o registro ao final deste documento. Passar nos testes locais e enviar ao GitHub não foi tratado como confirmação suficiente: a versão foi conferida no endereço público.
 
 ## Como usar
 
@@ -75,3 +75,13 @@ Testes funcionais não demonstram eficácia contra golpes. Não há randomizaç�
 A verificação extra `npm run test:legacy` **não passou**: parou na primeira suíte, balance, ao clicar no botão de olho da demonstração estática. Diagnóstico em Chromium: botão com largura 0, runtime Tailwind local presente e sem erros JS. Font Awesome e fontes da demonstração dependem de CDNs; os pedidos HTTPS foram recusados pelo proxy com HTTP 403. A página da demonstração, CSS e seus módulos financeiros estão idênticos ao commit publicado anterior. Não se alteraram testes para simular clique via JavaScript nem se classificou essa suíte como aprovada. As oito suítes seguintes do runner não foram executadas, pois ele interrompe na primeira falha. O laboratório persistente usa seus próprios controles e passou nos testes acima. Disponibilizar localmente os recursos visuais externos da demonstração é recomendação futura, separada desta entrega.
 
 Não foram executados testes com contas reais ou estudo com pessoas, dispositivos físicos ou outros navegadores. O ensaio de atualização não é backup de produção. A checagem pública posterior não realizará operações autenticadas.
+
+## Publicação confirmada
+
+Código enviado no commit `01f40e1349991419c53dc70481d3cfc170865c74` à branch `laboratorio-multiusuario`. A execução pública [42142388039](https://github.com/pauloalbertoofc-hue/Justec-Bank/actions/runs/42142388039), job `127645608868`, concluiu **Success**, incluindo **Published entrypoint research-panel-ready**. O GitHub registra conclusão em `2026-11-06T01:14:15Z`.
+
+Foram conferidos o marcador público `research-panel-1`, scripts e CSS do novo painel, recuperação/convites preservados, saúde PostgreSQL, entrada por login, CSP e recusa de acesso sem autenticação nas rotas de pares e exposição. A evidência foi lida pela página pública do GitHub, pois a API e o acesso direto ao Render neste ambiente são limitados pelo proxy. O workflow consulta o endereço real do Render, sem credenciais ou operações de usuários.
+
+Site: https://justec-laboratorio.onrender.com/ . Entrar com o acesso existente e abrir **Administração → Pesquisa → Configuração / Execução / Resultados**. main permaneceu em `837cb414ad27a149c9e0c57004f75af340ba9aec`, preservando a versão anterior da Vercel. Contas, senhas e dados de produção não foram modificados pelo agente. A coleta permanece desativada por padrão e em configurações antigas.
+
+O ensaio público não inclui uso autenticado de contas reais nem valida eficácia. Permanecem as limitações de testes estáticos/CDNs descritas acima. Atualizações documentais posteriores não modificam o código verificado.

@@ -1,5 +1,7 @@
 # JUSTEC — Pares controlados de duração da pausa
 
+**Estado atualizado:** esta etapa foi integrada e publicada no Render. [Revisão e evidência externa](REVISAO_INTEGRADA_PAINEL_PESQUISA.md). As referências abaixo à branch local e à ausência de publicação descrevem a preparação original da etapa.
+
 ## Objetivo e estado
 
 Construir a infraestrutura de uma comparação controlada com dados exclusivamente fictícios. Entrega local na branch `pesquisa-pares-de-pausa`, ainda não publicada. Não houve participação de pessoas, recrutamento ou ensaio de eficácia.

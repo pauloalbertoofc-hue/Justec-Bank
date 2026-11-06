@@ -1,6 +1,6 @@
 # JUSTEC Bank — laboratório acadêmico multiusuário
 
-Laboratório publicado: **https://justec-laboratorio.onrender.com/**. Em **25/10/2026**, a verificação externa confirmou a entrada **login-first**, o PostgreSQL e os arquivos da nova interface. Saúde PostgreSQL, arquivos públicos e recusa de acesso sem login foram verificados externamente pelo GitHub Actions em 22/10/2026. [Evidência e limites da verificação](Documentação/VERIFICACAO_PUBLICACAO_RENDER_2026-10-22.md). Operações autenticadas em produção ainda dependem do roteiro de aceitação do titular.
+Laboratório publicado: **https://justec-laboratorio.onrender.com/**. Revisão integrada confirmada externamente: painel em **Configuração, Execução e Resultados**, PostgreSQL e arquivos novos. [Evidência e limites da revisão](Documentação/REVISAO_INTEGRADA_PAINEL_PESQUISA.md). Não foram usadas contas reais para testes autenticados de produção. As verificações anteriores permanecem documentadas em [histórico de publicação](Documentação/VERIFICACAO_PUBLICACAO_RENDER_2026-10-22.md).
 
 No servidor desta branch, `/` abre primeiro o login em `/laboratorio/`. Depois de entrar, o participante usa a Home bancária com seu saldo persistente, Pix, extrato, chaves e educação na mesma navegação. O botão **Administração**, disponível somente à equipe autorizada, abre os instrumentos de gestão e pesquisa. Não existe mais a passagem de uma Home com saldo ilustrativo para outro painel de participante.
 
@@ -16,15 +16,15 @@ Publicação confirmada por verificação externa no commit `fcb0ee9`: PostgreSQ
 
 ## Jornadas experimentais
 
-A entrega integrada acrescenta ao painel os totais de operações atribuídas, não iniciadas, em andamento, concluídas, interrompidas e canceladas, além do histórico de reconsideração e da pausa configurada. O estado de publicação consta no Relatório-Mestre. [Funcionamento e limitações](Documentação/ACOMPANHAMENTO_DAS_JORNADAS_EXPERIMENTAIS.md).
+A entrega integrada acrescenta ao painel os totais de operações atribuídas, não iniciadas, em andamento, concluídas, interrompidas e canceladas, além do histórico de reconsideração e da pausa configurada. Publicação confirmada na revisão integrada. [Funcionamento e limitações](Documentação/ACOMPANHAMENTO_DAS_JORNADAS_EXPERIMENTAIS.md).
 
 ## Pares de pausa
 
-A entrega permite criar duas execuções da mesma base, com modo e regras iguais, variando apenas a espera configurada (0 ms e duração escolhida). Criação atômica, idempotência e vínculo auditável. O estado de publicação consta no Relatório-Mestre. [Guia dos pares controlados](Documentação/PARES_CONTROLADOS_DE_PAUSA.md).
+A entrega permite criar duas execuções da mesma base, com modo e regras iguais, variando apenas a espera configurada (0 ms e duração escolhida). Criação atômica, idempotência e vínculo auditável. Publicação confirmada na revisão integrada. [Guia dos pares controlados](Documentação/PARES_CONTROLADOS_DE_PAUSA.md).
 
 ## Sinais da pausa
 
-Registro mínimo opcional, desativado por padrão e restrito às execuções experimentais. Mostra sinais de abertura/saída e resultados por lado do par, sem afirmar leitura ou impedir Pix se o registro falhar. O estado de publicação consta no Relatório-Mestre. [Guia e limites do registro](Documentação/REGISTRO_MINIMO_DA_PAUSA.md).
+Registro mínimo opcional, desativado por padrão e restrito às execuções experimentais. Mostra sinais de abertura/saída e resultados por lado do par, sem afirmar leitura ou impedir Pix se o registro falhar. Publicação confirmada na revisão integrada. [Guia e limites do registro](Documentação/REGISTRO_MINIMO_DA_PAUSA.md).
 
 ## Painel de pesquisa organizado
 

@@ -1,5 +1,7 @@
 # JUSTEC — Registro mínimo de abertura e saída da pausa
 
+**Estado atualizado:** esta etapa foi integrada e publicada no Render. [Revisão e evidência externa](REVISAO_INTEGRADA_PAINEL_PESQUISA.md). As referências abaixo à branch local e à ausência de publicação descrevem a preparação original da etapa.
+
 ## Finalidade e estado
 
 Distinguir duração configurada de sinais observados no navegador, preparando o laboratório para análises futuras. Implementação local na branch `pesquisa-exposicao-da-pausa`, ainda não publicada. Testes exclusivamente com dados fictícios; nenhum estudo com pessoas iniciado.
