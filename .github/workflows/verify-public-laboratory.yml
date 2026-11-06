@@ -46,10 +46,11 @@ jobs:
               response = await get('/laboratorio/');
               assert.equal(response.status, 200);
               html = await response.text();
-              if (html.includes('id="recovery-form"')) break;
+              if (html.includes('data-release="research-panel-1"')) break;
               if (attempt < 11) await new Promise(resolve => setTimeout(resolve, 10000));
             }
             for (const id of ['login-form', 'register-form', 'auth-view', 'recovery-form', 'invitation-notice']) assert(html.includes('id="' + id + '"'), id);
+            assert(html.includes('data-release="research-panel-1"'), 'Integrated research release');
             assert.match(response.headers.get('content-security-policy') || '', /script-src 'self'/);
             assert.equal(response.headers.get('x-frame-options'), 'DENY');
             console.log('PASS laboratory HTML: recovery, invitations, CSP and frame protection');
@@ -63,14 +64,21 @@ jobs:
                 const source = await result.text();
                 assert(source.includes('/auth/recover'));
                 assert(source.includes('Copiar link de convite'));
+                assert(source.includes('research-section-nav'));
+                assert(source.includes('/run-pairs'));
+                assert(source.includes('/pause-observations'));
+                assert(source.includes('Registro experimental ativo'));
               }
               if (asset === '/laboratorio/bank.js') {
                 const source = await result.text();
                 assert(source.includes('/auth/recovery-code'));
               }
+              if (asset === '/laboratorio/lab.css') {
+                assert((await result.text()).includes('.research-section-nav'));
+              }
               console.log('PASS asset ' + asset);
             }
-            for (const route of ['/api/auth/me', '/api/sessions']) {
+            for (const route of ['/api/auth/me', '/api/sessions', '/api/sessions/public-smoke/run-pairs', '/api/sessions/public-smoke/pause-exposure']) {
               const result = await get(route);
               assert.equal(result.status, 401, 'Unauthenticated ' + route);
               console.log('PASS unauthenticated access denied: ' + route);
@@ -89,7 +97,7 @@ jobs:
             } else {
               assert(text.includes('id="home-security"'));
             }
-            require('node:fs').appendFileSync(process.env.GITHUB_OUTPUT, 'ui_mode=' + (bankEntry ? 'recovery-and-invitations-ready' : 'legacy-entry-awaiting-deploy') + '\n');
+            require('node:fs').appendFileSync(process.env.GITHUB_OUTPUT, 'ui_mode=' + (bankEntry ? 'research-panel-ready' : 'legacy-entry-awaiting-deploy') + '\n');
             console.log('PASS public entrypoint detected; original education preserved');
             console.log('Read-only public smoke passed. No authenticated transactions, live browser rendering or efficacy study performed.');
           })().catch(error => { console.error(error.message); process.exitCode = 1; });

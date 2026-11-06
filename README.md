@@ -14,17 +14,21 @@ A atualização inclui convite por link, orientação sobre pseudônimo e recupe
 
 Publicação confirmada por verificação externa no commit `fcb0ee9`: PostgreSQL, formulário de recuperação, arquivos novos e recusa de acesso sem login. [Execução de verificação](https://github.com/pauloalbertoofc-hue/Justec-Bank/actions/runs/42136666531). Isso não inclui operações autenticadas em produção.
 
-## Próxima etapa em desenvolvimento — jornadas experimentais
+## Jornadas experimentais
 
-A branch local de pesquisa acrescenta ao painel os totais de operações atribuídas, não iniciadas, em andamento, concluídas, interrompidas e canceladas, além do histórico de reconsideração e da pausa configurada. Esta etapa ainda não foi publicada. [Funcionamento e limitações](Documentação/ACOMPANHAMENTO_DAS_JORNADAS_EXPERIMENTAIS.md).
+A entrega integrada acrescenta ao painel os totais de operações atribuídas, não iniciadas, em andamento, concluídas, interrompidas e canceladas, além do histórico de reconsideração e da pausa configurada. O estado de publicação consta no Relatório-Mestre. [Funcionamento e limitações](Documentação/ACOMPANHAMENTO_DAS_JORNADAS_EXPERIMENTAIS.md).
 
-## Próxima etapa em desenvolvimento — pares de pausa
+## Pares de pausa
 
-A construção local permite criar duas execuções da mesma base, com modo e regras iguais, variando apenas a espera configurada (0 ms e duração escolhida). Criação atômica, idempotência e vínculo auditável. Ainda não publicada. [Guia dos pares controlados](Documentação/PARES_CONTROLADOS_DE_PAUSA.md).
+A entrega permite criar duas execuções da mesma base, com modo e regras iguais, variando apenas a espera configurada (0 ms e duração escolhida). Criação atômica, idempotência e vínculo auditável. O estado de publicação consta no Relatório-Mestre. [Guia dos pares controlados](Documentação/PARES_CONTROLADOS_DE_PAUSA.md).
 
-## Próxima etapa em desenvolvimento — sinais da pausa
+## Sinais da pausa
 
-Registro mínimo opcional, desativado por padrão e restrito às execuções experimentais. Mostra sinais de abertura/saída e resultados por lado do par, sem afirmar leitura ou impedir Pix se o registro falhar. Ainda não publicado. [Guia e limites do registro](Documentação/REGISTRO_MINIMO_DA_PAUSA.md).
+Registro mínimo opcional, desativado por padrão e restrito às execuções experimentais. Mostra sinais de abertura/saída e resultados por lado do par, sem afirmar leitura ou impedir Pix se o registro falhar. O estado de publicação consta no Relatório-Mestre. [Guia e limites do registro](Documentação/REGISTRO_MINIMO_DA_PAUSA.md).
+
+## Painel de pesquisa organizado
+
+**Administração → Pesquisa** reúne **Configuração**, **Execução** e **Resultados**, com um roteiro de demonstração sintética. Convites, cenários, execuções, exportações e auditoria foram preservados. [Guia da revisão integrada](Documentação/REVISAO_INTEGRADA_PAINEL_PESQUISA.md).
 
 ## Iniciar no VS Code
 

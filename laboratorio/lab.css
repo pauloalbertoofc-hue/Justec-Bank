@@ -870,3 +870,33 @@
     font-size: 18px;
   }
 }
+
+/* Painel de pesquisa: controles nativos, áreas distintas e tabelas contidas. */
+.research-section-nav {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 18px 0 12px;
+}
+.research-section-nav button {
+  min-width: 0;
+  min-height: 44px;
+  padding: 10px 6px;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.research-section-nav button[aria-pressed="true"] {
+  background: #ffcc00;
+  color: #07132a;
+  font-weight: 800;
+}
+.research-section {
+  min-width: 0;
+}
+.research-section > h2 {
+  scroll-margin-top: 120px;
+}
+.research-section [tabindex="-1"]:focus {
+  outline: 2px solid #ffcc00;
+  outline-offset: 4px;
+}

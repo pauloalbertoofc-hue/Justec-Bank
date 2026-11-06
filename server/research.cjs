@@ -887,6 +887,7 @@ function attachResearch(Lab) {
     yield this.member(user, sid, ["admin", "researcher"]);
     return {
       session: yield this.session(user, sid),
+      configurationFrozen: !!(yield this.one("SELECT 1 FROM runs WHERE session_id=?", sid)),
       members: yield this.members(user, sid),
       accounts: yield this.all(
         "SELECT a.id,a.name,a.owner_id ownerId,a.profile,a.status,a.limit_cents limitCents,COALESCE(SUM(l.delta_cents),0) balanceCents FROM accounts a LEFT JOIN ledger_entries l ON l.account_id=a.id WHERE a.session_id=? AND a.kind='virtual' GROUP BY a.id",

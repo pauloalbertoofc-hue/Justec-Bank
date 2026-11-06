@@ -1,0 +1,70 @@
+"use strict";
+// Ensaio local contra a versão publicada anterior; requer o histórico Git.
+const test = require("node:test");
+const assert = require("node:assert/strict");
+const fs = require("node:fs");
+const os = require("node:os");
+const path = require("node:path");
+const { execFileSync } = require("node:child_process");
+const { once } = require("node:events");
+const OLD = "300ba15c722797fc661b4e1e1cbcfd84db81e269";
+test("Banco da versão publicada anterior conserva login, saldo, extrato e cenários na atualização", async t => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "justec-upgrade-"));
+  const source = path.join(dir, "previous"); fs.mkdirSync(source);
+  const database = path.join(dir, "private.sqlite");
+  const cleanups = [() => fs.rmSync(dir, { recursive: true, force: true })];
+  t.after(async () => { for (const cleanup of cleanups.reverse()) await cleanup(); });
+  const archive = execFileSync("git", ["archive", OLD], { cwd: path.resolve(__dirname, ".."), maxBuffer: 32 * 1024 * 1024 });
+  execFileSync("tar", ["-xf", "-", "-C", source], { input: archive });
+  const createOld = `
+    const path = require('node:path');
+    const [root, filename] = process.argv.slice(1);
+    const {openDatabase} = require(path.join(root,'server/db.cjs'));
+    const {Lab} = require(path.join(root,'server/lab.cjs'));
+    const research = require(path.join(root,'server/research.cjs'));
+    const security = require(path.join(root,'server/security.cjs'));
+    research.attachResearch(Lab);
+    (async () => {
+      const db=openDatabase(filename), lab=new Lab(db);
+      const user=await security.register(db,{alias:'legacy-researcher',password:'synthetic-upgrade-password',consent:true},'admin');
+      const session=lab.createSession(user,{name:'Ambiente antigo fictício',config:{pauseMs:0}});
+      const scenario=lab.createScenario(user,session.id,research.examples()[0]);
+      const run=lab.startRun(user,session.id,scenario.id,{condition:'education',pauseMs:0});
+      const operation=lab.runs(user,session.id)[0].operations[0];
+      let draft=lab.taskDraft(user,operation.id);
+      lab.evaluateDraft(user,draft.id,{});
+      const receipt=lab.authorize(user,draft.id,{demoCode:'0000'},'legacy-upgrade-approval');
+      const access=await security.login(db,{alias:user.alias,password:'synthetic-upgrade-password'});
+      const balances=db.prepare('SELECT id,owner_id FROM accounts ORDER BY id').all().map(a=>({...a,balance:lab.balance(a.id)}));
+      const snapshot=db.prepare('SELECT config_snapshot FROM runs WHERE id=?').get(run.id).config_snapshot;
+      process.stdout.write(JSON.stringify({user,sessionId:session.id,run,draftId:draft.id,receiptId:receipt.id,secret:access.secret,balances,snapshot}));
+      db.close();
+    })().catch(()=>{process.stderr.write('Falha ao preparar fixture antiga.');process.exitCode=1;});
+  `;
+  const old = JSON.parse(execFileSync(process.execPath, ["-e", createOld, source, database], { encoding: "utf8" }));
+  const db = require("../server/db.cjs").openDatabase(database);
+  cleanups.push(() => db.close());
+  const { Lab } = require("../server/lab.cjs"); require("../server/research.cjs").attachResearch(Lab);
+  const lab = new Lab(db);
+  const security = require("../server/security.cjs");
+  assert.equal(security.authenticate(db, old.secret).id, old.user.id);
+  assert.equal((await security.login(db, { alias: old.user.alias, password: "synthetic-upgrade-password" })).user.globalRole, "admin");
+  assert.deepEqual(db.prepare("SELECT id,owner_id FROM accounts ORDER BY id").all().map(a => ({ ...a, balance: lab.balance(a.id) })), old.balances);
+  assert.equal(lab.receipt(old.user, old.receiptId).id, old.receiptId);
+  assert.equal(lab.metrics(old.user, old.sessionId).groups[0].journey.completed, 1);
+  assert.equal(lab.overview(old.user, old.sessionId).configurationFrozen, false);
+  assert.equal(lab.overview(old.user, old.run.sessionId).configurationFrozen, true);
+  assert.equal(lab.draft(old.user, old.draftId).canObservePause, false);
+  assert.deepEqual(lab.runPairs(old.user, old.sessionId), []);
+  assert.equal(lab.pauseExposure(old.user, old.sessionId).summary.openedVisits, 0);
+  const repeated = lab.repeatRun(old.user, old.run.id);
+  assert.equal(db.prepare("SELECT config_snapshot FROM runs WHERE id=?").get(repeated.id).config_snapshot, old.snapshot);
+  const server = require("../server/http.cjs").createServer(db, { rateLimit: false });
+  server.listen(0, "127.0.0.1"); await once(server, "listening");
+  cleanups.push(() => new Promise(resolve => server.close(resolve)));
+  const base = `http://127.0.0.1:${server.address().port}`;
+  for (const route of ["/api/auth/me", `/api/sessions/${old.sessionId}/research`, `/api/sessions/${old.sessionId}/run-pairs`, `/api/sessions/${old.sessionId}/pause-exposure`]) {
+    const response = await fetch(base + route, { headers: { Cookie: `justec_session=${old.secret}` } });
+    assert.equal(response.status, 200, route);
+  }
+});

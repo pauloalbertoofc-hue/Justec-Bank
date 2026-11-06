@@ -180,9 +180,22 @@ const { createServer } = require("../server/http.cjs");
     assert.equal(denied, 403);
     const researcher = admin.page;
     await researcher.locator("#research-nav").click();
+    await researcher.locator("#scenario-form").waitFor();
+    assert.equal(await researcher.locator("#research-section-setup").isVisible(), true);
+    assert.equal(await researcher.locator("#research-section-results").isVisible(), false);
+    const countsBeforeGuide = (await f.db.prepare("SELECT COUNT(*) n FROM runs").get()).n;
+    await researcher.getByText("Roteiro de demonstração com dados fictícios", { exact: true }).click();
+    assert.match(await researcher.locator("#workspace").innerText(), /código demonstrativo 0000/);
+    assert.equal((await f.db.prepare("SELECT COUNT(*) n FROM runs").get()).n, countsBeforeGuide);
+    await researcher.getByText("Roteiro de demonstração com dados fictícios", { exact: true }).click();
+    await researcher.locator('[data-research-section="results"]').focus();
+    await researcher.keyboard.press("Enter");
+    assert.equal(await researcher.locator('[data-research-section="results"]').getAttribute("aria-pressed"), "true");
+    assert.equal(await researcher.locator("#research-section-setup").isVisible(), false);
+    await researcher.locator('[data-research-section="setup"]').click();
     await researcher
       .getByRole("button", {
-        name: "Adicionar os quatro exemplos científicos",
+        name: "Adicionar quatro cenários fictícios",
         exact: true,
       })
       .click();
@@ -214,6 +227,7 @@ const { createServer } = require("../server/http.cjs");
     await researcher.locator("#session-select").selectOption(f.sessionId);
     await researcher.waitForSelector("#create-account-form");
     await researcher.locator("#research-nav").click();
+    await researcher.locator('[data-research-section="results"]').click();
     await researcher
       .getByRole("heading", { name: "Comparação experimental", exact: true })
       .waitFor();
@@ -231,6 +245,7 @@ const { createServer } = require("../server/http.cjs");
     assert.equal(exported.metrics.groups[0].journey.assigned, 1);
     assert.equal(exported.metrics.groups[0].journey.byLabel.legitimate.blocked, 1);
     assert.equal(exported.metrics.groups[0].pauseConfiguredMs, 40);
+    await researcher.locator('[data-research-section="execution"]').click();
     const pairForm = researcher.locator('form[id^="pair-"]').filter({
       has: researcher.getByRole("heading", { name: "Par de pausa · Transferência legítima", exact: true }),
     });
@@ -265,6 +280,15 @@ const { createServer } = require("../server/http.cjs");
     await researcher.locator("#workspace [name=confirm]").check();
     await researcher.locator("#lab-authorize").click();
     await researcher.getByRole("heading", { name: "Pix realizado no laboratório", exact: true }).waitFor();
+    await researcher.locator("#research-nav").click();
+    await researcher.locator("#configuration-form").waitFor();
+    await researcher.locator('#configuration-form [name=status]').selectOption("archived");
+    const archiveResponse = researcher.waitForResponse(response => response.request().method() === "PATCH" && response.url().endsWith(`/sessions/${pairData[0].control.sessionId}`));
+    await researcher.locator('#configuration-form button[type=submit]').click();
+    assert.equal((await archiveResponse).status(), 200, "Arquivar execução não deve reenviar configuração congelada");
+    await researcher.waitForFunction(() => document.querySelector("#session-status").textContent.includes("Arquivada"));
+    await researcher.locator('#configuration-form [name=config]').waitFor();
+    assert.equal(await researcher.locator('#configuration-form [name=config]').isEditable(), false);
     await researcher.locator("#session-select").selectOption(pairData[0].paused.sessionId);
     await researcher.locator("#create-account-form").waitFor();
     await researcher.route("**/api/drafts/*/pause-observations", route => route.fulfill({ status: 503, contentType: "application/json", body: '{"error":{"message":"synthetic observation failure"}}' }));
@@ -290,9 +314,16 @@ const { createServer } = require("../server/http.cjs");
     await researcher.locator("#session-select").selectOption(f.sessionId);
     await researcher.locator("#create-account-form").waitFor();
     await researcher.locator("#research-nav").click();
+    await researcher.locator('[data-research-section="results"]').click();
     await researcher.locator(".run-pair-card").waitFor();
     for (const width of [320, 375, 390, 768, 1024, 1366, 1920]) {
       await researcher.setViewportSize({ width, height: 900 });
+      for (const section of ["setup", "execution", "results"]) {
+        await researcher.locator(`[data-research-section="${section}"]`).click();
+        assert.equal(await researcher.locator(".research-section:visible").count(), 1);
+        assert.equal(await researcher.locator(`#research-section-${section}`).isVisible(), true);
+        assert.equal(await researcher.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1), false, `research/${section}/${width}`);
+      }
       assert(await researcher.getByRole("heading", { name: "Todas as jornadas atribuídas", exact: true }).isVisible());
       assert.match(await researcher.locator(".study-journeys").innerText(), /Não iniciadas/);
       assert.match(await researcher.locator(".run-pair-card").innerText(), /250 ms/);

@@ -18,6 +18,8 @@ const state = {
   selectedAccount: null,
   view: "home",
   mode: "bank",
+  researchSection: "setup",
+  researchSession: null,
   balanceVisible: true,
   draft: null,
   timer: null,
@@ -253,6 +255,8 @@ function showAuth() {
   state.scripted = null;
   state.idempotency.clear();
   state.mode = "bank";
+  state.researchSection = "setup";
+  state.researchSession = null;
   state.balanceVisible = true;
   clear($("#workspace"));
   document.body.dataset.access = "login";
@@ -1369,7 +1373,51 @@ async function renderResearch(w) {
   const buttons = node("div", null, head, "actions");
   action(buttons, "Exportar JSON", () => downloadExport("json"));
   action(buttons, "Exportar CSV", () => downloadExport("csv"));
-  const metrics = card(w, "Comparação experimental");
+  if (state.researchSession !== sid) {
+    state.researchSession = sid;
+    state.researchSection = "setup";
+  }
+  const sectionNav = node("nav", null, head, "research-section-nav");
+  sectionNav.setAttribute("aria-label", "Etapas do painel de pesquisa");
+  const sections = {};
+  const sectionButtons = {};
+  const labels = { setup: "Configuração", execution: "Execução", results: "Resultados" };
+  function selectSection(name, focus = false) {
+    state.researchSection = name;
+    for (const [key, section] of Object.entries(sections)) {
+      section.hidden = key !== name;
+      sectionButtons[key].setAttribute("aria-pressed", String(key === name));
+    }
+    if (focus) sections[name].querySelector("h2").focus();
+  }
+  for (const [key, label] of Object.entries(labels)) {
+    const section = node("section", null, w, "research-section");
+    section.id = "research-section-" + key;
+    section.hidden = key !== state.researchSection;
+    const title = node("h2", label, section);
+    title.id = section.id + "-title";
+    title.tabIndex = -1;
+    section.setAttribute("aria-labelledby", title.id);
+    sections[key] = section;
+    const button = action(sectionNav, label, () => selectSection(key, true));
+    button.dataset.researchSection = key;
+    button.setAttribute("aria-controls", section.id);
+    sectionButtons[key] = button;
+  }
+  selectSection(state.researchSection);
+  node("p", "Prepare a equipe e os cenários. Nenhum Pix é iniciado nesta área.", sections.setup, "muted");
+  node("p", "Escolha uma execução individual ou um par. A coleta de sinais da pausa permanece desligada até ativação explícita.", sections.execution, "muted");
+  node("p", "Confira os desfechos, sinais e auditoria. Resultados descritivos não comprovam eficácia preventiva.", sections.results, "muted");
+  const guide = details(head, "Roteiro de demonstração com dados fictícios");
+  const steps = node("ol", null, guide);
+  for (const text of [
+    "Em Configuração, confira o ambiente e adicione ou salve um cenário fictício. Convites são necessários somente para acessos independentes da equipe.",
+    "Em Execução, escolha uma transferência legítima ou um cenário de suspeita/falso positivo. Para comparar a espera, crie um par com a mesma base e regras.",
+    "Mantenha o registro da pausa desligado ou ative-o explicitamente para esta demonstração sintética. Isso não substitui consentimento para estudos com pessoas.",
+    "Abra um roteiro ou operação atribuída e siga conferência, pausa, código demonstrativo 0000 e resultado. Verifique também a opção de reconsiderar.",
+    "Volte a Resultados e confira jornadas, cada lado do par e registros incompletos. Compare o gabarito fictício com o desfecho e exporte o JSON se necessário.",
+  ]) node("li", text, steps);
+  const metrics = card(sections.results, "Comparação experimental");
   node("p", overview.metrics.definition, metrics, "muted");
   table(
     metrics,
@@ -1458,7 +1506,7 @@ async function renderResearch(w) {
     overview.indicatorDistribution.map((r) => [r.code, r.evaluations]),
   );
   if (state.session.role === "admin") {
-    const grid = node("div", null, w, "lab-grid");
+    const grid = node("div", null, sections.setup, "lab-grid");
     const invite = form(
       grid,
       "invite-form",
@@ -1508,7 +1556,9 @@ async function renderResearch(w) {
         const v = data(f);
         await api("/sessions/" + sid, {
           method: "PATCH",
-          body: { status: v.status, config: JSON.parse(v.config) },
+          body: overview.configurationFrozen
+            ? { status: v.status }
+            : { status: v.status, config: JSON.parse(v.config) },
         });
         await refreshSessions(sid);
         await renderView("research");
@@ -1522,12 +1572,15 @@ async function renderResearch(w) {
       ],
       value: state.session.status,
     });
-    field(conf, "Configuração versionada (JSON)", "config", {
+    const configurationInput = field(conf, "Configuração versionada (JSON)", "config", {
       type: "textarea",
       value: JSON.stringify(state.session.config, null, 2),
     });
+    configurationInput.readOnly = overview.configurationFrozen;
+    if (overview.configurationFrozen)
+      node("p", "Configuração congelada nesta execução. Para mudar regras ou pausa, crie outra execução. Aqui você pode alterar apenas o estado do ambiente.", conf, "muted");
     submit(conf, "Registrar alteração auditada");
-    const roles = details(w, "Participantes e papéis");
+    const roles = details(sections.setup, "Participantes e papéis");
     for (const member of overview.members) {
       const f = form(roles, "role-" + member.id, member.alias, async (form) => {
         await api(`/sessions/${sid}/members/${member.id}`, {
@@ -1549,7 +1602,7 @@ async function renderResearch(w) {
     }
   }
   const configure = details(
-    w,
+    sections.setup,
     "Contas e condições operacionais (sem edição direta de saldo)",
   );
   for (const a of overview.accounts) {
@@ -1608,7 +1661,7 @@ async function renderResearch(w) {
   }
   const samples = await api(`/sessions/${sid}/examples`);
   const scenarioForm = form(
-    w,
+    sections.setup,
     "scenario-form",
     "Criar cenário versionado",
     async (f) => {
@@ -1617,6 +1670,7 @@ async function renderResearch(w) {
         method: "POST",
         body: { name: v.name, baseline: JSON.parse(v.baseline) },
       });
+      state.researchSection = "execution";
       await renderView("research");
     },
   );
@@ -1642,14 +1696,15 @@ async function renderResearch(w) {
     );
   });
   submit(scenarioForm, "Salvar cenário");
-  action(scenarioForm, "Adicionar os quatro exemplos científicos", async () => {
+  action(scenarioForm, "Adicionar quatro cenários fictícios", async () => {
     for (const sample of samples)
       await api(`/sessions/${sid}/scenarios`, { method: "POST", body: sample });
+    state.researchSection = "execution";
     await renderView("research");
   });
   const scenarios = await api(`/sessions/${sid}/scenarios`);
   for (const scenario of scenarios) {
-    const f = form(w, "run-" + scenario.id, scenario.name, async (form) => {
+    const f = form(sections.execution, "run-" + scenario.id, scenario.name, async (form) => {
       const v = data(form);
       await api(`/sessions/${sid}/scenarios/${scenario.id}/runs`, {
         method: "POST",
@@ -1690,7 +1745,7 @@ async function renderResearch(w) {
     field(f, "Ativar registro mínimo de abertura/saída da pausa (dados fictícios; não substitui consentimento)", "observePause", { type: "checkbox", value: false });
     submit(f, "Iniciar nova execução");
     let pairAttempt = null;
-    const pairForm = form(w, "pair-" + scenario.id, `Par de pausa · ${scenario.name}`, async (form) => {
+    const pairForm = form(sections.execution, "pair-" + scenario.id, `Par de pausa · ${scenario.name}`, async (form) => {
       const v = data(form);
       const body = { condition: v.condition, pauseMs: Number(v.pause), owners: JSON.parse(v.owners), observePause: v.observePause };
       const signature = JSON.stringify(body);
@@ -1700,6 +1755,7 @@ async function renderResearch(w) {
         method: "POST", body, idem: pairAttempt.key,
       });
       await refreshSessions(sid);
+      state.researchSection = "results";
       await renderView("research");
       feedback("Par criado: espera de 0 ms e pausa configurada, com a mesma base e regras. Nenhum Pix foi iniciado.");
     });
@@ -1716,7 +1772,7 @@ async function renderResearch(w) {
     submit(pairForm, "Criar par de pausa");
   }
   const exposure = await api(`/sessions/${sid}/pause-exposure`);
-  const exposureCard = card(w, "Sinais de abertura e saída da pausa", "pause-exposure-report");
+  const exposureCard = card(sections.results, "Sinais de abertura e saída da pausa", "pause-exposure-report");
   node("p", exposure.definition, exposureCard, "muted");
   summary(exposureCard, [
     ["Visitas com abertura informada", exposure.summary.openedVisits],
@@ -1731,7 +1787,7 @@ async function renderResearch(w) {
   ]);
   node("p", "Ativação é opcional e vale apenas para novas execuções experimentais. Múltiplas visitas não representam pessoas distintas. Registro ausente pode significar falha de rede ou coleta desativada; não é abandono comprovado.", exposureCard, "muted");
   const pairs = await api(`/sessions/${sid}/run-pairs`);
-  const pairList = card(w, "Pares controlados de pausa", "run-pair-list");
+  const pairList = card(sections.results, "Pares controlados de pausa", "run-pair-list");
   node("p", "Equivalência verificada na criação. A duração configurada não prova exposição à pausa. Alterações posteriores e efeitos de ordem precisam ser considerados antes de interpretar resultados.", pairList, "muted");
   if (!pairs.length) node("p", "Nenhum par criado neste ambiente.", pairList);
   for (const pair of pairs) {
@@ -1749,7 +1805,7 @@ async function renderResearch(w) {
       action(panel, label, async () => { await refreshSessions(arm.sessionId); await renderView("accounts"); });
   }
   const runs = await api(`/sessions/${sid}/runs`);
-  const runList = card(w, "Histórico de execuções");
+  const runList = card(sections.execution, "Histórico de execuções");
   for (const r of runs) {
     const c = card(runList, `${r.name} · ${r.condition}`);
     node(
@@ -1782,7 +1838,7 @@ async function renderResearch(w) {
     });
   }
   const snapForm = form(
-    w,
+    sections.setup,
     "snapshot-form",
     "Estado-base da sessão atual",
     async (f) => {
@@ -1796,7 +1852,7 @@ async function renderResearch(w) {
   field(snapForm, "Nome do estado-base", "name", { required: true });
   submit(snapForm, "Capturar estado-base");
   for (const snap of await api(`/sessions/${sid}/snapshots`)) {
-    const f = form(w, "restore-" + snap.id, snap.name, async (form) => {
+    const f = form(sections.setup, "restore-" + snap.id, snap.name, async (form) => {
       const v = data(form);
       const result = await api(`/snapshots/${snap.id}/restore`, {
         method: "POST",
@@ -1819,7 +1875,7 @@ async function renderResearch(w) {
       );
     submit(f, "Clonar / reinicializar em nova sessão");
   }
-  const notes = form(w, "note-form", "Observações de pesquisa", async (f) => {
+  const notes = form(sections.results, "note-form", "Observações de pesquisa", async (f) => {
     await api(`/sessions/${sid}/observations`, {
       method: "POST",
       body: { note: data(f).note },
@@ -1833,7 +1889,7 @@ async function renderResearch(w) {
   submit(notes, "Registrar observação");
   for (const note of overview.notes)
     node("p", `${date(note.createdAt)} — ${note.note}`, notes);
-  const audit = details(w, "Auditoria imutável desta sessão");
+  const audit = details(sections.results, "Auditoria imutável desta sessão");
   for (const e of overview.audit) {
     node(
       "p",
