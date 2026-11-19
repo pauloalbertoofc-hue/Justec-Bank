@@ -1,0 +1,29 @@
+name: JUSTEC - Documentacao Academica
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  capturas:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Playwright in isolated directory
+        run: |
+          mkdir -p /tmp/justec-capture
+          npm install --prefix /tmp/justec-capture playwright@1.56.1
+          /tmp/justec-capture/node_modules/.bin/playwright install --with-deps chromium
+      - name: Capture current deployed application
+        env:
+          NODE_PATH: /tmp/justec-capture/node_modules
+        run: node scripts/capturas-academicas.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: justec-capturas-academicas
+          path: capturas/
+          retention-days: 30
