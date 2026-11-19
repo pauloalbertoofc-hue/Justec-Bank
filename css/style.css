@@ -320,3 +320,15 @@ body:has(#app-modal:not(.hidden)), body:has(dialog[open]) { overflow: hidden; }
 @media (prefers-reduced-motion: reduce) {
   #home-services .demo-services button { transition: none; }
 }
+
+.home-recent-heading { display:flex; align-items:center; justify-content:space-between; gap:8px; }
+#home-recent .home-recent-heading button { margin:0; border:0; background:transparent; font-size:12px; }
+#home-recent .home-recent-item { display:flex; align-items:center; gap:12px; width:100%; margin:0; padding:12px 0; border:0; border-bottom:1px solid #29374b; border-radius:0; background:transparent; text-align:left; color:#f1f5f9; }
+.home-recent-item > i { display:grid; place-items:center; width:36px; height:36px; flex-shrink:0; border-radius:50%; background:#24364d; color:#ffcc00; }
+.home-recent-item > span { flex:1; min-width:0; }
+.home-recent-item strong,.home-recent-item small { display:block; overflow-wrap:anywhere; }
+.home-recent-item strong { font-size:12px; }
+.home-recent-item small { font-size:10px; color:#aebed1; margin-top:4px; }
+.home-recent-item b { font-size:12px; white-space:nowrap; font-variant-numeric:tabular-nums; }
+.home-recent-item b.recent-incoming { color:#6ee7b7; }
+#home-recent .statement-caption { margin-top:12px; }
