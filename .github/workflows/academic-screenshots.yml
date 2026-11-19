@@ -13,36 +13,58 @@ jobs:
           node-version: '22'
       - run: npm install --no-save playwright@1.51.1
       - run: npx playwright install --with-deps chromium
-      - name: Capture public screens
+      - name: Capture academic journeys
         run: |
           mkdir -p screenshots
           cat > capture.cjs <<'JS'
-          const { chromium } = require('playwright');
-          (async () => {
-            const browser = await chromium.launch();
-            for (const [name, viewport] of Object.entries({mobile:{width:390,height:844},desktop:{width:1440,height:900}})) {
-              const context = await browser.newContext({viewport, locale:'pt-BR', isMobile:name==='mobile', hasTouch:name==='mobile'});
-              const page = await context.newPage();
-              const url = 'https://justec-bank.vercel.app/';
-              const response = await page.goto(url,{waitUntil:'domcontentloaded'});
-              if (!response || !response.ok()) throw new Error('Site unavailable');
-              await page.waitForTimeout(1500);
-              await page.screenshot({path:'screenshots/'+name+'-01-inicio.png',fullPage:true});
-              let i = 2;
-              for (const label of ['Pix','Triagem','Pós-golpe','Direitos','Segurança','Tenho dúvida','Sofri um golpe','Ver extrato','Verificar chave Pix','Bloqueios preventivos','Contestações','Central de segurança','Entrar','Criar conta']) {
-                await page.goto(url,{waitUntil:'domcontentloaded'});
-                await page.waitForTimeout(600);
-                const target = page.getByText(label,{exact:true}).first();
-                if (await target.isVisible()) {
-                  await target.click({timeout:3000}).catch(()=>{});
-                  await page.waitForTimeout(700);
-                  await page.screenshot({path:'screenshots/'+name+'-'+String(i++).padStart(2,'0')+'-'+label.replace(/[^a-zA-Z0-9]/g,'_')+'.png',fullPage:true});
-                }
-              }
-              await context.close();
+          const {chromium}=require('playwright');
+          const fs=require('fs'), assert=require('node:assert/strict'), crypto=require('crypto');
+          (async()=>{
+           const browser=await chromium.launch();
+           const url='https://justec-bank.vercel.app/';
+           const report=[];
+           for(const [device,viewport] of Object.entries({mobile:{width:390,height:844},desktop:{width:1440,height:900}})){
+            const context=await browser.newContext({viewport,deviceScaleFactor:2,locale:'pt-BR',isMobile:device==='mobile',hasTouch:device==='mobile',reducedMotion:'reduce'});
+            const page=await context.newPage();page.setDefaultTimeout(7000);
+            const dir='screenshots/'+device;fs.mkdirSync(dir,{recursive:true});
+            const seen=new Set();
+            const click=s=>page.locator(s).filter({visible:true}).first().click();
+            const go=async name=>{await page.evaluate(n=>navigateTo(n),name);await page.locator('#screen-'+name).waitFor({state:'visible'});};
+            const reset=async()=>{const r=await page.goto(url,{waitUntil:'domcontentloaded'});assert(r&&r.ok());await page.waitForFunction(()=>typeof navigateTo==='function');};
+            async function shot(name){
+             await page.evaluate(()=>document.fonts.ready);await page.waitForTimeout(250);
+             const scroll=await page.evaluate(()=>{const e=document.scrollingElement;return {height:e.scrollHeight,view:innerHeight};});
+             const count=Math.min(30,Math.max(1,Math.ceil((scroll.height-scroll.view)/(scroll.view*.65))+1));
+             for(let n=0;n<count;n++){
+              await page.evaluate(y=>window.scrollTo(0,y),Math.round(n*scroll.view*.65));await page.waitForTimeout(100);
+              const b=await page.screenshot({animations:'disabled'});const hash=crypto.createHash('sha256').update(b).digest('hex');
+              if(seen.has(hash))continue;seen.add(hash);
+              const file=dir+'/'+name+'-'+String(n+1).padStart(2,'0')+'.png';fs.writeFileSync(file,b);report.push({device,name,file});
+             }
+             await page.evaluate(()=>window.scrollTo(0,0));
             }
-            await browser.close();
-          })().catch(e=>{console.error(e);process.exit(1)});
+            async function scenario(name,fn){try{await reset();await fn();report.push({device,name,status:'ok'});}catch(e){report.push({device,name,status:'failed',error:String(e)});console.error(device,name,e.message);}}
+            for(const name of ['home','statement','protection','reviews','security','screening','action-post','rights','edu-center'])await scenario(name,async()=>{await go(name);await shot(name);});
+            for(const type of ['bank_call','whatsapp','offer'])await scenario('triagem-'+type,async()=>{await go('screening');await click('[onclick="showDiagnosis(\''+type+'\')"]');await page.locator('#app-modal').waitFor({state:'visible'});await shot('triagem-'+type);});
+            await scenario('med',async()=>{await go('action-post');await click('[onclick="openMedWizard()"]');await page.locator('#app-modal').waitFor({state:'visible'});await shot('med');});
+            async function pix(id,prefix,contextual=false){
+             await page.evaluate(()=>openPixFlow());await shot(prefix+'-01-inicio');
+             await click('[data-pix-method="recipient"]');await page.selectOption('#pix-recipient',id);await shot(prefix+'-02-destinatario');
+             await click('#pix-lookup');await shot(prefix+'-03-consulta');await click('#pix-recipient-next');
+             await page.fill('#pix-amount','50,00');if(contextual)await page.check('#pix-context-request');await shot(prefix+'-04-valor');
+             await click('#pix-form button[type=submit]');await page.check('#pix-data-confirm');await shot(prefix+'-05-conferencia');await click('[onclick="analyzePix()"]');
+            }
+            await scenario('pix-seguro',async()=>{await pix('demo-low','pix-seguro');await page.locator('#pix-pause').waitFor({state:'visible'});await shot('pix-seguro-06-pausa');await page.locator('#pix-continue').click({timeout:15000});await shot('pix-seguro-07-senha');await page.fill('#pix-demo-code','0000');await page.check('#pix-demo-confirm');await click('#pix-submit');await page.locator('#pix-result').waitFor({state:'visible'});assert.match(await page.locator('#pix-result-title').innerText(),/sucesso/i);await shot('pix-seguro-08-resultado');await click('#pix-receipt');await shot('pix-seguro-09-comprovante');await go('statement');await shot('pix-seguro-10-extrato');});
+            await scenario('pix-suspeito',async()=>{await pix('demo-medium','pix-suspeito');await page.locator('#pix-guard').waitFor({state:'visible'});await shot('pix-suspeito-06-avaliacao');for(const [k,v] of Object.entries({identity:'yes',urgency:'yes',advance:'no',ignore:'no'}))await page.selectOption('#pix-'+k,v);await click('#pix-check-context');await shot('pix-suspeito-07-alerta');});
+            await scenario('pix-interrompido',async()=>{await pix('demo-low','pix-interrompido',true);for(const [k,v] of Object.entries({identity:'no',urgency:'yes',advance:'yes',ignore:'no'}))await page.selectOption('#pix-'+k,v);await shot('pix-interrompido-06-respostas');await click('#pix-check-context');await page.locator('#pix-result').waitFor({state:'visible'});assert.match(await page.locator('#pix-result-title').innerText(),/interrompido/i);await shot('pix-interrompido-07-resultado');await go('security');await shot('pix-interrompido-08-historico');});
+            await scenario('pix-restrito',async()=>{await pix('demo-high','pix-restrito');await page.locator('#pix-result').waitFor({state:'visible'});await shot('pix-restrito-06-resultado');});
+            await scenario('falso-positivo',async()=>{await go('reviews');const card=page.locator('#review-list article').filter({hasText:'falso positivo, retirada interna'});await card.locator('textarea').fill('Contestação fictícia para demonstração acadêmica.');await shot('revisao-01-pedido');for(const [i,label] of ['Solicitar revisão simulada','Simular início da análise','Exibir resultado demonstrativo'].entries()){await card.getByRole('button',{name:label,exact:true}).click();await shot('revisao-0'+(i+2));}assert.match(await card.innerText(),/Restrição retirada/);});
+            report.push({device,name:'cadastro/login',status:'not-covered',reason:'A versão main inspecionada não possui telas de autenticação de conta; não confundir com senha demonstrativa Pix.'});
+            await context.close();
+           }
+           await browser.close();fs.writeFileSync('screenshots/manifest.json',JSON.stringify({url,generatedAt:new Date().toISOString(),report},null,2));
+           if(report.some(x=>x.status==='failed'))process.exitCode=1;
+          })().catch(e=>{console.error(e);process.exitCode=1;});
           JS
           node capture.cjs
       - uses: actions/upload-artifact@v4
