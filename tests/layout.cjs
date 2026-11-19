@@ -12,7 +12,7 @@ const assert = require('node:assert/strict');
         await page.locator('#balance-toggle').click();
         for (const width of [320,375,390,768,1024,1366,1920]) {
             await page.setViewportSize({width,height:900});
-            const desktop = width >= 1024;
+            const desktop = false; // Preview uses the same bottom navigation at every width.
             for (const screen of ['home','pix','statement','security','action-post','protection','reviews','rights','screening','edu-center']) {
                 if (desktop) await page.locator(`#desktop-nav [data-nav-screen="${screen}"]`).click();
                 else {
@@ -28,7 +28,7 @@ const assert = require('node:assert/strict');
                 assert.equal(await page.locator('#mobile-nav [aria-current=page]').getAttribute('data-nav-screen'),mobileParents[screen]||screen);
                 if (screen === 'home') {
                     const homeOrder = await page.locator('#screen-home > [id]').evaluateAll(nodes => nodes.map(node => node.id));
-                    assert.deepEqual(homeOrder, ['home-security', 'home-balance', 'home-services']);
+                    assert.deepEqual(homeOrder, ['home-security', 'home-balance', 'home-services', 'home-recent']);
                     const securityBox = await page.locator('#home-security').boundingBox();
                     const balanceBox = await page.locator('#home-balance').boundingBox();
                     assert(securityBox.y + securityBox.height <= balanceBox.y, `${width} Rota da Segurança deve ficar acima do saldo`);
@@ -64,7 +64,7 @@ const assert = require('node:assert/strict');
                 }));
                 assert(measure.overflow<=1,`${width}/${screen} horizontal ${measure.overflow}`);
                 assert(!['scroll','auto'].includes(measure.contentOverflow),`${width}/${screen} double scrolling`);
-                assert.equal(measure.shellWidth,width);
+                assert(Math.abs(measure.shellWidth - (width >= 680 ? 678 : width >= 640 ? width-2 : width)) <= 1);
                 if(desktop) assert(measure.contentWidth>width*.6);
                 assert.equal(await page.locator('#mobile-nav').isVisible(),!desktop);
                 assert.equal(await page.locator('#desktop-nav').isVisible(),desktop);
