@@ -31,3 +31,16 @@ const homePreviewScreen = document.getElementById('screen-home');
 new MutationObserver(() => {
     if (!homePreviewScreen.classList.contains('hidden')) renderHomeRecent();
 }).observe(homePreviewScreen,{attributes:true,attributeFilter:['class']});
+
+const previewCardState = { limit: 100000 };
+document.getElementById('preview-limit-save').addEventListener('click', () => {
+    const input = document.getElementById('preview-card-limit');
+    const status = document.getElementById('preview-limit-status');
+    const value = input.valueAsNumber;
+    if (!Number.isInteger(value) || value < 0 || value > 5000) {
+        status.textContent = 'Informe um limite inteiro entre R$ 0 e R$ 5.000.';
+        return;
+    }
+    previewCardState.limit = value * 100;
+    status.textContent = 'Limite disponível: ' + formatMoney(value);
+});
