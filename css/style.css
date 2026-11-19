@@ -332,3 +332,10 @@ body:has(#app-modal:not(.hidden)), body:has(dialog[open]) { overflow: hidden; }
 .home-recent-item b { font-size:12px; white-space:nowrap; font-variant-numeric:tabular-nums; }
 .home-recent-item b.recent-incoming { color:#6ee7b7; }
 #home-recent .statement-caption { margin-top:12px; }
+
+.preview-bank-card { display:flex; flex-direction:column; justify-content:space-between; aspect-ratio:1.8; max-width:340px; margin:14px auto; border:1px solid #567295; border-radius:20px; padding:20px; background:radial-gradient(ellipse at top right,#385c83,transparent 65%),linear-gradient(135deg,#192d48,#0a1528); box-shadow:0 10px 24px #0004; color:#fff; }
+.preview-bank-card strong { color:#ffcc00; font-size:15px; letter-spacing:.05em; }
+.preview-bank-card span { font-size:clamp(15px,4vw,22px); letter-spacing:.08em; }
+.preview-bank-card small { font-size:10px; letter-spacing:.08em; }
+#preview-card-status { font-size:12px; color:#b8c5d6; margin-bottom:8px; }
+#preview-card-toggle[aria-pressed=true] { border-color:#e87991; color:#fda4af; }
