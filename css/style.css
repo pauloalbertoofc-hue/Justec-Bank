@@ -295,3 +295,28 @@ body:has(#app-modal:not(.hidden)), body:has(dialog[open]) { overflow: hidden; }
 #screen-pix .pix-amount-box input { text-align: center; font-weight: 800; }
 #pix-auth .pix-code-input { padding: 18px 10px; margin-top: 20px; }
 .pix-screen-reader { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+
+/* Preview: unified mobile-first banking surface; original security colors retained. */
+.app-header { min-height: 64px; }
+#home-balance { background: linear-gradient(145deg,#18263e,#121929 75%); padding: 18px; }
+#balance-display { font-size: clamp(26px,4vw,34px); font-variant-numeric: tabular-nums; }
+#home-services { background: #121929; border-color: #334155; }
+#home-services .demo-services button { background: #19263a; border-color: transparent; border-radius: 14px; min-height: 78px; color: #e2e8f0; transition: background .15s; }
+#home-services .demo-services i { color: #ffcc00; }
+#home-services .demo-services button:hover { background: #263851; }
+#home-security.security-prompt { display: block; }
+#home-security .security-prompt-actions { margin-top: 12px; }
+@media (min-width: 640px) {
+  .app-shell { display: block; max-width: 680px; margin-inline: auto; border-inline: 1px solid #263348; }
+  .app-content { padding: 20px 24px 108px; }
+  .home-dashboard { grid-template-columns: minmax(0,1fr); gap: 16px; }
+  #home-services { grid-column: auto; }
+  .app-sidebar { display: none; }
+  .app-mobile-nav { display: grid; width: min(100%,680px); left: 50%; right: auto; transform: translateX(-50%); }
+  html { scroll-padding-bottom: 108px; }
+  .guidance-grid { grid-template-columns: minmax(0,1fr); }
+}
+@media (prefers-reduced-motion: reduce) {
+  #home-services .demo-services button { transition: none; }
+}
