@@ -123,6 +123,11 @@
                 <section id="home-services" class="demo-panel" aria-labelledby="services-title"><h2 id="services-title">Serviços Bancários</h2><div class="demo-services"><button type="button" onclick="openPixFlow('safe')"><i class="fa-solid fa-paper-plane" aria-hidden="true"></i><span>Fazer Pix</span></button><button type="button" onclick="navigateTo('statement')"><i class="fa-solid fa-receipt" aria-hidden="true"></i><span>Consultar movimentações</span></button><button type="button" onclick="navigateTo('protection')"><i class="fa-solid fa-key" aria-hidden="true"></i><span>Verificar chave Pix</span></button><button type="button" onclick="navigateTo('protection')"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i><span>Bloqueios preventivos</span></button><button type="button" onclick="navigateTo('reviews')"><i class="fa-solid fa-file-signature" aria-hidden="true"></i><span>Contestações</span></button><button type="button" onclick="navigateTo('security')"><i class="fa-solid fa-lock" aria-hidden="true"></i><span>Central de segurança</span></button></div></section>
 
 
+                <section id="home-recent" class="demo-panel home-recent" aria-labelledby="home-recent-title">
+                    <div class="home-recent-heading"><h2 id="home-recent-title">Movimentações recentes</h2><button type="button" onclick="navigateTo('statement')">Ver todas <span aria-hidden="true">›</span></button></div>
+                    <div id="home-recent-list"></div>
+                    <p class="statement-caption">Ambiente educacional · Operações fictícias</p>
+                </section>
             </div>
 
             <section id="screen-statement" class="hidden statement-screen" aria-labelledby="statement-title">
@@ -584,6 +589,7 @@
     <script src="./js/state.js"></script>
     <script src="./js/risk.js"></script>
     <script src="./js/app.js"></script>
+    <script src="./js/home-preview.js"></script>
     <script src="./js/pix-directory.js"></script>
     <script src="./js/pix-messages.js"></script>
     <script src="./js/pix-evidence.js"></script>
