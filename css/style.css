@@ -460,3 +460,17 @@ body:has(#app-modal:not(.hidden)), body:has(dialog[open]) { overflow: hidden; }
 #home-services .demo-services button:hover { background:transparent; }
 #home-services .demo-services button:hover i { background:#30435d; }
 #home-services .demo-services button span { white-space:normal; overflow-wrap:anywhere; }
+
+#home-informa { min-width:0; }
+.informa-alert { border-left:3px solid #ef6464; padding:14px; background:#19202e; border-radius:12px; }
+.informa-alert small { color:#ff8585; font-weight:700; letter-spacing:.04em; }
+.informa-alert h2,.informa-alert h3 { color:#facc15; margin:12px 0 8px; }
+.informa-alert p,.informa-alert li { color:#e2e8f0; line-height:1.55; }
+.informa-alert li { margin-bottom:8px; }
+.informa-alert button { min-height:44px; }
+
+/* Informa: keep long editorial content and final actions clear of fixed navigation. */
+#screen-informa { padding-bottom: 112px; }
+#screen-informa .informa-alert { overflow-wrap:anywhere; }
+#screen-informa .informa-alert a { color:#facc15; text-decoration:underline; }
+#screen-informa .informa-alert button { scroll-margin-bottom:112px; }

@@ -8,35 +8,35 @@ const assert = require('node:assert/strict');
         const errors = [];
         page.on('pageerror', error => errors.push(error.message));
         await page.goto(process.env.JUSTEC_TEST_URL || 'http://127.0.0.1:8000/', { waitUntil: 'networkidle' });
-        const mobileParents = { 'cards-preview': 'home', statement: 'home', protection: 'screening', reviews: 'screening', security: 'screening', 'edu-center': 'screening' };
+        const mobileParents = { informa: 'home', 'cards-preview': 'home', statement: 'home', protection: 'screening', reviews: 'screening', security: 'screening', 'edu-center': 'screening' };
         await page.locator('#balance-toggle').click();
         for (const width of [320,375,390,768,1024,1366,1920]) {
             await page.setViewportSize({width,height:900});
             const desktop = false; // Preview uses the same bottom navigation at every width.
-            for (const screen of ['home','pix','statement','security','action-post','protection','reviews','rights','screening','edu-center','cards-preview']) {
+            for (const screen of ['home','pix','statement','security','action-post','protection','reviews','rights','screening','edu-center','cards-preview','informa']) {
                 if (desktop) await page.locator(`#desktop-nav [data-nav-screen="${screen}"]`).click();
                 else {
                     await page.locator('#nav-btn-home').click();
                     if (screen === 'statement') await page.locator('#screen-home .statement-link').click();
-                    else if (['security','protection','reviews','cards-preview'].includes(screen)) await page.locator(`#home-services [onclick="navigateTo('${screen}')"]`).first().click();
+                    else if (['security','protection','reviews','cards-preview','informa'].includes(screen)) await page.locator(`#home-services [onclick="navigateTo('${screen}')"]`).first().click();
                     else if (screen === 'edu-center') {await page.locator('#header-security').click(); await page.locator('#screen-security [onclick="navigateTo(\'edu-center\')"]').click();}
                     else if (screen !== 'home') await page.locator(`#mobile-nav [data-nav-screen="${screen}"]`).click();
                 }
                 assert.equal(await page.locator('[id^="screen-"]:not(.hidden)').count(),1);
                 assert.equal(await page.locator(`#screen-${screen}`).isVisible(),true);
-                if(screen !== 'cards-preview') assert.equal(await page.locator('#desktop-nav [aria-current=page]').getAttribute('data-nav-screen'),screen);
+                if(!['cards-preview','informa'].includes(screen)) assert.equal(await page.locator('#desktop-nav [aria-current=page]').getAttribute('data-nav-screen'),screen);
                 assert.equal(await page.locator('#mobile-nav [aria-current=page]').getAttribute('data-nav-screen'),mobileParents[screen]||screen);
                 if ([390,1366].includes(width)) {
                     await page.screenshot({path:`/tmp/justec-responsive-${width}-${screen}.png`,fullPage:true,animations:'disabled'});
                 }
                 if (screen === 'home') {
                     const homeOrder = await page.locator('#screen-home > [id]').evaluateAll(nodes => nodes.map(node => node.id));
-                    assert.deepEqual(homeOrder, ['home-security', 'home-balance', 'home-services', 'home-recent']);
+                    assert.deepEqual(homeOrder, ['home-security', 'home-balance', 'home-services', 'home-informa', 'home-recent']);
                     const securityBox = await page.locator('#home-security').boundingBox();
                     const balanceBox = await page.locator('#home-balance').boundingBox();
                     assert(securityBox.y + securityBox.height <= balanceBox.y, `${width} Rota da Segurança deve ficar acima do saldo`);
                     const services=page.locator('#home-services .demo-services');
-                    assert.equal(await services.locator('button').count(),7);
+                    assert.equal(await services.locator('button').count(),8);
                     assert.equal(await services.evaluate(el=>getComputedStyle(el).flexWrap),'nowrap');
                     assert.equal(await services.evaluate(el=>getComputedStyle(el).overflowX),'auto');
                     if(width<=390){
@@ -80,10 +80,12 @@ const assert = require('node:assert/strict');
                 assert.equal(await page.locator('#mobile-nav').isVisible(),!desktop);
                 assert.equal(await page.locator('#desktop-nav').isVisible(),desktop);
                 const last = page.locator(`#screen-${screen} button:visible`).last();
-                await last.evaluate(element => element.scrollIntoView({ block: 'end', inline: 'nearest' }));
+                await last.evaluate(element => element.scrollIntoView({ block: 'end', inline: 'nearest', behavior: 'instant' }));
+                await page.waitForFunction(() => !document.querySelector('[id^="screen-"]:not(.hidden)')?.getAnimations().some(a => a.playState === 'running'));
+                await last.evaluate(element => element.scrollIntoView({ block: 'end', inline: 'nearest', behavior: 'instant' }));
                 if (!desktop) {
                     const target = await last.boundingBox(); const nav = await page.locator('#mobile-nav').boundingBox();
-                    assert(target.y+target.height<=nav.y+1,`${width}/${screen} last action covered by navigation`);
+                    assert(target.y+target.height<=nav.y+1,`${width}/${screen} last action covered by navigation: target=${JSON.stringify(target)} nav=${JSON.stringify(nav)}`);
                 }
             }
             await page.evaluate(() => {navigateTo('screening');showDiagnosis('bank_call')});
@@ -212,6 +214,6 @@ const assert = require('node:assert/strict');
         assert.equal(await page.locator('#screen-home').evaluate(el=>getComputedStyle(el).animationName),'none');
         assert.equal(await page.locator('[id^="screen-"]:not(.hidden)').count(),1);
         assert.deepEqual(errors,[]);
-        console.log('PASS responsive layout: 7 larguras, 11 telas por largura e 2 modais por largura, sem erros JavaScript.');
+        console.log('PASS responsive layout: 7 larguras, 12 telas por largura e 2 modais por largura, sem erros JavaScript.');
     } finally {await browser.close();}
 })().catch(error=>{console.error(error);process.exitCode=1});
