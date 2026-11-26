@@ -32,7 +32,7 @@ new MutationObserver(() => {
     if (!homePreviewScreen.classList.contains('hidden')) renderHomeRecent();
 }).observe(homePreviewScreen,{attributes:true,attributeFilter:['class']});
 
-const previewCardState = { limit: 100000, purchases: [], payments: [], refunds: [] };
+const previewCardState = { limit: 100000, purchases: [], payments: [], refunds: [], claims: [] };
 const previewStorageKey = 'justec-preview-card-v1';
 try {
     const saved = JSON.parse(localStorage.getItem(previewStorageKey));
@@ -41,6 +41,7 @@ try {
        saved.purchases.reduce((sum,p)=>sum+p.cents,0)<=saved.limit){
         previewCardState.limit=saved.limit;
         previewCardState.purchases=saved.purchases;
+        if(Array.isArray(saved.claims)) previewCardState.claims=saved.claims.filter(c=>c&&typeof c.id==='string'&&typeof c.name==='string'&&['pending','approved','rejected','obsolete'].includes(c.status)&&Number.isSafeInteger(c.cents)&&c.cents>0);
         if(Array.isArray(saved.refunds)) previewCardState.refunds=saved.refunds.filter(p=>p&&typeof p.name==='string'&&Number.isSafeInteger(p.cents)&&p.cents>0);
         if(Array.isArray(saved.payments) && saved.payments.every(p=>Number.isSafeInteger(p.cents)&&p.cents>0&&typeof p.id==='string') && new Set(saved.payments.map(p=>p.id)).size===saved.payments.length) previewCardState.payments=saved.payments;
         if(saved.blocked===true) document.getElementById('preview-card-toggle').click();
@@ -64,7 +65,9 @@ renderBalance();
 renderHomeRecent();
 const cardMoney = cents => (cents/100).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
 function renderPreviewCard() {
+    for(const p of previewCardState.purchases) if(!p.id) p.id=crypto.randomUUID();
     savePreviewCard();
+    renderPurchaseClaims();
     document.getElementById('preview-limit-status').textContent = 'Limite disponível: '+cardMoney(previewCardState.limit-cardSpent());
     document.getElementById('preview-invoice').textContent = 'Fatura simulada: '+cardMoney(cardSpent());
     renderPaidInvoices();
@@ -78,10 +81,11 @@ function renderPreviewCard() {
         dispute.textContent='Contestar saldo desta compra';
         dispute.addEventListener('click',()=>{
             if(!previewCardState.purchases.includes(p)) return;
-            if(!confirm('Simular aprovação do estorno de '+cardMoney(p.cents)+' ainda em aberto? Nenhum crédito será depositado na conta.')) return;
-            previewCardState.refunds.push({name:p.name,cents:p.cents});
-            previewCardState.purchases=previewCardState.purchases.filter(item=>item!==p);
+            if(!previewCardState.claims.some(c=>c.id===p.id&&c.status==='pending')){
+                previewCardState.claims.push({id:p.id,name:p.name,cents:p.cents,status:'pending'});
+            }
             renderPreviewCard();
+            navigateTo('reviews');
         });
         li.append(' ',dispute);
         list.append(li);
@@ -353,3 +357,39 @@ if(activeCardAlert?.status==='Aguardando reconhecimento'){
     disputeButton.hidden=false;
 }
 renderCardAlerts();
+
+function renderPurchaseClaims(){
+    let panel=document.getElementById('preview-purchase-claims');
+    if(!panel){
+        panel=document.createElement('section');
+        panel.id='preview-purchase-claims';panel.className='demo-panel';
+        document.getElementById('screen-reviews').append(panel);
+    }
+    panel.replaceChildren();
+    const heading=document.createElement('h3');
+    heading.textContent='Contestações de compras em aberto';
+    panel.append(heading);
+    for(const c of previewCardState.claims){
+        const entry=document.createElement('p');
+        entry.textContent=c.name+' · '+cardMoney(c.cents)+' · '+({pending:'Em análise',approved:'Estorno aprovado',rejected:'Rejeitada',obsolete:'Saldo alterado: nova análise necessária'}[c.status]);
+        panel.append(entry);
+        if(c.status!=='pending') continue;
+        for(const approved of [true,false]){
+            const button=document.createElement('button');
+            button.type='button';button.textContent=approved?'Simular aprovação':'Simular rejeição';
+            button.addEventListener('click',()=>{
+                if(c.status!=='pending') return;
+                const p=previewCardState.purchases.find(p=>p.id===c.id);
+                if(!approved) c.status='rejected';
+                else if(!p||p.cents!==c.cents) c.status='obsolete';
+                else {
+                    c.status='approved';
+                    previewCardState.refunds.push({name:p.name,cents:p.cents});
+                    previewCardState.purchases=previewCardState.purchases.filter(item=>item!==p);
+                }
+                renderPreviewCard();
+            });
+            panel.append(button);
+        }
+    }
+}
