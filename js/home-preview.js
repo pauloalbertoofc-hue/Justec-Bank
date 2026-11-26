@@ -216,7 +216,10 @@ reject.addEventListener('click',()=>{
     guardActions.hidden=true; guidance.hidden=false;
 });
 
-const cardAlertHistory=[];
+const guardStorageKey='justec-preview-guard-v1';
+let guardSaved={};
+try { guardSaved=JSON.parse(localStorage.getItem(guardStorageKey))||{}; } catch(e){}
+const cardAlertHistory=Array.isArray(guardSaved.alerts)?guardSaved.alerts.filter(a=>a&&['Aguardando reconhecimento','Reconhecida','Não reconhecida · bloqueio preventivo'].includes(a.status)):[];
 const cardAlertSection=document.createElement('section');
 cardAlertSection.className='demo-panel';
 const cardAlertTitle=document.createElement('h3');
@@ -224,7 +227,7 @@ cardAlertTitle.textContent='Histórico de alertas do cartão';
 const cardAlertList=document.createElement('ul');
 cardAlertSection.append(cardAlertTitle,cardAlertList);
 document.getElementById('screen-security').append(cardAlertSection);
-let activeCardAlert=null;
+let activeCardAlert=cardAlertHistory.at(-1)||null;
 const homeCardNotice=document.createElement('section');
 homeCardNotice.className='demo-panel';
 homeCardNotice.hidden=true;
@@ -239,6 +242,7 @@ homeCardNoticeLink.addEventListener('click',()=>navigateTo('cards-preview'));
 homeCardNotice.append(homeCardNoticeTitle,homeCardNoticeText,homeCardNoticeLink);
 document.getElementById('home-services').before(homeCardNotice);
 function renderCardAlerts(){
+    persistGuard();
     const pending=cardAlertHistory.filter(a=>a.status==='Aguardando reconhecimento').length;
     homeCardNotice.hidden=pending===0;
     homeCardNoticeText.textContent=pending?'Você tem uma tentativa fictícia de compra aguardando reconhecimento. Nenhuma cobrança foi realizada.':'';
@@ -265,9 +269,9 @@ reject.addEventListener('click',()=>{
     if(activeCardAlert) activeCardAlert.status='Não reconhecida · bloqueio preventivo';
     renderCardAlerts();
 });
-renderCardAlerts();
+// Initial render deferred until both ledgers are initialized.
 
-const cardDisputes=[];
+const cardDisputes=Array.isArray(guardSaved.disputes)?guardSaved.disputes.filter(d=>d&&typeof d.protocol==='string'&&[1,2,3].includes(d.stage)&&typeof d.status==='string'):[];
 const disputePanel=document.createElement('section');
 disputePanel.className='demo-panel';
 const disputeTitle=document.createElement('h3');
@@ -281,6 +285,7 @@ disputeButton.textContent='Registrar ocorrência fictícia';
 disputeButton.hidden=true;
 cardGuardPanel.append(disputeButton);
 function renderCardDisputes(){
+    persistGuard();
     disputeList.replaceChildren();
     if(!cardDisputes.length) disputeList.textContent='Nenhuma ocorrência de cartão nesta sessão.';
     for(const item of [...cardDisputes].reverse()){
@@ -318,3 +323,16 @@ disputeButton.addEventListener('click',()=>{
     navigateTo('reviews');
 });
 renderCardDisputes();
+
+function persistGuard(){
+    try { localStorage.setItem(guardStorageKey,JSON.stringify({alerts:cardAlertHistory,disputes:cardDisputes})); } catch(e){}
+}
+if(activeCardAlert?.status==='Aguardando reconhecimento'){
+    guardResult.textContent='Cenário fictício: tentativa de compra de R$ 289,90 aguardando reconhecimento. Nenhuma cobrança realizada.';
+    guardActions.hidden=false;
+} else if(activeCardAlert?.status.startsWith('Não reconhecida')){
+    guardResult.textContent='Tentativa não reconhecida registrada.';
+    guidance.hidden=false;
+    disputeButton.hidden=false;
+}
+renderCardAlerts();
