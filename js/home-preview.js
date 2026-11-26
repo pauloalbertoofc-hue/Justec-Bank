@@ -409,7 +409,11 @@ function renderPurchaseClaims(){
         protocol.textContent='Protocolo: '+(c.protocol||'JUSTEC-COMPRA-'+c.id);
         const reason=document.createElement('p');
         reason.textContent=({pending:'Aguardando decisão educativa.',approved:c.paid?'Parcela paga devolvida ao saldo fictício.':'Saldo em aberto cancelado; nenhum crédito em conta.',rejected:'Cobrança mantida no cenário de rejeição escolhido.',obsolete:'O saldo da compra mudou durante a análise.'})[c.status];
-        panel.append(protocol,entry,reason);
+        const card=document.createElement('article');
+        card.className='preview-claim-card';
+        card.dataset.claimStatus=c.status;
+        card.append(protocol,entry,reason);
+        panel.append(card);
         if(c.status!=='pending') continue;
         for(const approved of [true,false]){
             const button=document.createElement('button');
@@ -432,7 +436,7 @@ function renderPurchaseClaims(){
                 }
                 renderPreviewCard();
             });
-            panel.append(button);
+            card.append(button);
         }
     }
 }
