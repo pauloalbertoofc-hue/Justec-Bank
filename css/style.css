@@ -424,3 +424,13 @@ body:has(#app-modal:not(.hidden)), body:has(dialog[open]) { overflow: hidden; }
 @media (prefers-reduced-motion: reduce) {
   .app-content [id^="screen-"] { animation:none; }
 }
+
+/* Visual audit: dynamically inserted partial-payment field follows dark theme. */
+#screen-cards-preview input[aria-label="Valor do pagamento parcial em reais"] {
+  display:block; width:100%; min-height:44px; box-sizing:border-box;
+  background:#101b2d; color:#f1f5f9; border:1px solid #475569;
+  border-radius:10px; padding:10px 12px; font-size:16px; color-scheme:dark;
+}
+#screen-cards-preview input[aria-label="Valor do pagamento parcial em reais"]:focus-visible {
+  outline:2px solid #facc15; outline-offset:2px;
+}
