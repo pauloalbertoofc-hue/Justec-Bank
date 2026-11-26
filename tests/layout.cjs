@@ -8,23 +8,23 @@ const assert = require('node:assert/strict');
         const errors = [];
         page.on('pageerror', error => errors.push(error.message));
         await page.goto(process.env.JUSTEC_TEST_URL || 'http://127.0.0.1:8000/', { waitUntil: 'networkidle' });
-        const mobileParents = { statement: 'home', protection: 'screening', reviews: 'screening', security: 'screening', 'edu-center': 'screening' };
+        const mobileParents = { 'cards-preview': 'home', statement: 'home', protection: 'screening', reviews: 'screening', security: 'screening', 'edu-center': 'screening' };
         await page.locator('#balance-toggle').click();
         for (const width of [320,375,390,768,1024,1366,1920]) {
             await page.setViewportSize({width,height:900});
             const desktop = false; // Preview uses the same bottom navigation at every width.
-            for (const screen of ['home','pix','statement','security','action-post','protection','reviews','rights','screening','edu-center']) {
+            for (const screen of ['home','pix','statement','security','action-post','protection','reviews','rights','screening','edu-center','cards-preview']) {
                 if (desktop) await page.locator(`#desktop-nav [data-nav-screen="${screen}"]`).click();
                 else {
                     await page.locator('#nav-btn-home').click();
                     if (screen === 'statement') await page.locator('#screen-home .statement-link').click();
-                    else if (['security','protection','reviews'].includes(screen)) await page.locator(`#home-services [onclick="navigateTo('${screen}')"]`).first().click();
+                    else if (['security','protection','reviews','cards-preview'].includes(screen)) await page.locator(`#home-services [onclick="navigateTo('${screen}')"]`).first().click();
                     else if (screen === 'edu-center') {await page.locator('#header-security').click(); await page.locator('#screen-security [onclick="navigateTo(\'edu-center\')"]').click();}
                     else if (screen !== 'home') await page.locator(`#mobile-nav [data-nav-screen="${screen}"]`).click();
                 }
                 assert.equal(await page.locator('[id^="screen-"]:not(.hidden)').count(),1);
                 assert.equal(await page.locator(`#screen-${screen}`).isVisible(),true);
-                assert.equal(await page.locator('#desktop-nav [aria-current=page]').getAttribute('data-nav-screen'),screen);
+                if(screen !== 'cards-preview') assert.equal(await page.locator('#desktop-nav [aria-current=page]').getAttribute('data-nav-screen'),screen);
                 assert.equal(await page.locator('#mobile-nav [aria-current=page]').getAttribute('data-nav-screen'),mobileParents[screen]||screen);
                 if (screen === 'home') {
                     const homeOrder = await page.locator('#screen-home > [id]').evaluateAll(nodes => nodes.map(node => node.id));
@@ -88,7 +88,25 @@ const assert = require('node:assert/strict');
             await page.screenshot({path:`/tmp/justec-responsive-${width}.png`,fullPage:true});
             console.log(`PASS ${width}px: navegação, estado/aba ativa, rolagem única, últimos botões acessíveis, modais e ausência de overflow.`);
         }
+        await page.evaluate(()=>navigateTo('cards-preview'));
+        await page.fill('#preview-card-limit','1000');
+        await page.click('#preview-limit-save');
+        await page.fill('#preview-merchant','Loja fictícia');
+        await page.fill('#preview-purchase-amount','150');
+        await page.click('#preview-purchase-form button[type=submit]');
+        assert.match(await page.locator('#preview-invoice').innerText(),/150,00/);
+        assert.match(await page.locator('#preview-limit-status').innerText(),/850,00/);
+        await page.click('#preview-card-toggle');
+        await page.fill('#preview-merchant','Compra recusada');
+        await page.fill('#preview-purchase-amount','10');
+        await page.click('#preview-purchase-form button[type=submit]');
+        assert.match(await page.locator('#preview-purchase-status').innerText(),/bloqueado/);
+        await page.reload({waitUntil:'networkidle'});
+        await page.evaluate(()=>navigateTo('cards-preview'));
+        assert.equal(await page.locator('#preview-card-toggle').getAttribute('aria-pressed'),'true');
+        assert.match(await page.locator('#preview-invoice').innerText(),/150,00/);
+        assert.equal(await page.locator('#preview-purchases li').count(),1);
         assert.deepEqual(errors,[]);
-        console.log('PASS responsive layout: 7 larguras, 10 telas por largura e 2 modais por largura, sem erros JavaScript.');
+        console.log('PASS responsive layout: 7 larguras, 11 telas por largura e 2 modais por largura, sem erros JavaScript.');
     } finally {await browser.close();}
 })().catch(error=>{console.error(error);process.exitCode=1});
