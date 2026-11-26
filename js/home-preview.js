@@ -32,7 +32,7 @@ new MutationObserver(() => {
     if (!homePreviewScreen.classList.contains('hidden')) renderHomeRecent();
 }).observe(homePreviewScreen,{attributes:true,attributeFilter:['class']});
 
-const previewCardState = { limit: 100000, purchases: [], payments: [] };
+const previewCardState = { limit: 100000, purchases: [], payments: [], refunds: [] };
 const previewStorageKey = 'justec-preview-card-v1';
 try {
     const saved = JSON.parse(localStorage.getItem(previewStorageKey));
@@ -41,6 +41,7 @@ try {
        saved.purchases.reduce((sum,p)=>sum+p.cents,0)<=saved.limit){
         previewCardState.limit=saved.limit;
         previewCardState.purchases=saved.purchases;
+        if(Array.isArray(saved.refunds)) previewCardState.refunds=saved.refunds.filter(p=>p&&typeof p.name==='string'&&Number.isSafeInteger(p.cents)&&p.cents>0);
         if(Array.isArray(saved.payments) && saved.payments.every(p=>Number.isSafeInteger(p.cents)&&p.cents>0&&typeof p.id==='string') && new Set(saved.payments.map(p=>p.id)).size===saved.payments.length) previewCardState.payments=saved.payments;
         if(saved.blocked===true) document.getElementById('preview-card-toggle').click();
     }
@@ -72,6 +73,22 @@ function renderPreviewCard() {
     for(const p of [...previewCardState.purchases].reverse()){
         const li=document.createElement('li');
         li.textContent=p.name+' · '+cardMoney(p.cents);
+        const dispute=document.createElement('button');
+        dispute.type='button';
+        dispute.textContent='Contestar saldo desta compra';
+        dispute.addEventListener('click',()=>{
+            if(!previewCardState.purchases.includes(p)) return;
+            if(!confirm('Simular aprovação do estorno de '+cardMoney(p.cents)+' ainda em aberto? Nenhum crédito será depositado na conta.')) return;
+            previewCardState.refunds.push({name:p.name,cents:p.cents});
+            previewCardState.purchases=previewCardState.purchases.filter(item=>item!==p);
+            renderPreviewCard();
+        });
+        li.append(' ',dispute);
+        list.append(li);
+    }
+    for(const refund of previewCardState.refunds){
+        const li=document.createElement('li');
+        li.textContent=refund.name+' · Estorno aprovado (simulação) · '+cardMoney(refund.cents);
         list.append(li);
     }
 }
