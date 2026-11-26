@@ -266,3 +266,39 @@ reject.addEventListener('click',()=>{
     renderCardAlerts();
 });
 renderCardAlerts();
+
+const cardDisputes=[];
+const disputePanel=document.createElement('section');
+disputePanel.className='demo-panel';
+const disputeTitle=document.createElement('h3');
+disputeTitle.textContent='Contestações de cartão · Simulação';
+const disputeList=document.createElement('div');
+disputePanel.append(disputeTitle,disputeList);
+document.getElementById('screen-reviews').append(disputePanel);
+const disputeButton=document.createElement('button');
+disputeButton.type='button';
+disputeButton.textContent='Registrar ocorrência fictícia';
+disputeButton.hidden=true;
+cardGuardPanel.append(disputeButton);
+function renderCardDisputes(){
+    disputeList.replaceChildren();
+    if(!cardDisputes.length) disputeList.textContent='Nenhuma ocorrência de cartão nesta sessão.';
+    for(const item of [...cardDisputes].reverse()){
+        const entry=document.createElement('p');
+        entry.textContent=item.protocol+' · Tentativa não reconhecida · R$ 289,90 · '+item.status;
+        disputeList.append(entry);
+    }
+}
+guardStart.addEventListener('click',()=>{disputeButton.hidden=true;});
+recognize.addEventListener('click',()=>{disputeButton.hidden=true;});
+reject.addEventListener('click',()=>{disputeButton.hidden=false;});
+disputeButton.addEventListener('click',()=>{
+    if(!activeCardAlert||!activeCardAlert.status.startsWith('Não reconhecida')) return;
+    if(!activeCardAlert.protocol){
+        activeCardAlert.protocol='JUSTEC-CARD-'+String(cardDisputes.length+1).padStart(4,'0');
+        cardDisputes.push({protocol:activeCardAlert.protocol,status:'Ocorrência registrada · sem cobrança'});
+    }
+    renderCardDisputes();
+    navigateTo('reviews');
+});
+renderCardDisputes();
