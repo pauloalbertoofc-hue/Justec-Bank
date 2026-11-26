@@ -22,5 +22,6 @@ function evaluateRisk(recipient, amount, state = bankState) {
     return { score, level: restricted || score >= riskRules.high ? 'elevated' : score >= riskRules.moderate ? 'moderate' : 'low', reasons: [...indicators.map(([, , text]) => text), ...(restricted ? ['Política interna simulada: restrição ainda ativa'] : [])] };
 }
 for (const recipient of demoRecipients.filter(r => r.id === 'demo-high' || r.falsePositive)) {
+    if (bankState.restrictions.some(item => item.recipientId === recipient.id)) continue;
     bankState.restrictions.push({ id: demoId('REV'), recipientId: recipient.id, status: 'Restrição ativa', date: demoDate(), reasons: ['Alerta fictício de cadastro recente e sinalização interna'], reason: '', history: ['Restrição ativa'], falsePositive: !!recipient.falsePositive });
 }

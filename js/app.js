@@ -2,7 +2,7 @@
 function navigateTo(screenId) {
     if (typeof onPixNavigation === 'function') onPixNavigation(screenId);
     // Oculta todas as telas
-    const screens = ['home', 'pix', 'screening', 'action-post', 'rights', 'edu-center', 'statement', 'protection', 'reviews', 'security'];
+    const screens = ['home', 'pix', 'screening', 'action-post', 'rights', 'edu-center', 'statement', 'protection', 'reviews', 'security', 'cards-preview'];
     screens.forEach(id => {
         const el = document.getElementById(`screen-${id}`);
         if (el) el.classList.add('hidden');
@@ -17,7 +17,7 @@ function navigateTo(screenId) {
 }
 
 function syncNavigation(screenId) {
-    const mobileParents = { statement: 'home', protection: 'screening', reviews: 'screening', security: 'screening', 'edu-center': 'screening' };
+    const mobileParents = { 'cards-preview': 'home', statement: 'home', protection: 'screening', reviews: 'screening', security: 'screening', 'edu-center': 'screening' };
     document.querySelectorAll('[data-nav-screen]').forEach(button => {
         const isMobile = button.closest('[data-nav-variant]').dataset.navVariant === 'mobile';
         const active = button.dataset.navScreen === (isMobile ? mobileParents[screenId] || screenId : screenId);

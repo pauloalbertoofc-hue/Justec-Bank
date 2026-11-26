@@ -265,6 +265,7 @@ function requestReview(id, reason) {
     const feedback = document.getElementById('review-feedback');
     if (reason.trim().length < 10 || reason.trim().length > 500) { feedback.textContent = 'Informe um motivo fictício de 10 a 500 caracteres.'; return; }
     restriction.reason = reason.trim(); restriction.status = 'Revisão solicitada'; restriction.history.push(restriction.status);
+    persistPreviewBank();
     feedback.textContent = 'Revisão simulada solicitada. Nenhum pedido foi enviado a um banco.';
     renderProtection();
 }
@@ -275,6 +276,7 @@ function advanceReview(id) {
     else if (restriction.status === 'Em análise') restriction.status = restriction.falsePositive ? 'Restrição retirada' : 'Restrição mantida';
     else return;
     restriction.history.push(restriction.status);
+    persistPreviewBank();
     document.getElementById('review-feedback').textContent = `${restriction.status} — resultado educativo, sem efeito no sistema Pix real.`;
     renderProtection();
 }
