@@ -164,6 +164,13 @@ const assert = require('node:assert/strict');
         assert.equal(await page.evaluate(()=>JSON.stringify({attempts:bankState.attempts,restrictions:bankState.restrictions})),securitySnapshot);
         assert.equal(await page.evaluate(()=>bankState.restrictions.at(-1).status),'Restrição retirada');
         assert.equal(await page.evaluate(()=>bankState.balance),beforePayment);
+        await page.emulateMedia({reducedMotion:'no-preference'});
+        await page.evaluate(()=>navigateTo('statement'));
+        assert.equal(await page.locator('#screen-statement').evaluate(el=>getComputedStyle(el).animationName),'justec-screen-enter');
+        await page.emulateMedia({reducedMotion:'reduce'});
+        await page.evaluate(()=>navigateTo('home'));
+        assert.equal(await page.locator('#screen-home').evaluate(el=>getComputedStyle(el).animationName),'none');
+        assert.equal(await page.locator('[id^="screen-"]:not(.hidden)').count(),1);
         assert.deepEqual(errors,[]);
         console.log('PASS responsive layout: 7 larguras, 11 telas por largura e 2 modais por largura, sem erros JavaScript.');
     } finally {await browser.close();}
