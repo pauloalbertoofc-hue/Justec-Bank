@@ -94,6 +94,19 @@ function renderPreviewCard() {
             renderPreviewCard();
             navigateTo('reviews');
         });
+        const paidParts=()=>previewCardState.payments.flatMap(payment=>(payment.items||[]).filter(item=>item.id===p.id).map(item=>({key:payment.id+':'+item.id,cents:item.cents}))).filter(part=>!previewCardState.refunds.some(x=>x.creditId==='CARD-REFUND-'+part.key));
+        if(paidParts().length){
+            const full=document.createElement('button');
+            full.type='button';full.textContent='Contestar compra integralmente';
+            full.addEventListener('click',()=>{
+                if(!previewCardState.purchases.includes(p)) return;
+                const parts=paidParts();
+                if(!parts.length||previewCardState.claims.some(c=>c.status==='pending'&&(c.id===p.id||parts.some(part=>part.key===c.id)))) return;
+                previewCardState.claims.push({id:p.id,full:true,parts,openCents:p.cents,cents:p.cents+parts.reduce((sum,x)=>sum+x.cents,0),name:p.name,protocol:'JUSTEC-COMPRA-'+crypto.randomUUID(),status:'pending'});
+                renderPreviewCard();navigateTo('reviews');
+            });
+            li.append(full);
+        }
         li.append(' ',dispute);
         list.append(li);
     }
@@ -408,7 +421,7 @@ function renderPurchaseClaims(){
         const protocol=document.createElement('small');
         protocol.textContent='Protocolo: '+(c.protocol||'JUSTEC-COMPRA-'+c.id);
         const reason=document.createElement('p');
-        reason.textContent=({pending:'Aguardando decisão educativa.',approved:c.paid?'Parcela paga devolvida ao saldo fictício.':'Saldo em aberto cancelado; nenhum crédito em conta.',rejected:'Cobrança mantida no cenário de rejeição escolhido.',obsolete:'O saldo da compra mudou durante a análise.'})[c.status];
+        reason.textContent=({pending:'Aguardando decisão educativa.',approved:c.full?'Parcelas pagas devolvidas e saldo em aberto cancelado.':c.paid?'Parcela paga devolvida ao saldo fictício.':'Saldo em aberto cancelado; nenhum crédito em conta.',rejected:'Cobrança mantida no cenário de rejeição escolhido.',obsolete:'O saldo da compra mudou durante a análise.'})[c.status];
         const card=document.createElement('article');
         card.className='preview-claim-card';
         card.dataset.claimStatus=c.status;
@@ -422,6 +435,18 @@ function renderPurchaseClaims(){
                 if(c.status!=='pending') return;
                 const p=previewCardState.purchases.find(p=>p.id===c.id);
                 if(!approved) c.status='rejected';
+                else if(c.full===true){
+                    const parts=Array.isArray(c.parts)?c.parts:[];
+                    const current=previewCardState.payments.flatMap(payment=>(payment.items||[]).filter(item=>item.id===c.id).map(item=>({key:payment.id+':'+item.id,cents:item.cents}))).filter(part=>!previewCardState.refunds.some(x=>x.creditId==='CARD-REFUND-'+part.key));
+                    if(!p||p.cents!==c.openCents||!parts.length||JSON.stringify(parts)!==JSON.stringify(current)||c.cents!==p.cents+current.reduce((sum,x)=>sum+x.cents,0)) c.status='obsolete';
+                    else {
+                        c.status='approved';
+                        previewCardState.refunds.push({id:p.id,name:p.name,cents:p.cents,protocol:c.protocol});
+                        for(const part of current) previewCardState.refunds.push({name:p.name,cents:part.cents,creditId:'CARD-REFUND-'+part.key,protocol:c.protocol});
+                        previewCardState.purchases=previewCardState.purchases.filter(item=>item!==p);
+                        restoreCardPayments();renderBalance();renderHomeRecent();
+                    }
+                }
                 else if(c.paid===true){
                     const item=previewCardState.payments.find(x=>x.id===c.paymentId)?.items?.find(x=>x.id===c.purchaseId);
                     const creditId='CARD-REFUND-'+c.id;
