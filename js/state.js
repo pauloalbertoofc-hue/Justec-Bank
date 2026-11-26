@@ -13,7 +13,9 @@ function persistPreviewBank(){
     try {
         localStorage.setItem(previewBankKey,JSON.stringify({
             transactions:bankState.transactions.filter(t=>!t.id.startsWith('CARD-PAY-')&&!t.id.startsWith('CARD-REFUND-')),
-            sequence:bankState.sequence
+            sequence:bankState.sequence,
+            attempts:bankState.attempts,
+            restrictions:bankState.restrictions
         }));
     } catch(e){}
 }
@@ -24,6 +26,10 @@ try {
        new Set(saved.transactions.map(t=>t.id)).size===saved.transactions.length){
         bankState.transactions=saved.transactions;
         bankState.sequence=saved.sequence;
+        const strings=a=>Array.isArray(a)&&a.every(x=>typeof x==='string');
+        const base=x=>x&&typeof x.id==='string'&&typeof x.recipientId==='string'&&typeof x.date==='string'&&strings(x.reasons);
+        if(Array.isArray(saved.attempts)&&saved.attempts.every(x=>base(x)&&Number.isFinite(x.amount))) bankState.attempts=saved.attempts;
+        if(Array.isArray(saved.restrictions)&&saved.restrictions.every(x=>base(x)&&typeof x.status==='string'&&typeof x.reason==='string'&&strings(x.history)&&typeof x.falsePositive==='boolean')) bankState.restrictions=saved.restrictions;
     }
 } catch(e){}
 function demoId(prefix) { return `${prefix}-${++bankState.sequence}`; }
@@ -86,4 +92,5 @@ function recordApprovedPix(draft) {
 function recordInterruptedPix(draft, risk, createRestriction = true) {
     if (!bankState.attempts.some(item => item.id === draft.id)) bankState.attempts.unshift({ id: draft.id, recipientId: draft.recipient.id, date: demoDate(), amount: draft.amount, reasons: [...risk.reasons] });
     if (createRestriction && !bankState.restrictions.some(item => item.recipientId === draft.recipient.id && item.status !== 'Restrição retirada')) bankState.restrictions.push({ id: demoId('REV'), recipientId: draft.recipient.id, status: 'Restrição ativa', reasons: [...risk.reasons], date: demoDate(), reason: '', history: ['Restrição ativa'], falsePositive: draft.recipient.falsePositive === true });
+    persistPreviewBank();
 }
