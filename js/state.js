@@ -1,4 +1,4 @@
-// Estado único da demonstração, reiniciado a cada recarga. Nenhum armazenamento local.
+// Preview: persistência local das operações Pix; cartão mantém seu próprio registro.
 const bankState = {
     isBalanceVisible: true,
     transactions: statementScenario.transactions,
@@ -8,6 +8,24 @@ const bankState = {
         return (Math.round(this.openingBalance * 100) + this.transactions.reduce((sum, tx) => sum + Math.round(tx.amount * 100), 0)) / 100;
     }
 };
+const previewBankKey='justec-preview-bank-v1';
+function persistPreviewBank(){
+    try {
+        localStorage.setItem(previewBankKey,JSON.stringify({
+            transactions:bankState.transactions.filter(t=>!t.id.startsWith('CARD-PAY-')&&!t.id.startsWith('CARD-REFUND-')),
+            sequence:bankState.sequence
+        }));
+    } catch(e){}
+}
+try {
+    const saved=JSON.parse(localStorage.getItem(previewBankKey));
+    if(saved&&Array.isArray(saved.transactions)&&Number.isSafeInteger(saved.sequence)&&saved.sequence>=0&&
+       saved.transactions.every(t=>t&&typeof t.id==='string'&&typeof t.date==='string'&&typeof t.description==='string'&&typeof t.type==='string'&&typeof t.status==='string'&&Number.isFinite(t.amount)&&Number.isSafeInteger(Math.round(t.amount*100))&&t.amount===Math.round(t.amount*100)/100&&typeof t.participant?.name==='string')&&
+       new Set(saved.transactions.map(t=>t.id)).size===saved.transactions.length){
+        bankState.transactions=saved.transactions;
+        bankState.sequence=saved.sequence;
+    }
+} catch(e){}
 function demoId(prefix) { return `${prefix}-${++bankState.sequence}`; }
 function demoDate() { return `${statementScenario.referenceDate}T12:00:00-03:00`; }
 // Contrato monetário: number em BRL, canônico com até duas casas decimais.
@@ -62,6 +80,7 @@ function recordApprovedPix(draft) {
         amount: -amountCents / 100, status: 'completed',
         participant: { id: recipientId, name, institution: 'Instituição fictícia JUSTEC' } };
     bankState.transactions.unshift(transaction);
+    persistPreviewBank();
     return id;
 }
 function recordInterruptedPix(draft, risk, createRestriction = true) {
