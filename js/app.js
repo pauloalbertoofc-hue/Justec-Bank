@@ -239,6 +239,7 @@ function showTransactionDetails(id) {
     document.getElementById('receipt-feedback').textContent = '';
     document.getElementById('receipt-dispute').hidden = item.amount > 0;
     document.getElementById('receipt-education').hidden = true;
+    document.getElementById('receipt-med').hidden = !medEligible(item);
     document.getElementById('receipt-alert').hidden = item.status !== 'suspicious';
     document.getElementById('statement-dialog').showModal();
 }
