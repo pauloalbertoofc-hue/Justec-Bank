@@ -12,7 +12,7 @@ const previewBankKey='justec-preview-bank-v1';
 function persistPreviewBank(){
     try {
         localStorage.setItem(previewBankKey,JSON.stringify({
-            transactions:bankState.transactions.filter(t=>!t.id.startsWith('CARD-PAY-')&&!t.id.startsWith('CARD-REFUND-')),
+            transactions:bankState.transactions.filter(t=>!t.id.startsWith('CARD-PAY-')&&!t.id.startsWith('CARD-REFUND-')&&!t.id.startsWith('MED-REFUND-')),
             sequence:bankState.sequence,
             attempts:bankState.attempts,
             restrictions:bankState.restrictions
