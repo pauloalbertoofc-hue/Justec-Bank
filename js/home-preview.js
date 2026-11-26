@@ -179,3 +179,39 @@ function settleCardInvoice(cents){
     payStatus.textContent=cardSpent()?'Pagamento parcial registrado. Limite recomposto proporcionalmente.':'Fatura fictícia paga. Limite recomposto.';
     partialInput.value='';
 }
+
+/* Educational card alert, separate from actual purchase and Pix ledgers. */
+const cardGuardPanel=document.createElement('section');
+cardGuardPanel.className='demo-panel';
+const guardHeading=document.createElement('h3');
+guardHeading.textContent='JUSTEC Guard · Segurança do cartão';
+const guardStart=document.createElement('button');
+guardStart.type='button'; guardStart.textContent='Simular alerta de compra suspeita';
+const guardResult=document.createElement('p');
+guardResult.setAttribute('role','status');
+const guardActions=document.createElement('div');
+guardActions.hidden=true;
+const recognize=document.createElement('button');
+recognize.type='button'; recognize.textContent='Reconheço a compra';
+const reject=document.createElement('button');
+reject.type='button'; reject.textContent='Não reconheço a compra';
+const guidance=document.createElement('button');
+guidance.type='button'; guidance.textContent='Consultar orientação pós-golpe'; guidance.hidden=true;
+guidance.addEventListener('click',()=>navigateTo('action-post'));
+guardActions.append(recognize,reject);
+cardGuardPanel.append(guardHeading,guardStart,guardResult,guardActions,guidance);
+document.getElementById('screen-cards-preview').append(cardGuardPanel);
+guardStart.addEventListener('click',()=>{
+    guardResult.textContent='Cenário fictício: tentativa de compra de R$ 289,90 em estabelecimento desconhecido. Nenhuma cobrança foi realizada. Você reconhece a tentativa?';
+    guardActions.hidden=false; guidance.hidden=true;
+});
+recognize.addEventListener('click',()=>{
+    guardResult.textContent='Reconhecimento registrado nesta simulação. Nenhuma compra ou cobrança foi criada.';
+    guardActions.hidden=true;
+});
+reject.addEventListener('click',()=>{
+    const toggle=document.getElementById('preview-card-toggle');
+    if(toggle.getAttribute('aria-pressed')!=='true') toggle.click();
+    guardResult.textContent='Cartão fictício bloqueado preventivamente. Em um caso real, contate a instituição pelos canais oficiais e solicite a contestação da compra.';
+    guardActions.hidden=true; guidance.hidden=false;
+});
