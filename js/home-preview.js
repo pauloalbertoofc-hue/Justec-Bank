@@ -185,7 +185,7 @@ function renderPaidInvoices(){
                     claim.type='button';claim.textContent='Contestar parcela paga';
                     claim.addEventListener('click',()=>{
                         const key=payment.id+':'+item.id;
-                        if(!previewCardState.claims.some(c=>c.id===key&&['pending','approved'].includes(c.status))){
+                        if(!previewCardState.refunds.some(x=>x.creditId==='CARD-REFUND-'+key)&&!previewCardState.claims.some(c=>(c.id===key&&['pending','approved'].includes(c.status))||(c.full===true&&c.id===item.id&&c.status==='pending'))){
                             previewCardState.claims.push({id:key,name:item.name,cents:item.cents,status:'pending',paid:true,paymentId:payment.id,purchaseId:item.id,protocol:'JUSTEC-COMPRA-'+crypto.randomUUID()});
                         }
                         renderPreviewCard();navigateTo('reviews');
