@@ -152,6 +152,18 @@ const assert = require('node:assert/strict');
         await page.evaluate(()=>navigateTo('cards-preview'));
         assert.match(await page.locator('#preview-invoice').innerText(),/0,00/);
         assert.equal(await page.locator('#preview-card-toggle').getAttribute('aria-pressed'),'false');
+        await page.evaluate(()=>{
+            recordInterruptedPix({id:'TEST-INTERRUPTED',amount:50,recipient:{id:demoRecipients[0].id,falsePositive:true}},{reasons:['Cenário educativo']});
+            const restriction=bankState.restrictions.at(-1);
+            requestReview(restriction.id,'Justificativa fictícia de teste');
+            advanceReview(restriction.id);
+            advanceReview(restriction.id);
+        });
+        const securitySnapshot=await page.evaluate(()=>JSON.stringify({attempts:bankState.attempts,restrictions:bankState.restrictions}));
+        await page.reload({waitUntil:'networkidle'});
+        assert.equal(await page.evaluate(()=>JSON.stringify({attempts:bankState.attempts,restrictions:bankState.restrictions})),securitySnapshot);
+        assert.equal(await page.evaluate(()=>bankState.restrictions.at(-1).status),'Restrição retirada');
+        assert.equal(await page.evaluate(()=>bankState.balance),beforePayment);
         assert.deepEqual(errors,[]);
         console.log('PASS responsive layout: 7 larguras, 11 telas por largura e 2 modais por largura, sem erros JavaScript.');
     } finally {await browser.close();}
