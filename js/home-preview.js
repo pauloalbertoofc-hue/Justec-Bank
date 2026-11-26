@@ -225,7 +225,24 @@ const cardAlertList=document.createElement('ul');
 cardAlertSection.append(cardAlertTitle,cardAlertList);
 document.getElementById('screen-security').append(cardAlertSection);
 let activeCardAlert=null;
+const homeCardNotice=document.createElement('section');
+homeCardNotice.className='demo-panel';
+homeCardNotice.hidden=true;
+const homeCardNoticeTitle=document.createElement('h3');
+homeCardNoticeTitle.textContent='JUSTEC Guard · Notificações';
+const homeCardNoticeText=document.createElement('p');
+homeCardNoticeText.setAttribute('role','status');
+const homeCardNoticeLink=document.createElement('button');
+homeCardNoticeLink.type='button';
+homeCardNoticeLink.textContent='Consultar alerta do cartão';
+homeCardNoticeLink.addEventListener('click',()=>navigateTo('cards-preview'));
+homeCardNotice.append(homeCardNoticeTitle,homeCardNoticeText,homeCardNoticeLink);
+document.getElementById('home-services').before(homeCardNotice);
 function renderCardAlerts(){
+    const pending=cardAlertHistory.filter(a=>a.status==='Aguardando reconhecimento').length;
+    homeCardNotice.hidden=pending===0;
+    homeCardNoticeText.textContent=pending?'Você tem uma tentativa fictícia de compra aguardando reconhecimento. Nenhuma cobrança foi realizada.':'';
+
     cardAlertList.replaceChildren();
     if(!cardAlertHistory.length) cardAlertList.textContent='Nenhum alerta nesta sessão.';
     for(const alert of [...cardAlertHistory].reverse()){
