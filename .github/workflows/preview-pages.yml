@@ -1,7 +1,5 @@
 name: Publish JUSTEC Preview
 on:
-  push:
-    branches: ['preview/redesign-banking']
   workflow_dispatch:
 permissions:
   contents: read
