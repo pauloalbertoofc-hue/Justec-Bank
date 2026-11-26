@@ -26,6 +26,9 @@ const assert = require('node:assert/strict');
                 assert.equal(await page.locator(`#screen-${screen}`).isVisible(),true);
                 if(screen !== 'cards-preview') assert.equal(await page.locator('#desktop-nav [aria-current=page]').getAttribute('data-nav-screen'),screen);
                 assert.equal(await page.locator('#mobile-nav [aria-current=page]').getAttribute('data-nav-screen'),mobileParents[screen]||screen);
+                if ([390,1366].includes(width)) {
+                    await page.screenshot({path:`/tmp/justec-responsive-${width}-${screen}.png`,fullPage:true,animations:'disabled'});
+                }
                 if (screen === 'home') {
                     const homeOrder = await page.locator('#screen-home > [id]').evaluateAll(nodes => nodes.map(node => node.id));
                     assert.deepEqual(homeOrder, ['home-security', 'home-balance', 'home-services', 'home-recent']);
