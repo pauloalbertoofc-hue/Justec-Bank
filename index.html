@@ -225,7 +225,7 @@
 function resetJustecPreview(){
     if(!confirm('Apagar as movimentações, compras, pagamentos, estornos e contestações fictícias deste navegador e reiniciar a demonstração?')) return;
     try {
-        for(const key of ['justec-preview-bank-v1','justec-preview-card-v1','justec-preview-guard-v1']) localStorage.removeItem(key);
+        for(const key of ['justec-preview-bank-v1','justec-preview-card-v1','justec-preview-guard-v1','justec-preview-med-v1']) localStorage.removeItem(key);
     } catch(error){
         document.getElementById('preview-reset-status').textContent='Não foi possível limpar todos os dados locais. Verifique as permissões do navegador.';
         return;
