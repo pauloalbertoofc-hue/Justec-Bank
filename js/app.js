@@ -2,7 +2,7 @@
 function navigateTo(screenId) {
     if (typeof onPixNavigation === 'function') onPixNavigation(screenId);
     // Oculta todas as telas
-    const screens = ['home', 'pix', 'screening', 'action-post', 'rights', 'edu-center', 'statement', 'protection', 'reviews', 'security'];
+    const screens = ['home', 'pix', 'screening', 'action-post', 'rights', 'edu-center', 'statement', 'protection', 'reviews', 'security', 'cards-preview'];
     screens.forEach(id => {
         const el = document.getElementById(`screen-${id}`);
         if (el) el.classList.add('hidden');
