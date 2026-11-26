@@ -80,10 +80,12 @@ const assert = require('node:assert/strict');
                 assert.equal(await page.locator('#mobile-nav').isVisible(),!desktop);
                 assert.equal(await page.locator('#desktop-nav').isVisible(),desktop);
                 const last = page.locator(`#screen-${screen} button:visible`).last();
-                await last.evaluate(element => element.scrollIntoView({ block: 'end', inline: 'nearest' }));
+                await last.evaluate(element => element.scrollIntoView({ block: 'end', inline: 'nearest', behavior: 'instant' }));
+                await page.waitForFunction(() => !document.querySelector('[id^="screen-"]:not(.hidden)')?.getAnimations().some(a => a.playState === 'running'));
+                await last.evaluate(element => element.scrollIntoView({ block: 'end', inline: 'nearest', behavior: 'instant' }));
                 if (!desktop) {
                     const target = await last.boundingBox(); const nav = await page.locator('#mobile-nav').boundingBox();
-                    assert(target.y+target.height<=nav.y+1,`${width}/${screen} last action covered by navigation`);
+                    assert(target.y+target.height<=nav.y+1,`${width}/${screen} last action covered by navigation: target=${JSON.stringify(target)} nav=${JSON.stringify(nav)}`);
                 }
             }
             await page.evaluate(() => {navigateTo('screening');showDiagnosis('bank_call')});
