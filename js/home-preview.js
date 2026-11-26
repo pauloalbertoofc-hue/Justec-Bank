@@ -143,16 +143,39 @@ payButton.textContent='Pagar fatura integral';
 const payStatus=document.createElement('p');
 payStatus.setAttribute('role','status');
 document.getElementById('preview-invoice').after(payButton,payStatus);
-payButton.addEventListener('click',()=>{
-    const cents=cardSpent();
+const partialInput=document.createElement('input');
+partialInput.type='number'; partialInput.min='0.01'; partialInput.step='0.01';
+partialInput.setAttribute('aria-label','Valor do pagamento parcial em reais');
+const partialButton=document.createElement('button');
+partialButton.type='button'; partialButton.textContent='Pagar valor parcial';
+payStatus.after(partialInput,partialButton);
+payButton.addEventListener('click',()=>settleCardInvoice(cardSpent()));
+partialButton.addEventListener('click',()=>{
+    const value=partialInput.valueAsNumber;
+    const cents=Math.round(value*100);
+    if(!Number.isSafeInteger(cents)||cents<=0||value!==cents/100||cents>cardSpent()){
+        payStatus.textContent='Informe um valor positivo até o total da fatura.';return;
+    }
+    settleCardInvoice(cents);
+});
+function settleCardInvoice(cents){
     if(!cents){payStatus.textContent='Não há fatura em aberto.';return;}
     if(cents>Math.round(bankState.balance*100)){payStatus.textContent='Saldo fictício insuficiente.';return;}
     const id='CARD-PAY-'+crypto.randomUUID();
-    previewCardState.payments.push({id,cents,items:previewCardState.purchases.map(p=>({...p}))});
-    previewCardState.purchases=[];
+    let remaining=cents;
+    const paid=[], outstanding=[];
+    for(const item of previewCardState.purchases){
+        const applied=Math.min(remaining,item.cents);
+        if(applied>0) paid.push({...item,cents:applied});
+        if(item.cents>applied) outstanding.push({...item,cents:item.cents-applied});
+        remaining-=applied;
+    }
+    previewCardState.payments.push({id,cents,items:paid});
+    previewCardState.purchases=outstanding;
     restoreCardPayments();
     renderPreviewCard();
     renderBalance();
     renderHomeRecent();
-    payStatus.textContent='Fatura fictícia paga. Limite recomposto.';
-});
+    payStatus.textContent=cardSpent()?'Pagamento parcial registrado. Limite recomposto proporcionalmente.':'Fatura fictícia paga. Limite recomposto.';
+    partialInput.value='';
+}
