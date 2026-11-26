@@ -187,7 +187,7 @@ const assert = require('node:assert/strict');
         await page.reload({waitUntil:'networkidle'});
         await page.evaluate(()=>navigateTo('cards-preview'));
         assert.match(await page.locator('#preview-invoice').innerText(),/0,00/);
-        assert.match(await page.locator('#preview-limit-status').innerText(),/1\\.000,00/);
+        assert.match(await page.locator('#preview-limit-status').innerText(),/1\.000,00/);
         assert.equal(await page.evaluate(()=>bankState.balance),beforePayment);
         assert.equal(await page.evaluate(()=>bankState.transactions.filter(t=>t.id.startsWith('CARD-REFUND-')).length),1);
         await page.locator('#preview-paid-invoices summary').first().click();
