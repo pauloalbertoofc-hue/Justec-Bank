@@ -100,6 +100,20 @@ function renderPreviewCard() {
     for(const refund of previewCardState.refunds){
         const li=document.createElement('li');
         li.textContent=refund.name+' · Estorno aprovado (simulação) · '+cardMoney(refund.cents);
+        const receipt=document.createElement('details');
+        const summary=document.createElement('summary');
+        summary.textContent='Comprovante de estorno fictício';
+        receipt.append(summary);
+        for(const line of ['Protocolo: '+(refund.protocol||'Registro anterior sem protocolo'),'Estabelecimento: '+refund.name,'Valor: '+cardMoney(refund.cents),'Destino: '+(refund.creditId?'Saldo bancário fictício':'Cancelamento do saldo em aberto da fatura'),'Sem validade financeira']){
+            const row=document.createElement('p');row.textContent=line;receipt.append(row);
+        }
+        if(refund.creditId){
+            const link=document.createElement('button');
+            link.type='button';link.textContent='Consultar movimentação no extrato';
+            link.addEventListener('click',()=>showTransactionDetails(refund.creditId));
+            receipt.append(link);
+        }
+        li.append(receipt);
         list.append(li);
     }
 }
