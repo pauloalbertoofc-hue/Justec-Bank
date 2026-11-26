@@ -286,7 +286,23 @@ function renderCardDisputes(){
     for(const item of [...cardDisputes].reverse()){
         const entry=document.createElement('p');
         entry.textContent=item.protocol+' · Tentativa não reconhecida · R$ 289,90 · '+item.status;
-        disputeList.append(entry);
+        const details=document.createElement('section');
+        details.append(entry);
+        const stage=document.createElement('p');
+        stage.textContent='Etapa '+(item.stage||1)+' de 3 · Atendimento educativo';
+        details.append(stage);
+        if((item.stage||1)<3){
+            const advance=document.createElement('button');
+            advance.type='button';
+            advance.textContent=(item.stage||1)===1?'Simular início da análise':'Simular encerramento da análise';
+            advance.addEventListener('click',()=>{
+                item.stage=(item.stage||1)+1;
+                item.status=item.stage===2?'Em análise simulada':'Encerrada · tentativa sem débito, sem estorno';
+                renderCardDisputes();
+            });
+            details.append(advance);
+        }
+        disputeList.append(details);
     }
 }
 guardStart.addEventListener('click',()=>{disputeButton.hidden=true;});
@@ -296,7 +312,7 @@ disputeButton.addEventListener('click',()=>{
     if(!activeCardAlert||!activeCardAlert.status.startsWith('Não reconhecida')) return;
     if(!activeCardAlert.protocol){
         activeCardAlert.protocol='JUSTEC-CARD-'+String(cardDisputes.length+1).padStart(4,'0');
-        cardDisputes.push({protocol:activeCardAlert.protocol,status:'Ocorrência registrada · sem cobrança'});
+        cardDisputes.push({protocol:activeCardAlert.protocol,stage:1,status:'Ocorrência registrada · sem cobrança'});
     }
     renderCardDisputes();
     navigateTo('reviews');
