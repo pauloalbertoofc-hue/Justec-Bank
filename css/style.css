@@ -371,3 +371,14 @@ body:has(#app-modal:not(.hidden)), body:has(dialog[open]) { overflow: hidden; }
 #screen-security #attempt-list { display:grid; gap:10px; overflow-wrap:anywhere; }
 #screen-security li { padding:12px; margin-block:6px; border-radius:10px; background:#152237; overflow-wrap:anywhere; }
 #screen-security button:focus-visible { outline:2px solid #facc15; outline-offset:3px; }
+
+/* Preview card dashboard: preserve all existing controls and IDs. */
+#screen-cards-preview .preview-bank-card { width:100%; box-sizing:border-box; max-width:360px; margin:8px auto; }
+#preview-card-status { padding:10px 12px; border-radius:10px; background:#101b2d; margin:0; }
+#preview-card-toggle { width:100%; }
+#screen-cards-preview .preview-card-controls,#screen-cards-preview #preview-purchase-form { padding:14px; border:1px solid #334155; border-radius:14px; background:#101b2d; }
+#preview-limit-status { font-size:16px; font-weight:700; color:#6ee7b7; font-variant-numeric:tabular-nums; overflow-wrap:anywhere; }
+#screen-cards-preview #preview-invoice { padding:16px; border-radius:14px; background:#24364d; color:#f8fafc; font-size:20px; font-variant-numeric:tabular-nums; overflow-wrap:anywhere; }
+#screen-cards-preview #preview-purchase-form button[type="submit"] { background:#facc15; color:#101827; border-color:#facc15; }
+#screen-cards-preview #preview-purchases li { border:1px solid #334155; padding:12px; }
+#screen-cards-preview details { overflow-wrap:anywhere; }
