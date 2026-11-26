@@ -55,6 +55,10 @@ function savePreviewCard(){
 document.getElementById('preview-card-toggle').addEventListener('click',savePreviewCard);
 const cardSpent = () => previewCardState.purchases.reduce((sum,p) => sum+p.cents,0);
 function restoreCardPayments(){
+    for(const refund of previewCardState.refunds){
+        if(!refund.creditId||bankState.transactions.some(t=>t.id===refund.creditId)) continue;
+        bankState.transactions.unshift({id:refund.creditId,date:demoDate(),type:'pix-in',description:'Estorno de cartão · simulação',amount:refund.cents/100,status:'completed',participant:{id:'justec-card',name:'Estorno JUSTEC',institution:'JUSTEC fictício'}});
+    }
     for(const p of previewCardState.payments){
         if(bankState.transactions.some(t=>t.id===p.id)) continue;
         bankState.transactions.unshift({id:p.id,date:demoDate(),type:'pix-out',description:(p.partial===true?'Pagamento parcial de fatura':'Pagamento de fatura')+' · simulação',amount:-p.cents/100,status:'completed',participant:{id:'justec-card',name:'Fatura JUSTEC',institution:'JUSTEC fictício'}});
@@ -149,6 +153,18 @@ function renderPaidInvoices(){
                 const row=document.createElement('p');
                 row.textContent=String(item.name)+' · '+cardMoney(item.cents);
                 details.append(row);
+                if(item.id){
+                    const claim=document.createElement('button');
+                    claim.type='button';claim.textContent='Contestar parcela paga';
+                    claim.addEventListener('click',()=>{
+                        const key=payment.id+':'+item.id;
+                        if(!previewCardState.claims.some(c=>c.id===key&&['pending','approved'].includes(c.status))){
+                            previewCardState.claims.push({id:key,name:item.name,cents:item.cents,status:'pending',paid:true,paymentId:payment.id,purchaseId:item.id,protocol:'JUSTEC-COMPRA-'+crypto.randomUUID()});
+                        }
+                        renderPreviewCard();navigateTo('reviews');
+                    });
+                    details.append(claim);
+                }
             }
         }
         const receipt=document.createElement('button');
@@ -378,7 +394,7 @@ function renderPurchaseClaims(){
         const protocol=document.createElement('small');
         protocol.textContent='Protocolo: '+(c.protocol||'JUSTEC-COMPRA-'+c.id);
         const reason=document.createElement('p');
-        reason.textContent=({pending:'Aguardando decisão educativa.',approved:'Saldo em aberto cancelado; nenhum crédito em conta.',rejected:'Cobrança mantida no cenário de rejeição escolhido.',obsolete:'O saldo da compra mudou durante a análise.'})[c.status];
+        reason.textContent=({pending:'Aguardando decisão educativa.',approved:c.paid?'Parcela paga devolvida ao saldo fictício.':'Saldo em aberto cancelado; nenhum crédito em conta.',rejected:'Cobrança mantida no cenário de rejeição escolhido.',obsolete:'O saldo da compra mudou durante a análise.'})[c.status];
         panel.append(protocol,entry,reason);
         if(c.status!=='pending') continue;
         for(const approved of [true,false]){
@@ -388,6 +404,12 @@ function renderPurchaseClaims(){
                 if(c.status!=='pending') return;
                 const p=previewCardState.purchases.find(p=>p.id===c.id);
                 if(!approved) c.status='rejected';
+                else if(c.paid===true){
+                    const item=previewCardState.payments.find(x=>x.id===c.paymentId)?.items?.find(x=>x.id===c.purchaseId);
+                    const creditId='CARD-REFUND-'+c.id;
+                    if(!item||item.cents!==c.cents||previewCardState.refunds.some(x=>x.creditId===creditId)) c.status='obsolete';
+                    else {c.status='approved';previewCardState.refunds.push({name:c.name,cents:c.cents,creditId,protocol:c.protocol});restoreCardPayments();renderBalance();renderHomeRecent();}
+                }
                 else if(!p||p.cents!==c.cents) c.status='obsolete';
                 else {
                     c.status='approved';
