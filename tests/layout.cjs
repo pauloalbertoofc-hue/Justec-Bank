@@ -106,6 +106,16 @@ const assert = require('node:assert/strict');
         assert.equal(await page.locator('#preview-card-toggle').getAttribute('aria-pressed'),'true');
         assert.match(await page.locator('#preview-invoice').innerText(),/150,00/);
         assert.equal(await page.locator('#preview-purchases li').count(),1);
+        const beforePayment = await page.evaluate(()=>bankState.balance);
+        await page.getByRole('button',{name:'Pagar fatura integral',exact:true}).click();
+        assert.match(await page.locator('#preview-invoice').innerText(),/0,00/);
+        assert.match(await page.locator('#preview-limit-status').innerText(),/1\.000,00/);
+        assert.equal(await page.evaluate(()=>bankState.balance),Math.round((beforePayment-150)*100)/100);
+        await page.getByRole('button',{name:'Pagar fatura integral',exact:true}).click();
+        assert.equal(await page.evaluate(()=>bankState.transactions.filter(t=>t.id.startsWith('CARD-PAY-')).length),1);
+        await page.reload({waitUntil:'networkidle'});
+        assert.equal(await page.evaluate(()=>bankState.balance),Math.round((beforePayment-150)*100)/100);
+        assert.equal(await page.evaluate(()=>bankState.transactions.filter(t=>t.id.startsWith('CARD-PAY-')).length),1);
         assert.deepEqual(errors,[]);
         console.log('PASS responsive layout: 7 larguras, 11 telas por largura e 2 modais por largura, sem erros JavaScript.');
     } finally {await browser.close();}
