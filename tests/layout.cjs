@@ -35,8 +35,16 @@ const assert = require('node:assert/strict');
                     const securityBox = await page.locator('#home-security').boundingBox();
                     const balanceBox = await page.locator('#home-balance').boundingBox();
                     assert(securityBox.y + securityBox.height <= balanceBox.y, `${width} Rota da Segurança deve ficar acima do saldo`);
-                    const columns = await page.locator('.demo-services').evaluate(el => getComputedStyle(el).gridTemplateColumns.split(' ').length);
-                    assert.equal(columns, width < 375 ? 2 : 3);
+                    const services=page.locator('#home-services .demo-services');
+                    assert.equal(await services.locator('button').count(),7);
+                    assert.equal(await services.evaluate(el=>getComputedStyle(el).flexWrap),'nowrap');
+                    assert.equal(await services.evaluate(el=>getComputedStyle(el).overflowX),'auto');
+                    if(width<=390){
+                        assert.ok(await services.evaluate(el=>el.scrollWidth>el.clientWidth));
+                        await services.evaluate(el=>el.scrollLeft=el.scrollWidth);
+                        assert.ok(await services.evaluate(el=>el.scrollLeft>0));
+                        await services.evaluate(el=>el.scrollLeft=0);
+                    }
                 }
                 if (screen === 'pix') {
                     await page.locator('[data-pix-method="recipient"]').click();await page.locator('#pix-lookup').click();await page.locator('#pix-recipient-next').click();
