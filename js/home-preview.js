@@ -66,6 +66,7 @@ function renderPreviewCard() {
     savePreviewCard();
     document.getElementById('preview-limit-status').textContent = 'Limite disponível: '+cardMoney(previewCardState.limit-cardSpent());
     document.getElementById('preview-invoice').textContent = 'Fatura simulada: '+cardMoney(cardSpent());
+    renderPaidInvoices();
     const list = document.getElementById('preview-purchases');
     list.replaceChildren();
     for(const p of [...previewCardState.purchases].reverse()){
@@ -101,6 +102,39 @@ document.getElementById('preview-purchase-form').addEventListener('submit', e =>
     e.target.reset();
     status.textContent='Compra fictícia aprovada.';
 });
+function renderPaidInvoices(){
+    let list=document.getElementById('preview-paid-invoices');
+    if(!list){
+        const section=document.createElement('section');
+        const heading=document.createElement('h3');
+        heading.textContent='Faturas quitadas';
+        list=document.createElement('div');
+        list.id='preview-paid-invoices';
+        section.append(heading,list);
+        document.getElementById('preview-purchases').after(section);
+    }
+    list.replaceChildren();
+    if(!previewCardState.payments.length) list.textContent='Nenhuma fatura quitada.';
+    for(const payment of [...previewCardState.payments].reverse()){
+        const details=document.createElement('details');
+        const summary=document.createElement('summary');
+        summary.textContent='Fatura paga · '+cardMoney(payment.cents);
+        details.append(summary);
+        if(Array.isArray(payment.items)){
+            for(const item of payment.items){
+                const row=document.createElement('p');
+                row.textContent=String(item.name)+' · '+cardMoney(item.cents);
+                details.append(row);
+            }
+        }
+        const receipt=document.createElement('button');
+        receipt.type='button';
+        receipt.textContent='Ver comprovante fictício';
+        receipt.addEventListener('click',()=>showTransactionDetails(payment.id));
+        details.append(receipt);
+        list.append(details);
+    }
+}
 renderPreviewCard();
 
 const payButton=document.createElement('button');
@@ -114,7 +148,7 @@ payButton.addEventListener('click',()=>{
     if(!cents){payStatus.textContent='Não há fatura em aberto.';return;}
     if(cents>Math.round(bankState.balance*100)){payStatus.textContent='Saldo fictício insuficiente.';return;}
     const id='CARD-PAY-'+crypto.randomUUID();
-    previewCardState.payments.push({id,cents});
+    previewCardState.payments.push({id,cents,items:previewCardState.purchases.map(p=>({...p}))});
     previewCardState.purchases=[];
     restoreCardPayments();
     renderPreviewCard();
