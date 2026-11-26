@@ -231,6 +231,21 @@ const assert = require('node:assert/strict');
         await page.selectOption('#med-reason','fraude');
         await page.click('#med-form button[type=submit]');
         assert.match(await page.locator('#med-feedback').innerText(),/Já existe/);
+        for (const [id,outcome,credit] of [['DEMO-06','Simular devolução integral',250],['DEMO-10','Simular negativa',0]]) {
+            const prior = await page.evaluate(()=>bankState.balance);
+            await page.evaluate(id=>{navigateTo('statement');showTransactionDetails(id);},id);
+            await page.click('#receipt-dispute');
+            await page.click('#receipt-med');
+            await page.selectOption('#med-reason','fraude');
+            await page.click('#med-form button[type=submit]');
+            await page.getByRole('button',{name:outcome,exact:true}).click();
+            assert.equal(await page.evaluate(()=>bankState.balance),Math.round((prior+credit)*100)/100);
+            assert.equal(await page.evaluate(id=>bankState.transactions.filter(t=>t.id==='MED-REFUND-'+id).length,id),credit?1:0);
+        }
+        await page.evaluate(()=>{navigateTo('statement');showTransactionDetails('DEMO-03');});
+        await page.click('#receipt-dispute');
+        assert.equal(await page.locator('#receipt-med').isVisible(),false);
+        await page.evaluate(()=>closeTransactionDetails());
         await page.emulateMedia({reducedMotion:'no-preference'});
         await page.evaluate(()=>navigateTo('statement'));
         assert.equal(await page.locator('#screen-statement').evaluate(el=>getComputedStyle(el).animationName),'justec-screen-enter');
