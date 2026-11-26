@@ -55,7 +55,7 @@ const cardSpent = () => previewCardState.purchases.reduce((sum,p) => sum+p.cents
 function restoreCardPayments(){
     for(const p of previewCardState.payments){
         if(bankState.transactions.some(t=>t.id===p.id)) continue;
-        bankState.transactions.unshift({id:p.id,date:demoDate(),type:'pix-out',description:'Pagamento de fatura · simulação',amount:-p.cents/100,status:'completed',participant:{id:'justec-card',name:'Fatura JUSTEC',institution:'JUSTEC fictício'}});
+        bankState.transactions.unshift({id:p.id,date:demoDate(),type:'pix-out',description:(p.partial===true?'Pagamento parcial de fatura':'Pagamento de fatura')+' · simulação',amount:-p.cents/100,status:'completed',participant:{id:'justec-card',name:'Fatura JUSTEC',institution:'JUSTEC fictício'}});
     }
 }
 restoreCardPayments();
@@ -107,18 +107,18 @@ function renderPaidInvoices(){
     if(!list){
         const section=document.createElement('section');
         const heading=document.createElement('h3');
-        heading.textContent='Faturas quitadas';
+        heading.textContent='Histórico de pagamentos';
         list=document.createElement('div');
         list.id='preview-paid-invoices';
         section.append(heading,list);
         document.getElementById('preview-purchases').after(section);
     }
     list.replaceChildren();
-    if(!previewCardState.payments.length) list.textContent='Nenhuma fatura quitada.';
+    if(!previewCardState.payments.length) list.textContent='Nenhum pagamento registrado.';
     for(const payment of [...previewCardState.payments].reverse()){
         const details=document.createElement('details');
         const summary=document.createElement('summary');
-        summary.textContent='Fatura paga · '+cardMoney(payment.cents);
+        summary.textContent=(payment.partial===true?'Pagamento parcial':payment.partial===false?'Quitação integral':'Pagamento registrado')+' · '+cardMoney(payment.cents);
         details.append(summary);
         if(Array.isArray(payment.items)){
             for(const item of payment.items){
@@ -170,7 +170,7 @@ function settleCardInvoice(cents){
         if(item.cents>applied) outstanding.push({...item,cents:item.cents-applied});
         remaining-=applied;
     }
-    previewCardState.payments.push({id,cents,items:paid});
+    previewCardState.payments.push({id,cents,items:paid,partial:outstanding.length>0});
     previewCardState.purchases=outstanding;
     restoreCardPayments();
     renderPreviewCard();
