@@ -339,3 +339,14 @@ body:has(#app-modal:not(.hidden)), body:has(dialog[open]) { overflow: hidden; }
 .preview-bank-card small { font-size:10px; letter-spacing:.08em; }
 #preview-card-status { font-size:12px; color:#b8c5d6; margin-bottom:8px; }
 #preview-card-toggle[aria-pressed=true] { border-color:#e87991; color:#fda4af; }
+
+[aria-labelledby="cards-preview-title"] { display:grid; gap:12px; min-width:0; }
+.preview-card-controls,#preview-purchase-form { display:grid; gap:8px; min-width:0; }
+.preview-card-controls label,#preview-purchase-form label { font-size:13px; color:#cbd5e1; }
+.preview-card-controls input,#preview-purchase-form input { width:100%; min-width:0; box-sizing:border-box; background:#101b2d; color:#fff; border:1px solid #475569; border-radius:10px; padding:12px; font-size:16px; }
+[aria-labelledby="cards-preview-title"] button { min-height:44px; border:1px solid #64748b; border-radius:10px; padding:10px 14px; color:#facc15; background:#18263a; font-weight:600; }
+[aria-labelledby="cards-preview-title"] button:focus-visible { outline:2px solid #facc15; outline-offset:3px; }
+#preview-invoice { font-size:16px; font-weight:700; }
+#preview-purchases { display:grid; gap:6px; padding:0; list-style:none; }
+#preview-purchases li { padding:10px; background:#101b2d; border-radius:8px; overflow-wrap:anywhere; }
+#preview-purchase-status { font-size:13px; color:#cbd5e1; }
