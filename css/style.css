@@ -361,3 +361,13 @@ body:has(#app-modal:not(.hidden)), body:has(dialog[open]) { overflow: hidden; }
 .preview-claim-card p { margin:0; line-height:1.5; }
 .preview-claim-card button { min-height:44px; width:100%; border-radius:10px; }
 .preview-claim-card button:focus-visible { outline:2px solid #facc15; outline-offset:3px; }
+
+/* Preview security center */
+#screen-security > .demo-panel { display:grid; gap:12px; min-width:0; }
+#screen-security > .demo-panel > p { line-height:1.6; color:#cbd5e1; }
+#screen-security > .demo-panel > button { min-height:48px; width:100%; text-align:left; padding:12px 16px; border:1px solid #40536c; border-radius:12px; background:#19283d; color:#f1f5f9; }
+#screen-security > .demo-panel > button[onclick="resetJustecPreview()"] { border-color:#9f5363; color:#fda4af; background:#321e2a; text-align:center; }
+#screen-security h3 { margin-top:12px; padding-top:12px; border-top:1px solid #334155; }
+#screen-security #attempt-list { display:grid; gap:10px; overflow-wrap:anywhere; }
+#screen-security li { padding:12px; margin-block:6px; border-radius:10px; background:#152237; overflow-wrap:anywhere; }
+#screen-security button:focus-visible { outline:2px solid #facc15; outline-offset:3px; }
