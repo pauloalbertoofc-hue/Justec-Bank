@@ -474,3 +474,11 @@ body:has(#app-modal:not(.hidden)), body:has(dialog[open]) { overflow: hidden; }
 #screen-informa .informa-alert { overflow-wrap:anywhere; }
 #screen-informa .informa-alert a { color:#facc15; text-decoration:underline; }
 #screen-informa .informa-alert button { scroll-margin-bottom:112px; }
+
+#med-list { display:grid; gap:12px; margin-top:14px; }
+.med-case { display:grid; gap:10px; padding:14px; border:1px solid #334155; border-radius:14px; background:#101b2d; overflow-wrap:anywhere; }
+.med-case h4 { color:#facc15; font-weight:700; }
+.med-case p { color:#e2e8f0; line-height:1.5; }
+.med-case button { width:100%; min-height:44px; border:1px solid #64748b; border-radius:10px; padding:10px; }
+#med-form:not([hidden]) { display:grid; gap:12px; margin-block:12px; }
+#med-form select { width:100%; }
