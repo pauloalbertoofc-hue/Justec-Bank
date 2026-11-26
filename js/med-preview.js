@@ -1,4 +1,4 @@
-// Educational only. No real bank communication or balance changes.
+// Educational only. Credits affect fictional ledger only.
 const medStorageKey = 'justec-preview-med-v1';
 const medCases = new Map();
 try {
@@ -9,6 +9,21 @@ try {
 } catch {}
 function saveMedCases() {
     try { localStorage.setItem(medStorageKey, JSON.stringify([...medCases.values()])); return true; } catch { return false; }
+}
+function medRecoveredCents(entry, tx) {
+    const cents = pixAmountInCents(-tx.amount);
+    return entry.status === 'full' ? cents : entry.status === 'partial' ? Math.floor(cents / 2) : 0;
+}
+function reconcileMedCredits() {
+    bankState.transactions = bankState.transactions.filter(t => !t.id.startsWith('MED-REFUND-'));
+    for (const entry of medCases.values()) {
+        const tx = bankState.transactions.find(t => t.id === entry.id);
+        if (!medEligible(tx)) continue;
+        const cents = medRecoveredCents(entry, tx);
+        if (!cents) continue;
+        bankState.transactions.unshift({id:'MED-REFUND-'+tx.id,date:demoDate(),type:'pix-in',description:'Devolução Pix · MED simulado',amount:cents/100,status:'completed',participant:{name:'Devolução fictícia JUSTEC',institution:'Instituição fictícia JUSTEC'}});
+    }
+    renderBalance(); renderStatementBalance();
 }
 let medSelected = null;
 function medEligible(tx) { return !!tx && tx.type === 'pix-out' && tx.amount < 0; }
@@ -38,14 +53,13 @@ function renderMedCases() {
                 button.onclick = () => {
                     if (entry.status !== 'pending') return;
                     entry.status = status;
-                    saveMedCases(); renderMedCases();
+                    saveMedCases(); reconcileMedCredits(); renderMedCases();
                 };
                 list.append(button);
             }
         } else if (tx) {
             const result = document.createElement('p');
-            const cents = Math.round(-tx.amount * 100);
-            result.textContent = 'Valor recuperado no cenário: ' + formatMoney((entry.status === 'full' ? cents : entry.status === 'partial' ? Math.floor(cents / 2) : 0)/100) + '. Resultado ilustrativo; não altera o saldo.';
+            result.textContent = 'Valor recuperado no cenário: ' + formatMoney(medRecoveredCents(entry, tx)/100) + '. Crédito exclusivamente fictício.';
             list.append(result);
         }
     }
@@ -72,4 +86,5 @@ document.getElementById('med-form').addEventListener('submit', event => {
     renderMedCases();
 });
 
+reconcileMedCredits();
 renderMedCases();
