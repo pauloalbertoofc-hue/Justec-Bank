@@ -434,3 +434,9 @@ body:has(#app-modal:not(.hidden)), body:has(dialog[open]) { overflow: hidden; }
 #screen-cards-preview input[aria-label="Valor do pagamento parcial em reais"]:focus-visible {
   outline:2px solid #facc15; outline-offset:2px;
 }
+
+/* Desktop app framing: retain the mobile shell and navigation geometry. */
+@media (min-width: 1024px) {
+  body { background: radial-gradient(ellipse at 50% 0%, #18263e 0%, #0b101d 65%); }
+  .app-shell { box-shadow: 0 0 64px rgba(0,0,0,.32); }
+}
