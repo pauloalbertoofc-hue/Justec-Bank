@@ -17,7 +17,7 @@ function navigateTo(screenId) {
 }
 
 function syncNavigation(screenId) {
-    const mobileParents = { statement: 'home', protection: 'screening', reviews: 'screening', security: 'screening', 'edu-center': 'screening' };
+    const mobileParents = { 'cards-preview': 'home', statement: 'home', protection: 'screening', reviews: 'screening', security: 'screening', 'edu-center': 'screening' };
     document.querySelectorAll('[data-nav-screen]').forEach(button => {
         const isMobile = button.closest('[data-nav-variant]').dataset.navVariant === 'mobile';
         const active = button.dataset.navScreen === (isMobile ? mobileParents[screenId] || screenId : screenId);
