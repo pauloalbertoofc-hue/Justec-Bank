@@ -40,12 +40,22 @@ function startMedFromReceipt() {
 function renderMedCases() {
     const list = document.getElementById('med-list');
     list.replaceChildren();
+    if (!medCases.size) {
+        const empty = document.createElement('p');
+        empty.textContent = 'Nenhuma contestação de Pix registrada.';
+        list.append(empty);
+    }
     for (const entry of medCases.values()) {
-        const p = document.createElement('p');
+        const card = document.createElement('article');
+        card.className = 'med-case';
+        const p = document.createElement('h4');
         const tx = bankState.transactions.find(t => t.id === entry.id);
         const labels = {pending:'Em análise',full:'Devolução integral',partial:'Devolução parcial',denied:'Negativa'};
         p.textContent = entry.protocol + ' · ' + entry.id + ' · ' + labels[entry.status] + ' (simulação)';
-        list.append(p);
+        card.append(p);
+        const detail = document.createElement('p');
+        detail.textContent = 'Motivo: ' + (entry.reason === 'fraude' ? 'Suspeita de fraude ou golpe' : 'Falha operacional') + (tx ? ' · Pix original: ' + formatMoney(-tx.amount) : '');
+        card.append(detail);
         if (entry.status === 'pending') {
             for (const [status,label] of [['full','Simular devolução integral'],['partial','Simular devolução parcial'],['denied','Simular negativa']]) {
                 const button = document.createElement('button');
@@ -55,13 +65,14 @@ function renderMedCases() {
                     entry.status = status;
                     saveMedCases(); reconcileMedCredits(); renderMedCases();
                 };
-                list.append(button);
+                card.append(button);
             }
         } else if (tx) {
             const result = document.createElement('p');
             result.textContent = 'Valor recuperado no cenário: ' + formatMoney(medRecoveredCents(entry, tx)/100) + '. Crédito exclusivamente fictício.';
-            list.append(result);
+            card.append(result);
         }
+        list.append(card);
     }
 }
 document.getElementById('med-form').addEventListener('submit', event => {
