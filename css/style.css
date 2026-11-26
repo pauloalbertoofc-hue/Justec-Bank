@@ -399,3 +399,16 @@ body:has(#app-modal:not(.hidden)), body:has(dialog[open]) { overflow: hidden; }
 #screen-statement .transaction-item b { font-size:14px; font-variant-numeric:tabular-nums; }
 #screen-statement .transaction-item span,#screen-statement .transaction-item small { font-size:12px; }
 #screen-statement .statement-caption { line-height:1.5; }
+
+/* Preview: educational receipt, consistent with the account statement. */
+#statement-dialog .statement-receipt { background:#121929; color:#f1f5f9; padding:clamp(16px,4vw,28px); }
+#receipt-title { font-size:20px; line-height:1.35; margin-block:12px; }
+#statement-dialog .statement-notice { color:#facc15; font-weight:700; font-size:11px; line-height:1.5; overflow-wrap:anywhere; }
+#receipt-details { clear:both; margin-block:16px; padding:14px; border:1px solid #40536c; border-radius:14px; background:#152237; }
+#receipt-details p { padding-block:8px; margin:0; border-bottom:1px solid #334155; font-size:13px; overflow-wrap:anywhere; }
+#receipt-details p:last-child { border-bottom:0; }
+#receipt-copy,#receipt-dispute { width:100%; min-height:44px; }
+#receipt-copy { background:#facc15; color:#101827; font-weight:700; }
+#receipt-dispute { border-color:#9f5363; color:#fda4af; background:#321e2a; }
+#statement-dialog .receipt-close { min-width:44px; min-height:44px; }
+#receipt-education,#receipt-alert { border:1px solid #40536c; padding:14px; line-height:1.6; }
