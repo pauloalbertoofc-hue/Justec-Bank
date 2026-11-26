@@ -82,7 +82,7 @@ function renderPreviewCard() {
         dispute.addEventListener('click',()=>{
             if(!previewCardState.purchases.includes(p)) return;
             if(!previewCardState.claims.some(c=>c.id===p.id&&c.status==='pending')){
-                previewCardState.claims.push({id:p.id,name:p.name,cents:p.cents,status:'pending'});
+                previewCardState.claims.push({id:p.id,protocol:'JUSTEC-COMPRA-'+crypto.randomUUID(),name:p.name,cents:p.cents,status:'pending'});
             }
             renderPreviewCard();
             navigateTo('reviews');
@@ -372,7 +372,11 @@ function renderPurchaseClaims(){
     for(const c of previewCardState.claims){
         const entry=document.createElement('p');
         entry.textContent=c.name+' · '+cardMoney(c.cents)+' · '+({pending:'Em análise',approved:'Estorno aprovado',rejected:'Rejeitada',obsolete:'Saldo alterado: nova análise necessária'}[c.status]);
-        panel.append(entry);
+        const protocol=document.createElement('small');
+        protocol.textContent='Protocolo: '+(c.protocol||'JUSTEC-COMPRA-'+c.id);
+        const reason=document.createElement('p');
+        reason.textContent=({pending:'Aguardando decisão educativa.',approved:'Saldo em aberto cancelado; nenhum crédito em conta.',rejected:'Cobrança mantida no cenário de rejeição escolhido.',obsolete:'O saldo da compra mudou durante a análise.'})[c.status];
+        panel.append(protocol,entry,reason);
         if(c.status!=='pending') continue;
         for(const approved of [true,false]){
             const button=document.createElement('button');
