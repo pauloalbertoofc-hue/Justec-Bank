@@ -215,3 +215,37 @@ reject.addEventListener('click',()=>{
     guardResult.textContent='Cartão fictício bloqueado preventivamente. Em um caso real, contate a instituição pelos canais oficiais e solicite a contestação da compra.';
     guardActions.hidden=true; guidance.hidden=false;
 });
+
+const cardAlertHistory=[];
+const cardAlertSection=document.createElement('section');
+cardAlertSection.className='demo-panel';
+const cardAlertTitle=document.createElement('h3');
+cardAlertTitle.textContent='Histórico de alertas do cartão';
+const cardAlertList=document.createElement('ul');
+cardAlertSection.append(cardAlertTitle,cardAlertList);
+document.getElementById('screen-security').append(cardAlertSection);
+let activeCardAlert=null;
+function renderCardAlerts(){
+    cardAlertList.replaceChildren();
+    if(!cardAlertHistory.length) cardAlertList.textContent='Nenhum alerta nesta sessão.';
+    for(const alert of [...cardAlertHistory].reverse()){
+        const li=document.createElement('li');
+        li.textContent='Tentativa fictícia · R$ 289,90 · '+alert.status;
+        cardAlertList.append(li);
+    }
+}
+guardStart.addEventListener('click',()=>{
+    if(activeCardAlert&&activeCardAlert.status==='Aguardando reconhecimento') return;
+    activeCardAlert={status:'Aguardando reconhecimento'};
+    cardAlertHistory.push(activeCardAlert);
+    renderCardAlerts();
+});
+recognize.addEventListener('click',()=>{
+    if(activeCardAlert) activeCardAlert.status='Reconhecida';
+    renderCardAlerts();
+});
+reject.addEventListener('click',()=>{
+    if(activeCardAlert) activeCardAlert.status='Não reconhecida · bloqueio preventivo';
+    renderCardAlerts();
+});
+renderCardAlerts();
