@@ -32,15 +32,45 @@ new MutationObserver(() => {
     if (!homePreviewScreen.classList.contains('hidden')) renderHomeRecent();
 }).observe(homePreviewScreen,{attributes:true,attributeFilter:['class']});
 
-const previewCardState = { limit: 100000 };
+const previewCardState = { limit: 100000, purchases: [] };
+const cardSpent = () => previewCardState.purchases.reduce((sum,p) => sum+p.cents,0);
+const cardMoney = cents => (cents/100).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+function renderPreviewCard() {
+    document.getElementById('preview-limit-status').textContent = 'Limite disponível: '+cardMoney(previewCardState.limit-cardSpent());
+    document.getElementById('preview-invoice').textContent = 'Fatura simulada: '+cardMoney(cardSpent());
+    const list = document.getElementById('preview-purchases');
+    list.replaceChildren();
+    for(const p of [...previewCardState.purchases].reverse()){
+        const li=document.createElement('li');
+        li.textContent=p.name+' · '+cardMoney(p.cents);
+        list.append(li);
+    }
+}
 document.getElementById('preview-limit-save').addEventListener('click', () => {
-    const input = document.getElementById('preview-card-limit');
+    const value = document.getElementById('preview-card-limit').valueAsNumber;
     const status = document.getElementById('preview-limit-status');
-    const value = input.valueAsNumber;
-    if (!Number.isInteger(value) || value < 0 || value > 5000) {
-        status.textContent = 'Informe um limite inteiro entre R$ 0 e R$ 5.000.';
+    if (!Number.isInteger(value) || value < 0 || value > 5000 || value*100 < cardSpent()) {
+        status.textContent = 'Informe um limite inteiro entre R$ 0 e R$ 5.000, não inferior à fatura.';
         return;
     }
     previewCardState.limit = value * 100;
-    status.textContent = 'Limite disponível: ' + formatMoney(value);
+    renderPreviewCard();
 });
+document.getElementById('preview-purchase-form').addEventListener('submit', e => {
+    e.preventDefault();
+    const status=document.getElementById('preview-purchase-status');
+    const name=document.getElementById('preview-merchant').value.trim();
+    const amount=document.getElementById('preview-purchase-amount').valueAsNumber;
+    const cents=Math.round(amount*100);
+    if(document.getElementById('preview-card-toggle').getAttribute('aria-pressed')==='true'){
+        status.textContent='Compra recusada: cartão bloqueado.'; return;
+    }
+    if(!name || !Number.isFinite(amount) || cents<=0 || cents>previewCardState.limit-cardSpent()){
+        status.textContent='Compra recusada: dados inválidos ou limite insuficiente.'; return;
+    }
+    previewCardState.purchases.push({name,cents});
+    renderPreviewCard();
+    e.target.reset();
+    status.textContent='Compra fictícia aprovada.';
+});
+renderPreviewCard();
