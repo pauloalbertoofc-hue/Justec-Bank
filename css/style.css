@@ -350,3 +350,14 @@ body:has(#app-modal:not(.hidden)), body:has(dialog[open]) { overflow: hidden; }
 #preview-purchases { display:grid; gap:6px; padding:0; list-style:none; }
 #preview-purchases li { padding:10px; background:#101b2d; border-radius:8px; overflow-wrap:anywhere; }
 #preview-purchase-status { font-size:13px; color:#cbd5e1; }
+
+/* Preview dispute cards */
+#preview-purchase-claims { display:grid; gap:12px; }
+.preview-claim-card { display:grid; gap:8px; padding:16px; border:1px solid #40536c; border-inline-start:4px solid #facc15; border-radius:14px; background:#152237; min-width:0; overflow-wrap:anywhere; }
+.preview-claim-card[data-claim-status="approved"] { border-inline-start-color:#6ee7b7; }
+.preview-claim-card[data-claim-status="rejected"] { border-inline-start-color:#fda4af; }
+.preview-claim-card[data-claim-status="obsolete"] { border-inline-start-color:#94a3b8; }
+.preview-claim-card small { color:#aebed1; font-size:11px; }
+.preview-claim-card p { margin:0; line-height:1.5; }
+.preview-claim-card button { min-height:44px; width:100%; border-radius:10px; }
+.preview-claim-card button:focus-visible { outline:2px solid #facc15; outline-offset:3px; }
