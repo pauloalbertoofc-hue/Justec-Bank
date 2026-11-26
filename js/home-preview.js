@@ -32,7 +32,7 @@ new MutationObserver(() => {
     if (!homePreviewScreen.classList.contains('hidden')) renderHomeRecent();
 }).observe(homePreviewScreen,{attributes:true,attributeFilter:['class']});
 
-const previewCardState = { limit: 100000, purchases: [] };
+const previewCardState = { limit: 100000, purchases: [], payments: [] };
 const previewStorageKey = 'justec-preview-card-v1';
 try {
     const saved = JSON.parse(localStorage.getItem(previewStorageKey));
@@ -41,6 +41,7 @@ try {
        saved.purchases.reduce((sum,p)=>sum+p.cents,0)<=saved.limit){
         previewCardState.limit=saved.limit;
         previewCardState.purchases=saved.purchases;
+        if(Array.isArray(saved.payments) && saved.payments.every(p=>Number.isSafeInteger(p.cents)&&p.cents>0&&typeof p.id==='string') && new Set(saved.payments.map(p=>p.id)).size===saved.payments.length) previewCardState.payments=saved.payments;
         if(saved.blocked===true) document.getElementById('preview-card-toggle').click();
     }
 } catch(e) { /* Storage unavailable: retain session defaults. */ }
@@ -51,6 +52,15 @@ function savePreviewCard(){
 }
 document.getElementById('preview-card-toggle').addEventListener('click',savePreviewCard);
 const cardSpent = () => previewCardState.purchases.reduce((sum,p) => sum+p.cents,0);
+function restoreCardPayments(){
+    for(const p of previewCardState.payments){
+        if(bankState.transactions.some(t=>t.id===p.id)) continue;
+        bankState.transactions.unshift({id:p.id,date:demoDate(),type:'pix-out',description:'Pagamento de fatura · simulação',amount:-p.cents/100,status:'completed',participant:{id:'justec-card',name:'Fatura JUSTEC',institution:'JUSTEC fictício'}});
+    }
+}
+restoreCardPayments();
+renderBalance();
+renderHomeRecent();
 const cardMoney = cents => (cents/100).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
 function renderPreviewCard() {
     savePreviewCard();
@@ -92,3 +102,23 @@ document.getElementById('preview-purchase-form').addEventListener('submit', e =>
     status.textContent='Compra fictícia aprovada.';
 });
 renderPreviewCard();
+
+const payButton=document.createElement('button');
+payButton.type='button';
+payButton.textContent='Pagar fatura integral';
+const payStatus=document.createElement('p');
+payStatus.setAttribute('role','status');
+document.getElementById('preview-invoice').after(payButton,payStatus);
+payButton.addEventListener('click',()=>{
+    const cents=cardSpent();
+    if(!cents){payStatus.textContent='Não há fatura em aberto.';return;}
+    if(cents>Math.round(bankState.balance*100)){payStatus.textContent='Saldo fictício insuficiente.';return;}
+    const id='CARD-PAY-'+crypto.randomUUID();
+    previewCardState.payments.push({id,cents});
+    previewCardState.purchases=[];
+    restoreCardPayments();
+    renderPreviewCard();
+    renderBalance();
+    renderHomeRecent();
+    payStatus.textContent='Fatura fictícia paga. Limite recomposto.';
+});
