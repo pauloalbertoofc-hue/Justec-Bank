@@ -412,3 +412,15 @@ body:has(#app-modal:not(.hidden)), body:has(dialog[open]) { overflow: hidden; }
 #receipt-dispute { border-color:#9f5363; color:#fda4af; background:#321e2a; }
 #statement-dialog .receipt-close { min-width:44px; min-height:44px; }
 #receipt-education,#receipt-alert { border:1px solid #40536c; padding:14px; line-height:1.6; }
+
+/* Preview: short, non-blocking screen transitions. */
+@keyframes justec-screen-enter {
+  from { opacity:.86; }
+  to { opacity:1; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .app-content [id^="screen-"]:not(.hidden) { animation:justec-screen-enter 140ms ease-out; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .app-content [id^="screen-"] { animation:none; }
+}
