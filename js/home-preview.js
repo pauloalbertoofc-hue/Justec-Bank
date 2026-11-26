@@ -33,9 +33,27 @@ new MutationObserver(() => {
 }).observe(homePreviewScreen,{attributes:true,attributeFilter:['class']});
 
 const previewCardState = { limit: 100000, purchases: [] };
+const previewStorageKey = 'justec-preview-card-v1';
+try {
+    const saved = JSON.parse(localStorage.getItem(previewStorageKey));
+    if(saved && Number.isInteger(saved.limit) && saved.limit>=0 && saved.limit<=500000 &&
+       Array.isArray(saved.purchases) && saved.purchases.every(p=>p && typeof p.name==='string' && p.name.length<=60 && Number.isInteger(p.cents) && p.cents>0) &&
+       saved.purchases.reduce((sum,p)=>sum+p.cents,0)<=saved.limit){
+        previewCardState.limit=saved.limit;
+        previewCardState.purchases=saved.purchases;
+        if(saved.blocked===true) document.getElementById('preview-card-toggle').click();
+    }
+} catch(e) { /* Storage unavailable: retain session defaults. */ }
+document.getElementById('preview-card-limit').value=previewCardState.limit/100;
+function savePreviewCard(){
+    try { localStorage.setItem(previewStorageKey,JSON.stringify({...previewCardState,blocked:document.getElementById('preview-card-toggle').getAttribute('aria-pressed')==='true'})); }
+    catch(e) { /* Session remains usable without storage. */ }
+}
+document.getElementById('preview-card-toggle').addEventListener('click',savePreviewCard);
 const cardSpent = () => previewCardState.purchases.reduce((sum,p) => sum+p.cents,0);
 const cardMoney = cents => (cents/100).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
 function renderPreviewCard() {
+    savePreviewCard();
     document.getElementById('preview-limit-status').textContent = 'Limite disponível: '+cardMoney(previewCardState.limit-cardSpent());
     document.getElementById('preview-invoice').textContent = 'Fatura simulada: '+cardMoney(cardSpent());
     const list = document.getElementById('preview-purchases');
