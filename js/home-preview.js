@@ -65,7 +65,10 @@ renderBalance();
 renderHomeRecent();
 const cardMoney = cents => (cents/100).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
 function renderPreviewCard() {
-    for(const p of previewCardState.purchases) if(!p.id) p.id=crypto.randomUUID();
+    for(const p of previewCardState.purchases){
+        if(!p.id) p.id=crypto.randomUUID();
+        if(!Number.isSafeInteger(p.originalCents)||p.originalCents<p.cents) p.originalCents=p.cents;
+    }
     savePreviewCard();
     renderPurchaseClaims();
     document.getElementById('preview-limit-status').textContent = 'Limite disponível: '+cardMoney(previewCardState.limit-cardSpent());
@@ -118,7 +121,7 @@ document.getElementById('preview-purchase-form').addEventListener('submit', e =>
     if(!name || !Number.isFinite(amount) || cents<=0 || cents>previewCardState.limit-cardSpent()){
         status.textContent='Compra recusada: dados inválidos ou limite insuficiente.'; return;
     }
-    previewCardState.purchases.push({name,cents});
+    previewCardState.purchases.push({id:crypto.randomUUID(),name,cents,originalCents:cents});
     renderPreviewCard();
     e.target.reset();
     status.textContent='Compra fictícia aprovada.';
@@ -388,7 +391,7 @@ function renderPurchaseClaims(){
                 else if(!p||p.cents!==c.cents) c.status='obsolete';
                 else {
                     c.status='approved';
-                    previewCardState.refunds.push({name:p.name,cents:p.cents});
+                    previewCardState.refunds.push({id:p.id,protocol:c.protocol||'JUSTEC-COMPRA-'+c.id,name:p.name,cents:p.cents});
                     previewCardState.purchases=previewCardState.purchases.filter(item=>item!==p);
                 }
                 renderPreviewCard();
