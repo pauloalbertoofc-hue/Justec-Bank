@@ -382,3 +382,20 @@ body:has(#app-modal:not(.hidden)), body:has(dialog[open]) { overflow: hidden; }
 #screen-cards-preview #preview-purchase-form button[type="submit"] { background:#facc15; color:#101827; border-color:#facc15; }
 #screen-cards-preview #preview-purchases li { border:1px solid #334155; padding:12px; }
 #screen-cards-preview details { overflow-wrap:anywhere; }
+
+/* Preview: consistent statement hierarchy across viewport sizes. */
+#screen-statement .statement-summary { grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+#screen-statement .statement-summary > div { min-width:0; padding:14px; background:#152237; overflow-wrap:anywhere; }
+#screen-statement .statement-summary > div:first-child { grid-column:1/-1; background:linear-gradient(145deg,#24364d,#121929); padding:18px; }
+#screen-statement .statement-summary span { font-size:12px; color:#cbd5e1; margin-bottom:6px; }
+#screen-statement .statement-summary strong { font-size:clamp(16px,4vw,21px); font-variant-numeric:tabular-nums; }
+#screen-statement #statement-balance { font-size:clamp(24px,5vw,32px); }
+#statement-incoming { color:#6ee7b7; }
+#statement-outgoing { color:#fda4af; }
+#screen-statement .statement-filters label { min-width:0; font-size:12px; }
+#screen-statement .statement-filters select { min-height:44px; font-size:16px; box-sizing:border-box; }
+#screen-statement .transaction-item { padding:14px; background:#152237; gap:7px 10px; }
+#screen-statement .transaction-item strong { font-size:13px; overflow-wrap:anywhere; }
+#screen-statement .transaction-item b { font-size:14px; font-variant-numeric:tabular-nums; }
+#screen-statement .transaction-item span,#screen-statement .transaction-item small { font-size:12px; }
+#screen-statement .statement-caption { line-height:1.5; }
